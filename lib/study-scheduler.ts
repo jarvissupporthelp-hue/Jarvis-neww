@@ -11,6 +11,7 @@ export type ScheduleInput = {
   studyDays: number[];
   topics: Topic[];
   busy: BusySlot[];
+  includeReview?: boolean;
 };
 
 export type ProposedSession = {
@@ -46,7 +47,7 @@ export function proposeStudySchedule(input: ScheduleInput): StudySchedule {
   const topics = [...input.topics].sort((a, b) => a.confidence - b.confidence || a.position - b.position);
   const queue = [
     ...topics.map((topic) => ({ position: topic.position as number | null, title: topic.name })),
-    ...(topics.length ? [{ position: null, title: "Mixed review" }] : []),
+    ...((input.includeReview ?? (topics.length > 0)) ? [{ position: null, title: "Mixed review" }] : []),
   ];
 
   const byDay = new Map<string, { start: number; end: number }[]>();

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { getAccessToken } from "@/lib/browser-supabase";
+import { RebalancePreview } from "./rebalance-preview";
 import { SessionCompletion } from "./session-completion";
 import type { StudySchedule } from "@/lib/study-scheduler";
 
@@ -19,6 +20,7 @@ export function SchedulePreview({ planId, hasSessions, refreshPlans }: {
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [rebalanceSaved, setRebalanceSaved] = useState(false);
 
   async function generate() {
     setBusy(true);
@@ -77,6 +79,7 @@ export function SchedulePreview({ planId, hasSessions, refreshPlans }: {
         {busy ? "Working…" : hasSessions || confirmed ? "View study sessions" : "Generate schedule preview"}
       </button>
       {error && <p role="alert">{error}</p>}
+      {rebalanceSaved && <p role="status">Rebalance saved to your calendar.</p>}
       {schedule && (
         <div className="space-y-2" aria-live="polite">
           <h3 className="font-semibold">{confirmed ? "Confirmed sessions" : "Proposed sessions"} · Yerevan time</h3>
@@ -102,7 +105,13 @@ export function SchedulePreview({ planId, hasSessions, refreshPlans }: {
               {" "}Try widening your availability or shortening sessions.</p>
           )}
           {confirmed ? (
-            <p className="text-sm">Saved to your calendar. <Link href="/account#student-timetable" className="underline">Open calendar</Link></p>
+            <>
+              <p className="text-sm">Saved to your calendar. <Link href="/account#student-timetable" className="underline">Open calendar</Link></p>
+              <RebalancePreview planId={planId} onApplied={async () => {
+                setRebalanceSaved(true);
+                await generate();
+              }} />
+            </>
           ) : (
             <>
               <p className="text-sm">Preview only. Sessions haven’t been saved to your calendar.</p>

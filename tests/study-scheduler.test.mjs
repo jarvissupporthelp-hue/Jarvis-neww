@@ -57,3 +57,10 @@ test("does not propose a past minute and permits adjacent calendar entries", () 
   assert.equal(result.sessions[0].end, "17:46");
   assert.equal(result.sessions[1].start, "18:00");
 });
+
+test("reschedules a remaining review after all topics are complete", () => {
+  const result = proposeStudySchedule({ ...input, topics: [], includeReview: true });
+  assert.deepEqual(result.sessions.map(({ title, topicPosition }) => [title, topicPosition]), [
+    ["Mixed review", null],
+  ]);
+});
