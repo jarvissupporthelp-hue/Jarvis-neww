@@ -1,0 +1,10 @@
+project_id = "jarvis"
+
+[auth]
+enable_signup = false
+
+[auth.email]
+enable_signup = false
+
+[db.seed]
+enabled = false
