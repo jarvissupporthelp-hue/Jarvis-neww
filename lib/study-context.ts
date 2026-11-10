@@ -29,9 +29,9 @@ export function createStudyClient(authorization: string) {
 }
 
 export async function loadStudyContext(client: NonNullable<ReturnType<typeof createStudyClient>>) {
-  const { data, error } = await client.rpc("study_context").overrideTypes<StudyContext, { merge: false }>();
+  const { data, error } = await client.rpc("study_context");
   if (error || !data) return { context: null, forbidden: error?.code === "42501" } as const;
-  return { context: data, forbidden: false } as const;
+  return { context: data as unknown as StudyContext, forbidden: false } as const;
 }
 
 export function examDateClarification(prompt: string, context: StudyContext) {
