@@ -1,5 +1,6 @@
 "use client";
 
+import { Timetable } from "./timetable";
 import { useEffect, useState, type FormEvent } from "react";
 
 type Option = { id: string; name: string };
@@ -18,7 +19,7 @@ type Workspace = {
   audit: { id: string; actor_id: string; action: string; resource_id: string; created_at: string }[];
 };
 
-type Section = "users" | "group" | "semester" | "course" | "offering" | "audit";
+type Section = "users" | "group" | "semester" | "course" | "offering" | "timetable" | "audit";
 
 const field = "w-full rounded border border-[#789181] bg-white p-2";
 const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
@@ -112,7 +113,7 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
         }}>
           <option value="users">Users</option><option value="group">Groups</option>
           <option value="semester">Semesters</option><option value="course">Courses</option>
-          <option value="offering">Course offerings</option><option value="audit">Audit log</option>
+          <option value="offering">Course offerings</option><option value="timetable">Timetable</option><option value="audit">Audit log</option>
         </select>
       </label>
       <fieldset disabled={busy} className="space-y-3">
@@ -209,6 +210,7 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
           </ul> : <p>No admin changes recorded yet.</p>
         )}
       </fieldset>
+      {section === "timetable" && <Timetable getToken={getToken} admin={data} />}
       {message && <p role="status">{message}</p>}
     </section>
   );
