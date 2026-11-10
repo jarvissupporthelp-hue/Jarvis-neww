@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { AdminWorkspace } from "./admin-workspace";
 import { useEffect, useState, type FormEvent } from "react";
 
 type Flow = "signin" | "forgot" | "invite" | "recovery";
@@ -14,6 +15,11 @@ function getClient() {
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) throw new Error("Authentication is not configured.");
   return client ??= createClient(url, key);
+}
+
+async function getAccessToken() {
+  const { data } = await getClient().auth.getSession();
+  return data.session?.access_token;
 }
 
 async function currentRole(token: string): Promise<Role | null> {
@@ -180,6 +186,7 @@ export function AccountForm() {
               <button className={buttonClass} disabled={busy}>Send or resend invitation</button>
             </form>
           )}
+          {role === "admin" && <AdminWorkspace getToken={getAccessToken} />}
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setMessage("Could not sign out. Try again.");
