@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
 import { AdminWorkspace } from "./admin-workspace";
 import { useEffect, useState, type FormEvent } from "react";
@@ -187,7 +188,12 @@ export function AccountForm() {
               <button className={buttonClass} disabled={busy}>Send or resend invitation</button>
             </form>
           )}
-          {role === "admin" ? <AdminWorkspace getToken={getAccessToken} /> : <Timetable getToken={getAccessToken} />}
+          {role === "admin" ? <AdminWorkspace getToken={getAccessToken} /> : (
+            <>
+              {role === "student" && <StudentDashboard getToken={getAccessToken} />}
+              <div id="student-timetable"><Timetable getToken={getAccessToken} /></div>
+            </>
+          )}
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setMessage("Could not sign out. Try again.");
