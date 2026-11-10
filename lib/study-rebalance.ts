@@ -18,14 +18,16 @@ function padTime(value: string, offset: number) {
     .map((part) => String(part).padStart(2, "0")).join(":");
 }
 
-export function proposeRebalance(input: RebalanceInput) {
+export function proposeRebalance(input: RebalanceInput, practiceTopics: string[] = []) {
   const movable = new Map(input.saved.filter((item) => item.movable).map((item) => [item.topicPosition, item]));
   const fixed = input.saved.filter((item) => !item.movable).map((item) => ({
     date: item.date, start: padTime(item.start, -10), end: padTime(item.end, 10),
   }));
+  const priority = new Set(practiceTopics.map((topic) => topic.trim().toLowerCase()));
   const proposal = proposeStudySchedule({
     ...input,
-    topics: input.topics.filter((topic) => movable.has(topic.position)),
+    topics: input.topics.filter((topic) => movable.has(topic.position)).map((topic) =>
+      priority.has(topic.name.trim().toLowerCase()) ? { ...topic, confidence: 0 } : topic),
     includeReview: movable.has(null),
     busy: [...input.busy, ...fixed],
   });

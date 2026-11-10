@@ -13,8 +13,8 @@ type VisibleSchedule = Omit<StudySchedule, "sessions"> & {
   })[];
 };
 
-export function SchedulePreview({ planId, hasSessions, refreshPlans }: {
-  planId: string; hasSessions: boolean; refreshPlans: () => Promise<void>;
+export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPlans }: {
+  planId: string; hasSessions: boolean; practiceTopics?: string[]; refreshPlans: () => Promise<void>;
 }) {
   const [schedule, setSchedule] = useState<VisibleSchedule | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -107,7 +107,7 @@ export function SchedulePreview({ planId, hasSessions, refreshPlans }: {
           {confirmed ? (
             <>
               <p className="text-sm">Saved to your calendar. <Link href="/account#student-timetable" className="underline">Open calendar</Link></p>
-              <RebalancePreview planId={planId} onApplied={async () => {
+              <RebalancePreview planId={planId} practiceTopics={practiceTopics} onApplied={async () => {
                 setRebalanceSaved(true);
                 await generate();
               }} />
