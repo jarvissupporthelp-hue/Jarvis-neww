@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="mx-auto grid min-h-dvh max-w-4xl content-center px-6 py-16 sm:px-12">
@@ -7,8 +9,9 @@ export default function Home() {
         An academic workspace for your courses, timetable, and exam preparation.
       </p>
       <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4">
-        Pilot access will be by invitation when the student workspace opens.
+        Pilot access is by invitation.
       </p>
+      <Link href="/account" className="mt-5 w-fit font-semibold underline">Sign in to JARVIS</Link>
     </main>
   );
 }
