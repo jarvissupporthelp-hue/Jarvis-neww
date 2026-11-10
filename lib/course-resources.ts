@@ -6,6 +6,7 @@ export type CourseResource = {
   title: string;
   filename: string;
   size_bytes: number;
+  index_status: "pending" | "indexed" | "unsearchable";
 };
 
 export function hasPdfMarkers(bytes: Uint8Array) {

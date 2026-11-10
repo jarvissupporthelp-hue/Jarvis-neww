@@ -12,12 +12,13 @@ export async function POST(request: Request) {
   if (!caller.ok) return reply({ error: "Active student access required." }, caller.status);
 
   const input = await request.json().catch(() => null);
-  const prompt = typeof input?.prompt === "string" ? input.prompt.trim() : "";
+  const prompt: string = typeof input?.prompt === "string" ? input.prompt.trim() : "";
+  const coursePdfSearch = input?.mode === "course-pdfs";
   const conversationId = typeof input?.conversationId === "string" ? input.conversationId : "";
   if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(conversationId)) {
     return reply({ error: "Choose a conversation first." }, 400);
   }
-  if (!prompt || prompt.length > MAX_STUDY_PROMPT || input?.consent !== true) {
+  if (!prompt || prompt.length > MAX_STUDY_PROMPT || (!coursePdfSearch && input?.consent !== true)) {
     return reply({ error: "Enter a question within the character limit and accept the AI data-use notice." }, 400);
   }
 
@@ -29,6 +30,20 @@ export async function POST(request: Request) {
     .eq("id", conversationId).eq("student_id", caller.userId).maybeSingle();
   if (thread.error) return reply({ error: "Could not load the conversation. Your draft is still here." }, 503);
   if (!thread.data) return reply({ error: "Conversation not found." }, 404);
+
+  if (coursePdfSearch) {
+    const words = [...new Set(prompt.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])];
+    const terms = words.filter((word) => word.length > 1);
+    const { data, error } = await supabase.rpc("search_course_pdf_pages", { p_terms: terms });
+    if (error || !data) return reply({ error: "Could not search course PDFs. Your draft is still here." }, 503);
+    const results = data as { matches: { title: string; page: number; excerpt: string }[]; unavailable: number };
+    const passages = results.matches.map(({ title, page, excerpt }) =>
+      `${title} · Page ${page}\n“${excerpt.replaceAll("[[[", "").replaceAll("]]]", "")}”`);
+    const sections = [passages.length ? "Relevant passages from your course PDFs." : "No matching passages in your searchable course PDFs."];
+    sections.push(...passages);
+    if (results.unavailable) sections.push(`JARVIS couldn’t search ${results.unavailable} course PDF(s) that haven’t been indexed. You can still open them in Course resources.`);
+    return reply({ turn: { id: crypto.randomUUID(), prompt, answer: sections.join("\n\n") } });
+  }
 
   const { context, forbidden } = await loadStudyContext(supabase);
   if (!context) {
