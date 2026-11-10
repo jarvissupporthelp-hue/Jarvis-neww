@@ -20,7 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!client) return reply({ error: "Schedule preview unavailable." }, 503);
 
   const saved = await client.from("study_sessions")
-    .select("topic_position,title,session_date,starts_at,ends_at")
+    .select("id,topic_position,title,session_date,starts_at,ends_at,completed_at,confidence_after")
     .eq("plan_id", id).eq("student_id", caller.userId)
     .order("session_date").order("starts_at");
   if (saved.error) return reply({ error: "Could not load confirmed sessions." }, 503);
@@ -28,7 +28,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     return reply({
       confirmed: true,
       sessions: saved.data.map((session) => ({
-        topicPosition: session.topic_position, title: session.title, date: session.session_date,
+        id: session.id, topicPosition: session.topic_position, title: session.title, date: session.session_date,
+        completedAt: session.completed_at, confidenceAfter: session.confidence_after,
         start: session.starts_at.slice(0, 5), end: session.ends_at.slice(0, 5),
       })),
       unscheduled: [],

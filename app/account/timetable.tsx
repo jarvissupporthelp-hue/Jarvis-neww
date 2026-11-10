@@ -9,7 +9,7 @@ type Lesson = {
   offering_id: string; lecturer_id: string; course: string; student_group: string; lecturer: string;
 };
 
-type ConfirmedSession = { id: string; title: string; session_date: string; starts_at: string; ends_at: string };
+type ConfirmedSession = { id: string; title: string; session_date: string; starts_at: string; ends_at: string; completed_at: string | null };
 
 type AdminOptions = {
   offerings: { id: string; label: string }[];
@@ -62,7 +62,7 @@ export function Timetable({ getToken, admin, personal }: {
           const [eventsResult, sessionsResult] = await Promise.all([
             personal.from("personal_events").select("id,title,event_date,starts_at,ends_at")
               .gte("event_date", week).lt("event_date", until).abortSignal(controller.signal),
-            personal.from("study_sessions").select("id,title,session_date,starts_at,ends_at")
+            personal.from("study_sessions").select("id,title,session_date,starts_at,ends_at,completed_at")
               .gte("session_date", week).lt("session_date", until).abortSignal(controller.signal),
           ]);
           if (controller.signal.aborted) return;
@@ -133,6 +133,7 @@ export function Timetable({ getToken, admin, personal }: {
             <p className="text-xs font-semibold uppercase">{entry.source === "official" ? "Official class" : entry.source === "study" ? "Study session" : "Personal event"}</p>
             <strong className="break-words">{entry.source === "official" ? entry.item.course : entry.item.title}</strong>
             <p>{entry.date} · {entry.item.starts_at.slice(0, 5)}–{entry.item.ends_at.slice(0, 5)}</p>
+            {entry.source === "study" && entry.item.completed_at && <p className="text-sm font-semibold">Completed</p>}
             {entry.source === "official" ? (
               <>
                 <p className="text-sm">{entry.item.room} · {entry.item.student_group} · {entry.item.lecturer}</p>
