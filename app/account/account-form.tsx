@@ -145,6 +145,7 @@ export function AccountForm() {
     const fields = new FormData(event.currentTarget);
     setBusy(true);
     setMessage("");
+    setError("");
     try {
       const { data } = await getClient().auth.getSession();
       if (!data.session) throw new Error("Session unavailable");
@@ -157,7 +158,7 @@ export function AccountForm() {
       if (response.ok) setMessage(result.message);
       else setError(result.message);
     } catch {
-      setError("Could not process the invitation.");
+      setError("Could not confirm invitation delivery. Retry with the same email, role, and group.");
     } finally {
       setBusy(false);
     }
