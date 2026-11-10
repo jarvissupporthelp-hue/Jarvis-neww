@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { SchedulePreview } from "./schedule-preview";
 import { useEffect, useState, type FormEvent } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
 
@@ -204,6 +205,7 @@ export function StudyPlanWorkspace() {
               minutes: plan.session_minutes, start: plan.study_start, end: plan.study_end,
               studyDays: plan.study_days, topics: [...plan.study_plan_topics].sort((a, b) => a.position - b.position),
             }} /></div>
+            <SchedulePreview planId={plan.id} />
           </details>
         ))}
       </section>
