@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getAccessToken } from "@/lib/browser-supabase";
 import type { CourseAssignment } from "@/lib/course-assignments";
+import { CourseResources } from "../resources/workspace";
 import { Timetable } from "../account/timetable";
 
 type Offering = {
@@ -94,6 +95,7 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
           </ul>
         ) : <p>No assignments published for this group yet.</p>}
       </section>
+      <CourseResources offeringId={offering.id} canPublish />
     </>
   );
 }
