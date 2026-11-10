@@ -16,6 +16,7 @@ type SavedPlan = {
   id: string; course_name: string; exam_date: string; target_outcome: string;
   session_minutes: number; study_start: string; study_end: string; study_days: number[];
   study_plan_topics: (Topic & { position: number })[];
+  study_sessions: { id: string; completed_at: string | null }[];
 };
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -44,7 +45,7 @@ function PlanDetails({ plan }: { plan: Pick<Draft, "course" | "examDate" | "targ
 
 async function readPlans(signal?: AbortSignal) {
   const query = getClient().from("study_plans").select(
-    "id,course_name,exam_date,target_outcome,session_minutes,study_start,study_end,study_days,study_plan_topics(position,name,confidence)",
+    "id,course_name,exam_date,target_outcome,session_minutes,study_start,study_end,study_days,study_plan_topics(position,name,confidence),study_sessions(id,completed_at)",
   ).order("created_at", { ascending: false });
   const result = await (signal ? query.abortSignal(signal) : query);
   if (result.error) throw result.error;
@@ -100,6 +101,14 @@ export function StudyPlanWorkspace() {
     })();
     return () => controller.abort();
   }, []);
+
+  async function refreshPlans() {
+    try {
+      setPlans(await readPlans());
+    } catch {
+      setError("Your change was saved. Reload to refresh the plan summary.");
+    }
+  }
 
   function preview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -219,7 +228,12 @@ export function StudyPlanWorkspace() {
               minutes: plan.session_minutes, start: plan.study_start, end: plan.study_end,
               studyDays: plan.study_days, topics: [...plan.study_plan_topics].sort((a, b) => a.position - b.position),
             }} /></div>
-            <SchedulePreview planId={plan.id} />
+            {plan.study_sessions.length > 0 && (
+              <p className="mt-2 font-semibold">
+                {plan.study_sessions.filter((session) => session.completed_at).length} of {plan.study_sessions.length} sessions completed
+              </p>
+            )}
+            <SchedulePreview planId={plan.id} hasSessions={plan.study_sessions.length > 0} refreshPlans={refreshPlans} />
           </details>
         ))}
       </section>

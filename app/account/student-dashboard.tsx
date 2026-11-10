@@ -13,6 +13,7 @@ type Dashboard = {
   today: Lesson[];
   next: Lesson | null;
   courses: { id: string; code: string; name: string; semester: string }[];
+  studyProgress?: { id: string; course_name: string; exam_date: string; scheduled: number; completed: number }[];
 };
 
 const card = "rounded-xl border border-[#afbeb3] bg-white p-4 sm:p-5";
@@ -100,6 +101,18 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
           ) : <p>No upcoming lessons scheduled.</p>}
         </section>
       </div>
+      <section className={card}>
+        <h3 className="mb-2 text-lg font-semibold">Study plan progress</h3>
+        {data.studyProgress?.length ? (
+          <ul className="space-y-2">{data.studyProgress.map((plan) => (
+            <li key={plan.id}>
+              <strong className="break-words">{plan.course_name}</strong>
+              <p className="text-sm">{plan.completed} of {plan.scheduled} sessions completed · Exam {formatDate(plan.exam_date)}</p>
+            </li>
+          ))}</ul>
+        ) : <p>No confirmed sessions for upcoming exams.</p>}
+        <Link href="/study-plans" className="mt-2 inline-block font-semibold underline">Open Study Plans</Link>
+      </section>
       <section id="student-courses" className={card}>
         <h3 className="mb-2 text-lg font-semibold">My courses</h3>
         {data.courses.length ? (
