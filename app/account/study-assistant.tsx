@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChatPlanStarter } from "./chat-plan-starter";
 import { StudyContextSummary } from "./study-context-summary";
 import { useEffect, useState, type FormEvent } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
@@ -157,6 +158,7 @@ export function StudyAssistant() {
       </aside>
       <section aria-label="Study conversation" className="min-w-0 space-y-4 rounded-xl border border-[#afbeb3] bg-white p-4">
         <StudyContextSummary />
+        <ChatPlanStarter />
         {error && <p role="alert">{error}</p>}
         {selected ? (
           <>
