@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { studyPlanHandoffKey, type StudyPlanHandoff } from "@/lib/study-plan-handoff";
+import { studyPlanHandoffKey, type QuizPlanHandoff, type StudyPlanHandoff } from "@/lib/study-plan-handoff";
 import { SchedulePreview } from "./schedule-preview";
 import { useEffect, useState, type FormEvent } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
@@ -13,7 +13,7 @@ type Draft = {
   minutes: number; start: string; end: string; studyDays: number[]; topics: Topic[];
 };
 type SavedPlan = {
-  id: string; course_name: string; exam_date: string; target_outcome: string;
+  id: string; offering_id: string; course_name: string; exam_date: string; target_outcome: string;
   session_minutes: number; study_start: string; study_end: string; study_days: number[];
   study_plan_topics: (Topic & { position: number })[];
   study_sessions: { id: string; completed_at: string | null }[];
@@ -45,7 +45,7 @@ function PlanDetails({ plan }: { plan: Pick<Draft, "course" | "examDate" | "targ
 
 async function readPlans(signal?: AbortSignal) {
   const query = getClient().from("study_plans").select(
-    "id,course_name,exam_date,target_outcome,session_minutes,study_start,study_end,study_days,study_plan_topics(position,name,confidence),study_sessions(id,completed_at)",
+    "id,offering_id,course_name,exam_date,target_outcome,session_minutes,study_start,study_end,study_days,study_plan_topics(position,name,confidence),study_sessions(id,completed_at)",
   ).order("created_at", { ascending: false });
   const result = await (signal ? query.abortSignal(signal) : query);
   if (result.error) throw result.error;
@@ -57,6 +57,8 @@ export function StudyPlanWorkspace() {
   const [plans, setPlans] = useState<SavedPlan[]>([]);
   const [topics, setTopics] = useState<Topic[]>([{ name: "", confidence: 3 }]);
   const [prefill, setPrefill] = useState<StudyPlanHandoff | null>(null);
+  const [quizFeedback, setQuizFeedback] = useState<QuizPlanHandoff | null>(null);
+  const [revisionSource, setRevisionSource] = useState<SavedPlan | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [showForm, setShowForm] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -85,10 +87,19 @@ export function StudyPlanWorkspace() {
         try {
           const handoff = sessionStorage.getItem(studyPlanHandoffKey);
           if (handoff) {
-            const suggested: StudyPlanHandoff = JSON.parse(handoff);
+            const suggested: StudyPlanHandoff | QuizPlanHandoff = JSON.parse(handoff);
             sessionStorage.removeItem(studyPlanHandoffKey);
-            setPrefill(suggested);
-            setTopics([{ name: suggested.topic, confidence: 3 }]);
+            if ("kind" in suggested) {
+              if (suggested.kind === "quiz" && dashboard.courses.some((course: Course) => course.id === suggested.offeringId)
+                && Array.isArray(suggested.topics) && suggested.topics.length > 0 && suggested.topics.length <= 10
+                && suggested.topics.every((name) => typeof name === "string" && name.trim() && name.length <= 120)) {
+                setQuizFeedback(suggested);
+                setTopics(suggested.topics.map((name) => ({ name, confidence: 2 })));
+              }
+            } else {
+              setPrefill(suggested);
+              setTopics([{ name: suggested.topic, confidence: 3 }]);
+            }
           }
         } catch {
           // The standard form still works when browser storage is unavailable.
@@ -110,6 +121,23 @@ export function StudyPlanWorkspace() {
     }
   }
 
+  function reviseFromQuiz(plan: SavedPlan) {
+    if (!quizFeedback || busy) return;
+    const practice = quizFeedback.topics.map((name) => ({ name, confidence: 2 }));
+    const practiceNames = new Set(practice.map((topic) => topic.name.trim().toLowerCase()));
+    const otherTopics = [...plan.study_plan_topics].sort((a, b) => a.position - b.position)
+      .filter((topic) => !practiceNames.has(topic.name.trim().toLowerCase()))
+      .map(({ name, confidence }) => ({ name, confidence }));
+    setTopics([...practice, ...otherTopics]);
+    setRevisionSource(plan);
+    setRevision((value) => value + 1);
+    setDraft(null);
+    setShowForm(true);
+    setError("");
+    setMessage("");
+    requestAnimationFrame(() => document.getElementById("study-plan-form-heading")?.focus());
+  }
+
   function preview(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -123,6 +151,10 @@ export function StudyPlanWorkspace() {
     const studyDays = values.getAll("studyDays").map(Number);
     const target = String(values.get("target")).trim();
     const cleanTopics = topics.map((topic) => ({ ...topic, name: topic.name.trim() }));
+    if (cleanTopics.length > 10) {
+      setError("Keep at most ten topics in your revised draft.");
+      return;
+    }
     if (!course || examDate < today || !target || !studyDays.length || cleanTopics.some((topic) => !topic.name)
       || minutesAt(end) - minutesAt(start) < minutes) {
       setError("Choose an enrolled course, an upcoming exam, study days, and a study window long enough for your session. Fill in the goal and topic names.");
@@ -143,6 +175,8 @@ export function StudyPlanWorkspace() {
       saved = true;
       setDraft(null);
       setPrefill(null);
+      setQuizFeedback(null);
+      setRevisionSource(null);
       setTopics([{ name: "", confidence: 3 }]);
       setRevision((value) => value + 1);
       setShowForm(true);
@@ -163,25 +197,28 @@ export function StudyPlanWorkspace() {
       {!courses.length && <p className={card}>You need an enrolled course before creating a plan.</p>}
       {courses.length > 0 && (
         <form key={revision} hidden={!showForm} className={card} onSubmit={preview}>
-          <h2 className="text-xl font-semibold">New study plan</h2>
+          <h2 id="study-plan-form-heading" tabIndex={-1} className="text-xl font-semibold">{revisionSource ? "Revised study plan draft" : "New study plan"}</h2>
+          {quizFeedback && <p className="text-sm">Quiz feedback prefilled the topics that need practice. Review their confidence ratings before saving.</p>}
+          {revisionSource && <p className="text-sm">This draft is a copy. Your existing sessions and progress stay with the original plan.</p>}
+          {topics.length > 10 && <p role="status">Remove topics until ten or fewer remain.</p>}
           <label className="block">Course
-            <select name="course" defaultValue={prefill && courses.length === 1 ? courses[0].id : ""} required className={field}>
+            <select name="course" defaultValue={quizFeedback?.offeringId ?? (prefill && courses.length === 1 ? courses[0].id : "")} required className={field}>
               <option value="" disabled>Choose an enrolled course</option>
               {courses.map((course) => <option key={course.id} value={course.id}>{course.name} · {course.semester}</option>)}
             </select>
           </label>
-          <label className="block">Exam date<input className={field} name="examDate" type="date" min={today} defaultValue={prefill?.examDate} required /></label>
-          <label className="block">Target outcome<input className={field} name="target" maxLength={240} required /></label>
-          <label className="block">Session duration in minutes<input className={field} name="minutes" type="number" min={15} max={180} defaultValue={prefill?.minutes ?? 45} required /></label>
+          <label className="block">Exam date<input className={field} name="examDate" type="date" min={today} defaultValue={revisionSource?.exam_date ?? prefill?.examDate} required /></label>
+          <label className="block">Target outcome<input className={field} name="target" maxLength={240} defaultValue={revisionSource?.target_outcome} required /></label>
+          <label className="block">Session duration in minutes<input className={field} name="minutes" type="number" min={15} max={180} defaultValue={revisionSource?.session_minutes ?? prefill?.minutes ?? 45} required /></label>
           <fieldset className="grid gap-2 sm:grid-cols-2">
             <legend className="font-semibold">Daily study window (Yerevan time)</legend>
-            <label className="block">Available from<input className={field} name="start" type="time" defaultValue="17:00" required /></label>
-            <label className="block">Available until<input className={field} name="end" type="time" defaultValue="20:00" required /></label>
+            <label className="block">Available from<input className={field} name="start" type="time" defaultValue={revisionSource?.study_start.slice(0, 5) ?? "17:00"} required /></label>
+            <label className="block">Available until<input className={field} name="end" type="time" defaultValue={revisionSource?.study_end.slice(0, 5) ?? "20:00"} required /></label>
           </fieldset>
           <fieldset className="flex flex-wrap gap-3">
             <legend className="font-semibold">Available days</legend>
             {days.map((day, index) => (
-              <label key={day} className="flex gap-1"><input name="studyDays" type="checkbox" value={index + 1} defaultChecked />{day}</label>
+              <label key={day} className="flex gap-1"><input name="studyDays" type="checkbox" value={index + 1} defaultChecked={revisionSource?.study_days.includes(index + 1) ?? true} />{day}</label>
             ))}
           </fieldset>
           <fieldset className="space-y-2">
@@ -200,7 +237,7 @@ export function StudyPlanWorkspace() {
                 {topics.length > 1 && <button type="button" className="self-end underline" onClick={() => setTopics((items) => items.filter((_, i) => i !== index))}>Remove topic {index + 1}</button>}
               </div>
             ))}
-            <button type="button" className="underline" disabled={topics.length === 10} onClick={() => setTopics((items) => [...items, { name: "", confidence: 3 }])}>Add another topic</button>
+            <button type="button" className="underline" disabled={topics.length >= 10} onClick={() => setTopics((items) => [...items, { name: "", confidence: 3 }])}>Add another topic</button>
           </fieldset>
           <button className={button}>Preview study plan</button>
         </form>
@@ -232,6 +269,10 @@ export function StudyPlanWorkspace() {
               <p className="mt-2 font-semibold">
                 {plan.study_sessions.filter((session) => session.completed_at).length} of {plan.study_sessions.length} sessions completed
               </p>
+            )}
+            {quizFeedback?.offeringId === plan.offering_id && plan.exam_date >= today && (
+              <button type="button" className="mt-2 font-semibold underline" disabled={busy}
+                onClick={() => reviseFromQuiz(plan)}>Revise a copy using quiz feedback</button>
             )}
             <SchedulePreview planId={plan.id} hasSessions={plan.study_sessions.length > 0} refreshPlans={refreshPlans} />
           </details>
