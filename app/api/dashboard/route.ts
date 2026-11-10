@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { assignmentDeadlines, type AssignmentDeadline } from "@/lib/course-assignments";
 import { authorize } from "@/lib/authorization";
 
 function reply(body: unknown, status = 200) {
@@ -18,8 +19,13 @@ export async function GET(request: Request) {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: authorization } },
   });
-  const { data, error } = await supabase.rpc("student_dashboard");
+  const localDate = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Yerevan", dateStyle: "short" }).format(new Date());
+  const [dashboard, deadlines] = await Promise.all([
+    supabase.rpc("student_dashboard"),
+    assignmentDeadlines(supabase).gte("due_on", localDate).limit(10).returns<AssignmentDeadline[]>(),
+  ]);
+  const { data, error } = dashboard;
   if (error?.code === "42501") return reply({ error: "Active student access required." }, 403);
   if (error) return reply({ error: "Dashboard unavailable." }, 503);
-  return reply(data);
+  return reply({ ...data, assignmentDeadlines: deadlines.error ? null : deadlines.data });
 }

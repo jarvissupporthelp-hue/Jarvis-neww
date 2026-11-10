@@ -1,5 +1,6 @@
 "use client";
 
+import type { AssignmentDeadline } from "@/lib/course-assignments";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -13,6 +14,7 @@ type Dashboard = {
   today: Lesson[];
   next: Lesson | null;
   courses: { id: string; code: string; name: string; semester: string }[];
+  assignmentDeadlines?: AssignmentDeadline[] | null;
   studyProgress?: { id: string; course_name: string; exam_date: string; scheduled: number; completed: number }[];
 };
 
@@ -102,6 +104,20 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
           ) : <p>No upcoming lessons scheduled.</p>}
         </section>
       </div>
+      <section className={card}>
+        <h3 className="mb-2 text-lg font-semibold">Assignment deadlines</h3>
+        {data.assignmentDeadlines === null ? <p>Could not load assignment deadlines.</p> : data.assignmentDeadlines?.length ? (
+          <ul className="space-y-2">{data.assignmentDeadlines.map((item) => (
+            <li key={item.id}>
+              <details>
+                <summary className="cursor-pointer break-words font-semibold">{item.title}</summary>
+                <p className="mt-1 whitespace-pre-wrap break-words">{item.brief}</p>
+              </details>
+              <p className="text-sm">{item.offering.course.name} · Due {formatDate(item.due_on)} at {item.due_at.slice(0, 5)} Yerevan</p>
+            </li>
+          ))}</ul>
+        ) : <p>No upcoming assignment deadlines.</p>}
+      </section>
       <section className={card}>
         <h3 className="mb-2 text-lg font-semibold">Study plan progress</h3>
         {data.studyProgress?.length ? (

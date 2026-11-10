@@ -1,5 +1,6 @@
 "use client";
 
+import { assignmentDeadlines, type AssignmentDeadline } from "@/lib/course-assignments";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { PersonalEventEditor, type PersonalEvent } from "./personal-planner";
 import { useEffect, useState, type FormEvent } from "react";
@@ -38,6 +39,7 @@ export function Timetable({ getToken, admin, personal }: {
   const [week, setWeek] = useState(yerevanWeek);
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
   const [studySessions, setStudySessions] = useState<ConfirmedSession[]>([]);
+  const [deadlines, setDeadlines] = useState<AssignmentDeadline[]>([]);
   const [events, setEvents] = useState<PersonalEvent[]>([]);
   const [eventId, setEventId] = useState("");
   const [selected, setSelected] = useState("");
@@ -59,16 +61,19 @@ export function Timetable({ getToken, admin, personal }: {
         setLessons(official);
         if (personal) {
           const until = shiftDate(week, 7);
-          const [eventsResult, sessionsResult] = await Promise.all([
+          const [eventsResult, sessionsResult, deadlinesResult] = await Promise.all([
             personal.from("personal_events").select("id,title,event_date,starts_at,ends_at")
               .gte("event_date", week).lt("event_date", until).abortSignal(controller.signal),
             personal.from("study_sessions").select("id,title,session_date,starts_at,ends_at,completed_at")
               .gte("session_date", week).lt("session_date", until).abortSignal(controller.signal),
+            assignmentDeadlines(personal).gte("due_on", week).lt("due_on", until)
+              .abortSignal(controller.signal).returns<AssignmentDeadline[]>(),
           ]);
           if (controller.signal.aborted) return;
           setEvents(eventsResult.data ?? []);
           setStudySessions(sessionsResult.data ?? []);
-          if (eventsResult.error || sessionsResult.error) setMessage("Could not load all personal calendar entries.");
+          setDeadlines(deadlinesResult.data ?? []);
+          if (eventsResult.error || sessionsResult.error || deadlinesResult.error) setMessage("Could not load all calendar entries.");
         }
       } catch {
         if (!controller.signal.aborted) setMessage("Could not load the timetable.");
@@ -78,7 +83,7 @@ export function Timetable({ getToken, admin, personal }: {
   }, [getToken, week, revision, personal]);
 
   function changeWeek(date: string) {
-    setWeek(date); setLessons(null); setEvents([]); setStudySessions([]); setEventId(""); setSelected(""); setOffering(""); setMessage("");
+    setWeek(date); setLessons(null); setEvents([]); setStudySessions([]); setDeadlines([]); setEventId(""); setSelected(""); setOffering(""); setMessage("");
   }
 
   async function mutate(action: "save" | "remove", data: object) {
@@ -108,10 +113,11 @@ export function Timetable({ getToken, admin, personal }: {
   }
 
   const entries = [
-    ...(lessons ?? []).map((item) => ({ source: "official" as const, date: item.lesson_date, item })),
-    ...studySessions.map((item) => ({ source: "study" as const, date: item.session_date, item })),
-    ...events.map((item) => ({ source: "personal" as const, date: item.event_date, item })),
-  ].sort((a, b) => a.date.localeCompare(b.date) || a.item.starts_at.localeCompare(b.item.starts_at));
+    ...(lessons ?? []).map((item) => ({ source: "official" as const, date: item.lesson_date, time: item.starts_at, item })),
+    ...studySessions.map((item) => ({ source: "study" as const, date: item.session_date, time: item.starts_at, item })),
+    ...events.map((item) => ({ source: "personal" as const, date: item.event_date, time: item.starts_at, item })),
+    ...deadlines.map((item) => ({ source: "assignment" as const, date: item.due_on, time: item.due_at, item })),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
   const lesson = lessons?.find((item) => item.id === selected);
   const lecturers = admin?.users.filter((user) => user.role === "lecturer" && user.status === "active"
     && admin.assignments.some((item) => item.user_id === user.id && item.offering_id === offering));
@@ -128,7 +134,17 @@ export function Timetable({ getToken, admin, personal }: {
       {!lessons && !message && <p>Loading lessons…</p>}
       {lessons && entries.length === 0 && <p>No calendar entries this week.</p>}
       <ul className="space-y-2">
-        {entries.map((entry) => (
+        {entries.map((entry) => entry.source === "assignment" ? (
+          <li key={entry.source + entry.item.id} className="rounded bg-white p-3">
+            <p className="text-xs font-semibold uppercase">Assignment deadline</p>
+            <details>
+              <summary className="cursor-pointer break-words font-semibold">{entry.item.title}</summary>
+              <p className="whitespace-pre-wrap break-words">{entry.item.brief}</p>
+            </details>
+            <p>{entry.date} · Due {entry.time.slice(0, 5)}</p>
+            <p className="text-sm">{entry.item.offering.course.name}</p>
+          </li>
+        ) : (
           <li key={entry.source + entry.item.id} className="rounded bg-white p-3">
             <p className="text-xs font-semibold uppercase">{entry.source === "official" ? "Official class" : entry.source === "study" ? "Study session" : "Personal event"}</p>
             <strong className="break-words">{entry.source === "official" ? entry.item.course : entry.item.title}</strong>
