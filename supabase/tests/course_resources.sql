@@ -29,51 +29,45 @@ insert into public.enrollments values
   ('00000000-0000-4000-8000-000000000192',current_setting('test.assigned_offering')::uuid),
   ('00000000-0000-4000-8000-000000000193',current_setting('test.other_offering')::uuid);
 
-set local role service_role;
-do $$
-declare
-  resource uuid := '00000000-0000-4000-8000-000000000194';
-  lecturer uuid := '00000000-0000-4000-8000-000000000191';
-  offering uuid := current_setting('test.assigned_offering')::uuid;
-  other_offering uuid := current_setting('test.other_offering')::uuid;
-  object_key text := resource::text || '/' || repeat('a',64) || '.pdf';
-begin
-  begin
-    perform public.publish_course_resource(resource,other_offering,lecturer,'Routing notes','notes.pdf',1024,object_key);
-    raise exception 'Unassigned lecturer published';
-  exception when insufficient_privilege then null;
-  end;
-  perform public.publish_course_resource(resource,offering,lecturer,'Routing notes','notes.pdf',1024,object_key);
-  perform public.publish_course_resource(resource,offering,lecturer,'Routing notes','notes.pdf',1024,object_key);
-  if (select count(*) from public.course_resources where id=resource) <> 1 then
-    raise exception 'Publication retry duplicated the resource';
-  end if;
-end $$;
-reset role;
-
 set local role authenticated;
 do $$
 declare
   resource uuid := '00000000-0000-4000-8000-000000000194';
+  offering uuid := current_setting('test.assigned_offering')::uuid;
+  other_offering uuid := current_setting('test.other_offering')::uuid;
+  pdf text := encode(convert_to(E'%PDF-1.4\nDemo\n%%EOF\n','UTF8'),'base64');
 begin
-  perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000192',true);
-  if not exists (select 1 from public.course_resources where id=resource) then
-    raise exception 'Enrolled student could not read resource';
+  perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000191',true);
+  begin
+    perform public.publish_course_pdf(resource,other_offering,'Routing notes','notes.pdf',pdf);
+    raise exception 'Unassigned lecturer published';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.publish_course_pdf(resource,offering,'Routing notes','notes.pdf','bm90IHBkZg==');
+    raise exception 'Invalid PDF was published';
+  exception when invalid_parameter_value then null;
+  end;
+  perform public.publish_course_pdf(resource,offering,'Routing notes','notes.pdf',pdf);
+  perform public.publish_course_pdf(resource,offering,'Routing notes','notes.pdf',pdf);
+  if (select count(*) from public.course_resources where id=resource) <> 1 then
+    raise exception 'Publication retry duplicated the resource';
   end if;
-  if has_function_privilege('public.publish_course_resource(uuid,uuid,uuid,text,text,integer,text)', 'execute') then
-    raise exception 'Direct publication is available to authenticated users';
-  end if;
-  perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000193',true);
-  if exists (select 1 from public.course_resources where id=resource) then
-    raise exception 'Outsider could read resource by its ID';
-  end if;
-end $$;
-reset role;
 
-do $$ begin
-  if not exists (select 1 from storage.buckets where id='course-pdfs' and not public
-    and file_size_limit=4194304 and allowed_mime_types=array['application/pdf']) then
-    raise exception 'Private PDF bucket is misconfigured';
+  perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000192',true);
+  if public.read_course_pdf(resource) is distinct from pdf then
+    raise exception 'Enrolled student could not read PDF';
+  end if;
+  begin
+    perform public.publish_course_pdf(resource,offering,'Routing notes','notes.pdf',pdf);
+    raise exception 'Student published';
+  exception when insufficient_privilege then null;
+  end;
+  perform set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000193',true);
+  if exists (select 1 from public.course_resources where id=resource)
+    or public.read_course_pdf(resource) is not null
+    or exists (select 1 from public.course_resource_files where resource_id=resource) then
+    raise exception 'Outsider could read PDF by its ID';
   end if;
 end $$;
 rollback;

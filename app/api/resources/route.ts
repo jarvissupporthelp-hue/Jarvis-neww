@@ -1,10 +1,7 @@
-import { createHash } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
 import { authorize } from "@/lib/authorization";
 import { createStudyClient } from "@/lib/study-context";
 import { hasPdfMarkers, maxPdfBytes } from "@/lib/course-resources";
 
-const bucket = "course-pdfs";
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const headers = { "Cache-Control": "private, no-store" };
 const listFields = "id,offering_id,title,filename,size_bytes";
@@ -13,19 +10,12 @@ function reply(body: unknown, status = 200) {
   return Response.json(body, { status, headers });
 }
 
-function storageAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secret = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secret) return null;
-  return createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
-}
-
 async function access(request: Request, roles: ("lecturer" | "student")[]) {
   const caller = await authorize(request, roles);
   if (!caller.ok) return reply({ error: "Authorized course access required." }, caller.status);
   const token = request.headers.get("authorization");
   const client = token && createStudyClient(token);
-  return client ? { client, userId: caller.userId } : reply({ error: "Course resources unavailable." }, 503);
+  return client ? { client } : reply({ error: "Course resources unavailable." }, 503);
 }
 
 export async function GET(request: Request) {
@@ -36,15 +26,10 @@ export async function GET(request: Request) {
   const offering = params.get("course");
   if (id !== null) {
     if (!uuid.test(id)) return reply({ error: "PDF not found." }, 404);
-    const { data, error } = await auth.client.from("course_resources")
-      .select("object_key,filename").eq("id", id).maybeSingle();
+    const { data, error } = await auth.client.rpc("read_course_pdf", { p_id: id });
     if (error) return reply({ error: "Could not load the PDF." }, 503);
     if (!data) return reply({ error: "PDF not found." }, 404);
-    const admin = storageAdmin();
-    if (!admin) return reply({ error: "Course resources unavailable." }, 503);
-    const result = await admin.storage.from(bucket).download(data.object_key);
-    if (result.error) return reply({ error: "Could not open the PDF." }, 503);
-    return new Response(result.data, {
+    return new Response(Uint8Array.from(Buffer.from(data, "base64")), {
       headers: {
         ...headers,
         "Content-Type": "application/pdf",
@@ -90,26 +75,15 @@ export async function POST(request: Request) {
   }
   if (!file.size || file.size > maxPdfBytes) return reply({ error: "Choose a nonempty PDF up to 4 MB." }, 413);
 
-  const assignment = await auth.client.from("lecturer_assignments").select("course_offering_id")
-    .eq("course_offering_id", offering).maybeSingle();
-  if (assignment.error) return reply({ error: "Could not verify teaching access." }, 503);
-  if (!assignment.data) return reply({ error: "You can publish only for a course group you teach." }, 403);
-  const bytes = await file.arrayBuffer();
-  if (!hasPdfMarkers(new Uint8Array(bytes))) return reply({ error: "This file does not look like a complete PDF." }, 400);
-  const admin = storageAdmin();
-  if (!admin) return reply({ error: "Course resources unavailable." }, 503);
-
-  const digest = createHash("sha256").update(new Uint8Array(bytes)).digest("hex");
-  const key = `${id.toLowerCase()}/${digest}.pdf`;
-  const upload = await admin.storage.from(bucket).upload(key, bytes, { contentType: "application/pdf", upsert: true });
-  if (upload.error) return reply({ error: "Could not store the PDF. Try again." }, 503);
-
-  const { error } = await admin.rpc("publish_course_resource", {
-    p_id: id, p_offering_id: offering, p_publisher: auth.userId, p_title: title.trim(),
-    p_filename: file.name, p_size: file.size, p_object_key: key,
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (!hasPdfMarkers(bytes)) return reply({ error: "This file does not look like a complete PDF." }, 400);
+  const { error } = await auth.client.rpc("publish_course_pdf", {
+    p_id: id, p_offering_id: offering, p_title: title.trim(), p_filename: file.name,
+    p_base64: Buffer.from(bytes).toString("base64"),
   });
   if (error?.code === "42501") return reply({ error: "You can publish only for a course group you teach." }, 403);
   if (error?.code === "23505") return reply({ error: "This upload was already used for another resource. Select the PDF again." }, 409);
+  if (error?.code.startsWith("22") || error?.code === "23514") return reply({ error: "Choose a valid PDF and resource title." }, 400);
   if (error) return reply({ error: "Could not publish the PDF. Retry with the same file and title." }, 503);
   return reply({ id, offering_id: offering, title: title.trim(), filename: file.name, size_bytes: file.size }, 201);
 }
