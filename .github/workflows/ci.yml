@@ -20,5 +20,5 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: node --test tests/study-scheduler.test.mjs
+      - run: node --test tests/*.test.mjs
       - run: npm run build
