@@ -82,6 +82,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
           <Link href="/study-plans" className="font-semibold underline">Study Plans</Link>
           <Link href="/quizzes" className="font-semibold underline">Course quizzes</Link>
           <Link href="/resources" className="font-semibold underline">Course resources</Link>
+          <Link href="/focus" className="font-semibold underline">Start focus session</Link>
           <a href="#student-tasks" className="font-semibold underline">View my tasks</a>
           <a href="#student-courses" className="font-semibold underline">View my courses</a>
         </nav>
@@ -129,7 +130,12 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
             </li>
           ))}</ul>
         ) : <p>No confirmed sessions for upcoming exams.</p>}
-        <Link href="/study-plans" className="mt-2 inline-block font-semibold underline">Open Study Plans</Link>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <Link href="/study-plans" className="font-semibold underline">Open Study Plans</Link>
+          {data.studyProgress?.some((plan) => plan.completed < plan.scheduled) && (
+            <Link href="/study-plans#saved-plans" className="font-semibold underline">Continue unfinished plans</Link>
+          )}
+        </div>
       </section>
       <section id="student-courses" className={card}>
         <h3 className="mb-2 text-lg font-semibold">My courses</h3>

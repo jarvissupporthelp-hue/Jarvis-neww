@@ -21,20 +21,28 @@ async function access(request: Request, { params }: Route) {
   return { client, id };
 }
 
-export async function GET(request: Request, route: Route) {
-  const result = await access(request, route);
-  if (result instanceof Response) return result;
+async function preview(result: Exclude<Awaited<ReturnType<typeof access>>, Response>, practiceTopics?: string[]) {
   const { data, error } = await result.client.rpc("study_rebalance_inputs", { p_plan_id: result.id });
   if (error?.code === "42501") return reply({ error: "Active student access required." }, 403);
   if (error) return reply({ error: "Could not load the latest availability." }, 503);
   if (!data) return reply({ error: "Study plan not found." }, 404);
-  return reply(proposeRebalance(data as unknown as RebalanceInput));
+  return reply(proposeRebalance(data as unknown as RebalanceInput, practiceTopics));
+}
+
+export async function GET(request: Request, route: Route) {
+  const result = await access(request, route);
+  return result instanceof Response ? result : preview(result);
 }
 
 export async function POST(request: Request, route: Route) {
   const result = await access(request, route);
   if (result instanceof Response) return result;
   const input = await request.json().catch(() => null);
+  if (input?.confirmed !== true && Array.isArray(input?.practiceTopics)
+    && input.practiceTopics.length > 0 && input.practiceTopics.length <= 10
+    && input.practiceTopics.every((topic: unknown) => typeof topic === "string" && topic.length <= 120)) {
+    return preview(result, input.practiceTopics);
+  }
   if (input?.confirmed !== true || !Array.isArray(input.moves) || !input.moves.length || input.moves.length > 11) {
     return reply({ error: "Review and confirm a rebalance preview." }, 400);
   }

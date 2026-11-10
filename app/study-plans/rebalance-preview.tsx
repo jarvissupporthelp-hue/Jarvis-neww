@@ -10,8 +10,8 @@ function slot(date: string, start: string, end: string) {
   return `${date} · ${start.slice(0, 5)}–${end.slice(0, 5)}`;
 }
 
-export function RebalancePreview({ planId, onApplied }: {
-  planId: string; onApplied: () => Promise<void>;
+export function RebalancePreview({ planId, practiceTopics, onApplied }: {
+  planId: string; practiceTopics?: string[]; onApplied: () => Promise<void>;
 }) {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [busy, setBusy] = useState(false);
@@ -20,16 +20,17 @@ export function RebalancePreview({ planId, onApplied }: {
     slot(move.oldDate, move.oldStart, move.oldEnd) !== slot(move.date, move.start, move.end)) ?? [];
   const canApply = preview && !preview.unplaced.length && changed.length > 0;
 
-  async function submit(apply: boolean) {
+  async function submit(apply: boolean, useFeedback = false) {
     setBusy(true);
     setError("");
     if (!apply) setPreview(null);
     try {
       const token = await getAccessToken();
       const response = await fetch(`/api/study-plans/${planId}/rebalance`, {
-        method: apply ? "POST" : "GET",
+        method: apply || useFeedback ? "POST" : "GET",
         headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
-        body: apply ? JSON.stringify({ confirmed: true, moves: preview?.moves }) : undefined,
+        body: apply ? JSON.stringify({ confirmed: true, moves: preview?.moves })
+          : useFeedback ? JSON.stringify({ practiceTopics }) : undefined,
       });
       const result = await response.json();
       if (!response.ok) {
@@ -51,6 +52,10 @@ export function RebalancePreview({ planId, onApplied }: {
       <p className="text-sm">Rebalance missed and upcoming unfinished sessions around your latest calendar. Completed sessions and sessions in progress stay in place.</p>
       <button type="button" disabled={busy} onClick={() => void submit(false)}
         className="rounded border border-[#1e3328] px-3 py-2 disabled:opacity-50">Preview rebalance</button>
+      {!!practiceTopics?.length && (
+        <button type="button" disabled={busy} onClick={() => void submit(false, true)}
+          className="ml-2 rounded border border-[#1e3328] px-3 py-2 disabled:opacity-50">Preview with quiz feedback</button>
+      )}
       {error && <p role="alert">{error}</p>}
       {preview && (
         <div className="space-y-2" aria-live="polite">

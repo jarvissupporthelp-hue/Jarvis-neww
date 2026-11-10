@@ -254,7 +254,7 @@ export function StudyPlanWorkspace() {
       )}
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
-      <section className={card}>
+      <section id="saved-plans" className={card}>
         <h2 className="text-xl font-semibold">Saved study plans</h2>
         {plans.length === 0 && <p>No study plans saved yet.</p>}
         {plans.map((plan) => (
@@ -274,7 +274,9 @@ export function StudyPlanWorkspace() {
               <button type="button" className="mt-2 font-semibold underline" disabled={busy}
                 onClick={() => reviseFromQuiz(plan)}>Revise a copy using quiz feedback</button>
             )}
-            <SchedulePreview planId={plan.id} hasSessions={plan.study_sessions.length > 0} refreshPlans={refreshPlans} />
+            <SchedulePreview planId={plan.id} hasSessions={plan.study_sessions.length > 0}
+              practiceTopics={quizFeedback?.offeringId === plan.offering_id ? quizFeedback.topics : undefined}
+              refreshPlans={refreshPlans} />
           </details>
         ))}
       </section>
