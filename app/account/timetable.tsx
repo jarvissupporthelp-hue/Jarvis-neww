@@ -1,5 +1,7 @@
 "use client";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { PersonalEventEditor, type PersonalEvent } from "./personal-planner";
 import { useEffect, useState, type FormEvent } from "react";
 
 type Lesson = {
@@ -28,9 +30,13 @@ function yerevanWeek() {
   return shiftDate(today, -((weekday + 6) % 7));
 }
 
-export function Timetable({ getToken, admin }: { getToken: () => Promise<string | undefined>; admin?: AdminOptions }) {
+export function Timetable({ getToken, admin, personal }: {
+  getToken: () => Promise<string | undefined>; admin?: AdminOptions; personal?: SupabaseClient;
+}) {
   const [week, setWeek] = useState(yerevanWeek);
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
+  const [events, setEvents] = useState<PersonalEvent[]>([]);
+  const [eventId, setEventId] = useState("");
   const [selected, setSelected] = useState("");
   const [offering, setOffering] = useState("");
   const [message, setMessage] = useState("");
@@ -46,16 +52,30 @@ export function Timetable({ getToken, admin }: { getToken: () => Promise<string 
           signal: controller.signal, headers: { Authorization: `Bearer ${token ?? ""}` },
         });
         if (!response.ok) throw new Error();
-        setLessons(await response.json());
+        const official = await response.json();
+        setLessons(official);
+        if (personal) {
+          const result = await personal.from("personal_events")
+            .select("id,title,event_date,starts_at,ends_at")
+            .gte("event_date", week).lt("event_date", shiftDate(week, 7))
+            .abortSignal(controller.signal);
+          if (controller.signal.aborted) return;
+          if (result.error) {
+            setEvents([]);
+            setMessage("Could not load personal events.");
+          } else {
+            setEvents(result.data);
+          }
+        }
       } catch {
         if (!controller.signal.aborted) setMessage("Could not load the timetable.");
       }
     })();
     return () => controller.abort();
-  }, [getToken, week, revision]);
+  }, [getToken, week, revision, personal]);
 
   function changeWeek(date: string) {
-    setWeek(date); setLessons(null); setSelected(""); setOffering(""); setMessage("");
+    setWeek(date); setLessons(null); setEvents([]); setEventId(""); setSelected(""); setOffering(""); setMessage("");
   }
 
   async function mutate(action: "save" | "remove", data: object) {
@@ -84,13 +104,17 @@ export function Timetable({ getToken, admin }: { getToken: () => Promise<string 
     void mutate("save", Object.fromEntries(new FormData(event.currentTarget)));
   }
 
+  const entries = [
+    ...(lessons ?? []).map((item) => ({ source: "official" as const, date: item.lesson_date, item })),
+    ...events.map((item) => ({ source: "personal" as const, date: item.event_date, item })),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.item.starts_at.localeCompare(b.item.starts_at));
   const lesson = lessons?.find((item) => item.id === selected);
   const lecturers = admin?.users.filter((user) => user.role === "lecturer" && user.status === "active"
     && admin.assignments.some((item) => item.user_id === user.id && item.offering_id === offering));
 
   return (
     <section className="space-y-4 rounded border border-[#789181] p-4">
-      <h2 className="text-2xl font-semibold">{admin ? "Edit timetable" : "My timetable"}</h2>
+      <h2 className="text-2xl font-semibold">{admin ? "Edit timetable" : personal ? "My weekly calendar" : "My timetable"}</h2>
       <p className="text-sm">All times are in Asia/Yerevan.</p>
       <nav aria-label="Timetable week" className="flex flex-wrap items-center justify-between gap-2">
         <button type="button" disabled={busy} className="underline" onClick={() => changeWeek(shiftDate(week, -7))}>Previous</button>
@@ -98,19 +122,31 @@ export function Timetable({ getToken, admin }: { getToken: () => Promise<string 
         <button type="button" disabled={busy} className="underline" onClick={() => changeWeek(shiftDate(week, 7))}>Next</button>
       </nav>
       {!lessons && !message && <p>Loading lessons…</p>}
-      {lessons?.length === 0 && <p>No lessons this week.</p>}
+      {lessons && entries.length === 0 && <p>No calendar entries this week.</p>}
       <ul className="space-y-2">
-        {lessons?.map((item) => (
-          <li key={item.id} className="rounded bg-white p-3">
-            <strong>{item.course}</strong>
-            <p>{item.lesson_date} · {item.starts_at.slice(0, 5)}–{item.ends_at.slice(0, 5)} · {item.room}</p>
-            <p className="text-sm">{item.student_group} · {item.lecturer}</p>
-            {admin && <button type="button" disabled={busy} className="underline" onClick={() => {
-              setSelected(item.id); setOffering(item.offering_id); setMessage("");
-            }}>Edit lesson</button>}
+        {entries.map((entry) => (
+          <li key={entry.source + entry.item.id} className="rounded bg-white p-3">
+            <p className="text-xs font-semibold uppercase">{entry.source === "official" ? "Official class" : "Personal event"}</p>
+            <strong className="break-words">{entry.source === "official" ? entry.item.course : entry.item.title}</strong>
+            <p>{entry.date} · {entry.item.starts_at.slice(0, 5)}–{entry.item.ends_at.slice(0, 5)}</p>
+            {entry.source === "official" ? (
+              <>
+                <p className="text-sm">{entry.item.room} · {entry.item.student_group} · {entry.item.lecturer}</p>
+                {admin && <button type="button" disabled={busy} className="underline" onClick={() => {
+                  setSelected(entry.item.id); setOffering(entry.item.offering_id); setMessage("");
+                }}>Edit lesson</button>}
+              </>
+            ) : <button type="button" className="underline" onClick={() => setEventId(entry.item.id)}>Edit event</button>}
           </li>
         ))}
       </ul>
+      {personal && (
+        <PersonalEventEditor key={week + eventId + revision} client={personal}
+          event={events.find((event) => event.id === eventId)} from={week} to={shiftDate(week, 6)}
+          onCancel={() => setEventId("")} onSaved={() => {
+            setEventId(""); setRevision((value) => value + 1); setMessage("Personal calendar updated.");
+          }} />
+      )}
       {admin && (
         <form key={selected + week + revision} onSubmit={save} className="space-y-3">
           <fieldset disabled={busy} className="space-y-3">
