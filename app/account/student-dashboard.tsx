@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Lesson = {
@@ -74,7 +75,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
         </h2>
         <nav aria-label="Student quick actions" className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
           <a href="#student-timetable" className="font-semibold underline">Open weekly calendar</a>
-          <a href="#study-assistant" className="font-semibold underline">Ask JARVIS</a>
+          <Link href="/chat" className="font-semibold underline">Ask JARVIS</Link>
           <a href="#student-tasks" className="font-semibold underline">View my tasks</a>
           <a href="#student-courses" className="font-semibold underline">View my courses</a>
         </nav>
