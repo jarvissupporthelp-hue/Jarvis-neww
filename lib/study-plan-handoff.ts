@@ -5,3 +5,9 @@ export type StudyPlanHandoff = {
   examDate: string;
   minutes: number;
 };
+
+export type QuizPlanHandoff = {
+  kind: "quiz";
+  offeringId: string;
+  topics: string[];
+};

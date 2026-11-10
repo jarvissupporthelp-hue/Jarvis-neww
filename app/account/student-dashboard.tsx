@@ -78,6 +78,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
           <a href="#student-timetable" className="font-semibold underline">Open weekly calendar</a>
           <Link href="/chat" className="font-semibold underline">Ask JARVIS</Link>
           <Link href="/study-plans" className="font-semibold underline">Study Plans</Link>
+          <Link href="/quizzes" className="font-semibold underline">Course quizzes</Link>
           <a href="#student-tasks" className="font-semibold underline">View my tasks</a>
           <a href="#student-courses" className="font-semibold underline">View my courses</a>
         </nav>
