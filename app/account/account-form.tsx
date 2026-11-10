@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { StudyAssistant } from "./study-assistant";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
@@ -193,7 +194,10 @@ export function AccountForm() {
             <>
               {role === "student" && <StudentDashboard getToken={getAccessToken} />}
               <div id="student-timetable"><Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} /></div>
-              {role === "student" && <PersonalTasks client={getClient()} />}
+              {role === "student" && <>
+                <PersonalTasks client={getClient()} />
+                <StudyAssistant getToken={getAccessToken} />
+              </>}
             </>
           )}
           <button type="button" className="underline" onClick={async () => {
