@@ -8,12 +8,13 @@ import { maxPdfBytes, type CourseResource } from "@/lib/course-resources";
 type Offering = { id: string; course: { name: string }; group: { name: string }; semester: { name: string } };
 
 const field = "block w-full rounded border border-[#789181] bg-white p-2";
+const indexLabels = { pending: "Awaiting indexing", indexed: "Searchable in Ask JARVIS", unsearchable: "Text could not be indexed" };
 const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
 
 async function resourceRequest(query: string, options: RequestInit = {}) {
   const token = await getAccessToken();
   return fetch(`/api/resources${query}`, {
-    ...options, headers: { Authorization: `Bearer ${token ?? ""}` },
+    ...options, headers: { ...options.headers, Authorization: `Bearer ${token ?? ""}` },
   });
 }
 
@@ -24,6 +25,7 @@ export function CourseResources({ offeringId, canPublish = false }: { offeringId
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [indexing, setIndexing] = useState<string | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
   const [opened, setOpened] = useState<{ id: string; url: string } | null>(null);
   const pending = useRef<string | null>(null);
@@ -85,6 +87,23 @@ export function CourseResources({ offeringId, canPublish = false }: { offeringId
     }
   }
 
+  async function indexPdf(id: string) {
+    setIndexing(id);
+    setError("");
+    try {
+      const response = await resourceRequest("", {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
+      });
+      const result = await response.json();
+      if (!response.ok) setError(result.error ?? "Could not index the PDF.");
+      else setResources((items) => items?.map((item) => item.id === id ? { ...item, index_status: result.index_status } : item) ?? null);
+    } catch {
+      setError("Could not index the PDF. Try again.");
+    } finally {
+      setIndexing(null);
+    }
+  }
+
   async function openPdf(item: CourseResource) {
     if (opening) return;
     setOpening(item.id);
@@ -130,6 +149,13 @@ export function CourseResources({ offeringId, canPublish = false }: { offeringId
                 <li key={item.id} className="space-y-1 rounded bg-[#eef3ee] p-3">
                   <strong className="break-words">{item.title}</strong>
                   <p className="break-words text-sm">{item.filename} · {Math.ceil(item.size_bytes / 1024)} KB</p>
+                  <p className="text-sm">{indexLabels[item.index_status]}</p>
+                  {canPublish && item.index_status !== "indexed" && (
+                    <button type="button" className="mr-3 underline" disabled={indexing !== null}
+                      onClick={() => void indexPdf(item.id)}>
+                      {indexing === item.id ? "Indexing…" : item.index_status === "pending" ? "Index PDF" : "Retry indexing"}
+                    </button>
+                  )}
                   {opened?.id === item.id ? (
                     <div className="flex flex-wrap gap-3">
                       <a className="font-semibold underline" href={opened.url} target="_blank" rel="noopener noreferrer">View PDF</a>

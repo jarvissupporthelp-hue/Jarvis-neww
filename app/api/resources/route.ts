@@ -1,10 +1,11 @@
 import { authorize } from "@/lib/authorization";
 import { createStudyClient } from "@/lib/study-context";
+import { indexCoursePdf } from "@/lib/course-pdf-index";
 import { hasPdfMarkers, maxPdfBytes } from "@/lib/course-resources";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const headers = { "Cache-Control": "private, no-store" };
-const listFields = "id,offering_id,title,filename,size_bytes";
+const listFields = "id,offering_id,title,filename,size_bytes,index_status";
 
 function reply(body: unknown, status = 200) {
   return Response.json(body, { status, headers });
@@ -85,5 +86,24 @@ export async function POST(request: Request) {
   if (error?.code === "23505") return reply({ error: "This upload was already used for another resource. Select the PDF again." }, 409);
   if (error?.code.startsWith("22") || error?.code === "23514") return reply({ error: "Choose a valid PDF and resource title." }, 400);
   if (error) return reply({ error: "Could not publish the PDF. Retry with the same file and title." }, 503);
-  return reply({ id, offering_id: offering, title: title.trim(), filename: file.name, size_bytes: file.size }, 201);
+  const status = await indexCoursePdf(auth.client, id, bytes).catch(() => null);
+  return reply({
+    id, offering_id: offering, title: title.trim(), filename: file.name,
+    size_bytes: file.size, index_status: status ?? "pending",
+  }, 201);
+}
+
+
+export async function PATCH(request: Request) {
+  const auth = await access(request, ["lecturer"]);
+  if (auth instanceof Response) return auth;
+  const input = await request.json().catch(() => null);
+  const id = input?.id;
+  if (typeof id !== "string" || !uuid.test(id)) return reply({ error: "PDF not found." }, 404);
+
+  const { data, error } = await auth.client.rpc("read_course_pdf", { p_id: id });
+  if (error) return reply({ error: "Could not load the PDF." }, 503);
+  if (!data) return reply({ error: "PDF not found." }, 404);
+  const status = await indexCoursePdf(auth.client, id, Uint8Array.from(Buffer.from(data, "base64"))).catch(() => null);
+  return status ? reply({ index_status: status }) : reply({ error: "Could not save the PDF index. Try again." }, 503);
 }

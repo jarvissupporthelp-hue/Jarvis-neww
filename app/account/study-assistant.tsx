@@ -19,6 +19,7 @@ export function StudyAssistant() {
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
+  const [coursePdfSearch, setCoursePdfSearch] = useState(false);
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -114,7 +115,7 @@ export function StudyAssistant() {
 
   async function ask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !selectedId || !turns || !draft.trim() || !consent) return;
+    if (busy || !selectedId || !turns || !draft.trim() || (!coursePdfSearch && !consent)) return;
     setBusy(true);
     setError("");
     try {
@@ -122,7 +123,7 @@ export function StudyAssistant() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: selectedId, prompt: draft.trim(), consent }),
+        body: JSON.stringify({ conversationId: selectedId, prompt: draft.trim(), consent, mode: coursePdfSearch ? "course-pdfs" : "general" }),
       });
       const result = await response.json();
       if (!response.ok) {
@@ -183,18 +184,25 @@ export function StudyAssistant() {
               </ol>
             )}
             <form className="space-y-3" onSubmit={ask}>
-              <p className="text-sm">AI requests send your question, up to four recent exchanges, and the study context shown above through Vercel AI Gateway to an external model provider. Personal event titles and task titles are excluded. Leave out confidential information.</p>
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" className="mt-1" checked={coursePdfSearch} disabled={busy}
+                  onChange={(event) => setCoursePdfSearch(event.target.checked)} />
+                Search course PDFs
+              </label>
+              {coursePdfSearch ? (
+                <p className="text-sm">Find passages with page references in your course PDFs. Results are temporary and stay inside JARVIS. <Link href="/resources" className="underline">Open course resources</Link></p>
+              ) : <p className="text-sm">AI requests send your question, up to four recent exchanges, and the study context shown above through Vercel AI Gateway to an external model provider. Personal event titles and task titles are excluded. Leave out confidential information.</p>}
               <label className="block">Study question
                 <textarea className={field} rows={4} maxLength={MAX_STUDY_PROMPT} required disabled={busy}
                   value={draft} onChange={(event) => setDrafts({ ...drafts, [selected.id]: event.target.value })} />
               </label>
-              <label className="flex items-start gap-2 text-sm">
+              {!coursePdfSearch && <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" className="mt-1" checked={consent} disabled={busy}
                   onChange={(event) => setConsent(event.target.checked)} />
                 I agree to send this question, recent exchanges, and study context to the AI provider.
-              </label>
-              <button className={button} disabled={busy || !turns || !consent || !draft.trim()}>
-                {busy ? "Working…" : "Ask JARVIS"}
+              </label>}
+              <button className={button} disabled={busy || !turns || (!coursePdfSearch && !consent) || !draft.trim()}>
+                {busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Ask JARVIS"}
               </button>
             </form>
           </>
