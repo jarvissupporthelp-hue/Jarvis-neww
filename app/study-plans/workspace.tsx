@@ -22,7 +22,7 @@ type SavedPlan = {
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const field = "w-full rounded border border-[#789181] bg-white p-2";
 const card = "space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4 sm:p-5";
-const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
 
 function minutesAt(time: string) {
   const [hour, minute] = time.split(":").map(Number);
@@ -65,6 +65,7 @@ export function StudyPlanWorkspace() {
   const [needsSignIn, setNeedsSignIn] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [revision, setRevision] = useState(0);
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Yerevan", dateStyle: "short" }).format(new Date());
 
@@ -107,11 +108,21 @@ export function StudyPlanWorkspace() {
         setCourses(dashboard.courses);
         setPlans(saved);
       } catch {
-        if (!controller.signal.aborted) setError("Could not load your study plans. Reload to try again.");
+        if (!controller.signal.aborted) setError("Could not load your study plans.");
       }
     })();
     return () => controller.abort();
-  }, []);
+  }, [loadAttempt]);
+
+  useEffect(() => {
+    if (!showForm) document.getElementById("study-plan-preview-heading")?.focus();
+  }, [showForm]);
+
+  useEffect(() => {
+    if (courses && window.location.hash === "#saved-plans") {
+      document.getElementById("saved-plans")?.scrollIntoView();
+    }
+  }, [courses]);
 
   async function refreshPlans() {
     try {
@@ -190,7 +201,15 @@ export function StudyPlanWorkspace() {
   }
 
   if (needsSignIn) return <p>Sign in with an active student account. <Link className="underline" href="/account">Sign in</Link></p>;
-  if (!courses) return <p role="status">{error || "Loading your study plans…"}</p>;
+  if (!courses) return error ? (
+    <div className="space-y-2">
+      <p role="alert">{error}</p>
+      <button type="button" className={button} onClick={() => {
+        setError("");
+        setLoadAttempt((value) => value + 1);
+      }}>Retry loading study plans</button>
+    </div>
+  ) : <p role="status">Loading your study plans…</p>;
 
   return (
     <div className="space-y-4">
@@ -244,11 +263,11 @@ export function StudyPlanWorkspace() {
       )}
       {!showForm && draft && (
         <section className={card} aria-label="Draft preview">
-          <h2 className="text-xl font-semibold">Review your study plan</h2>
+          <h2 id="study-plan-preview-heading" tabIndex={-1} className="text-xl font-semibold">Review your study plan</h2>
           <PlanDetails plan={draft} />
           <div className="flex flex-wrap gap-3">
             <button type="button" className={button} disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Save draft"}</button>
-            <button type="button" className="underline" disabled={busy} onClick={() => { setShowForm(true); setError(""); }}>Edit inputs</button>
+            <button type="button" className="underline" disabled={busy} onClick={() => { setShowForm(true); setError(""); requestAnimationFrame(() => document.getElementById("study-plan-form-heading")?.focus()); }}>Edit inputs</button>
           </div>
         </section>
       )}
@@ -259,7 +278,7 @@ export function StudyPlanWorkspace() {
         {plans.length === 0 && <p>No study plans saved yet.</p>}
         {plans.map((plan) => (
           <details key={plan.id} className="rounded bg-[#eef3ee] p-3">
-            <summary className="cursor-pointer font-semibold">{plan.course_name} · {plan.exam_date}</summary>
+            <summary className="cursor-pointer break-words py-2 font-semibold">{plan.course_name} · {plan.exam_date}</summary>
             <div className="mt-2"><PlanDetails plan={{
               course: plan.course_name, examDate: plan.exam_date, target: plan.target_outcome,
               minutes: plan.session_minutes, start: plan.study_start, end: plan.study_end,

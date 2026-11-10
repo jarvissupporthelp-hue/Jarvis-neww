@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getAccessToken } from "@/lib/browser-supabase";
 import { RebalancePreview } from "./rebalance-preview";
 import { SessionCompletion } from "./session-completion";
@@ -16,11 +16,17 @@ type VisibleSchedule = Omit<StudySchedule, "sessions"> & {
 export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPlans }: {
   planId: string; hasSessions: boolean; practiceTopics?: string[]; refreshPlans: () => Promise<void>;
 }) {
+  const resultHeading = useRef<HTMLHeadingElement>(null);
+  const [completedNotice, setCompletedNotice] = useState("");
   const [schedule, setSchedule] = useState<VisibleSchedule | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [rebalanceSaved, setRebalanceSaved] = useState(false);
+
+  useEffect(() => {
+    if (schedule) resultHeading.current?.focus();
+  }, [schedule]);
 
   async function generate() {
     setBusy(true);
@@ -75,14 +81,15 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
   return (
     <section className="mt-3 space-y-2 border-t border-[#afbeb3] pt-3" aria-label="Schedule preview">
       <button type="button" disabled={busy} onClick={() => void generate()}
-        className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">
-        {busy ? "Working…" : hasSessions || confirmed ? "View study sessions" : "Generate schedule preview"}
+        className="min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">
+        {busy ? "Loading schedule…" : hasSessions || confirmed ? "View study sessions" : "Generate schedule preview"}
       </button>
       {error && <p role="alert">{error}</p>}
+      {completedNotice && <p role="status">{completedNotice}</p>}
       {rebalanceSaved && <p role="status">Rebalance saved to your calendar.</p>}
       {schedule && (
-        <div className="space-y-2" aria-live="polite">
-          <h3 className="font-semibold">{confirmed ? "Confirmed sessions" : "Proposed sessions"} · Yerevan time</h3>
+        <div className="space-y-2">
+          <h3 ref={resultHeading} tabIndex={-1} className="font-semibold">{confirmed ? "Confirmed sessions" : "Proposed sessions"} · Yerevan time</h3>
           {schedule.sessions.length ? (
             <ol className="list-decimal space-y-1 pl-5">{schedule.sessions.map((session) => (
               <li key={session.id ?? session.topicPosition ?? "review"} className="break-words">
@@ -93,6 +100,7 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
                 {confirmed && session.id && !session.completedAt && (
                   <SessionCompletion sessionId={session.id} topic={session.topicPosition === null ? null : session.title}
                     onCompleted={async () => {
+                      setCompletedNotice(`Completed: ${session.title}.`);
                       await generate();
                       await refreshPlans();
                     }} />
@@ -117,7 +125,7 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
               <p className="text-sm">Preview only. Sessions haven’t been saved to your calendar.</p>
               {schedule.sessions.length > 0 && (
                 <button type="button" disabled={busy} onClick={() => void confirm()}
-                  className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">Confirm schedule</button>
+                  className="min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">{busy ? "Confirming…" : "Confirm schedule"}</button>
               )}
             </>
           )}

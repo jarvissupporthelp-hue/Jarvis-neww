@@ -30,15 +30,15 @@ export function SessionCompletion({ sessionId, topic, onCompleted }: {
   return (
     <form onSubmit={complete} className="mt-2 flex flex-wrap items-end gap-2">
       {topic && (
-        <label className="text-sm">Confidence after {topic}
+        <label className="min-w-0 break-words text-sm">Confidence after {topic}
           <select name="confidence" defaultValue="" disabled={busy}
-            className="block rounded border border-[#789181] bg-white p-1.5">
+            className="block min-h-11 max-w-full rounded border border-[#789181] bg-white p-1.5">
             <option value="">Skip rating</option>
             {[1, 2, 3, 4, 5].map((value) => <option key={value} value={value}>{value}/5</option>)}
           </select>
         </label>
       )}
-      <button type="submit" disabled={busy} className="rounded bg-[#1e3328] px-3 py-1.5 text-sm text-white disabled:opacity-50">
+      <button type="submit" disabled={busy} aria-label={topic ? `Mark complete: ${topic}` : "Mark complete: Mixed review"} className="min-h-11 rounded bg-[#1e3328] px-3 py-1.5 text-sm text-white disabled:opacity-50">
         {busy ? "Saving…" : "Mark complete"}
       </button>
       {error && <p role="alert" className="w-full text-sm">{error}</p>}
