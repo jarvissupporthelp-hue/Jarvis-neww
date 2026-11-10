@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { StudyContextSummary } from "./study-context-summary";
 import { useEffect, useState, type FormEvent } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
 import { MAX_STUDY_PROMPT } from "@/lib/study-chat-limits";
@@ -155,6 +156,7 @@ export function StudyAssistant() {
         </ul>
       </aside>
       <section aria-label="Study conversation" className="min-w-0 space-y-4 rounded-xl border border-[#afbeb3] bg-white p-4">
+        <StudyContextSummary />
         {error && <p role="alert">{error}</p>}
         {selected ? (
           <>
@@ -179,7 +181,7 @@ export function StudyAssistant() {
               </ol>
             )}
             <form className="space-y-3" onSubmit={ask}>
-              <p className="text-sm">Your question and up to four recent exchanges in this conversation are sent through Vercel AI Gateway to an external model provider. Leave out personal or confidential information.</p>
+              <p className="text-sm">AI requests send your question, up to four recent exchanges, and the study context shown above through Vercel AI Gateway to an external model provider. Personal event titles and task titles are excluded. Leave out confidential information.</p>
               <label className="block">Study question
                 <textarea className={field} rows={4} maxLength={MAX_STUDY_PROMPT} required disabled={busy}
                   value={draft} onChange={(event) => setDrafts({ ...drafts, [selected.id]: event.target.value })} />
@@ -187,7 +189,7 @@ export function StudyAssistant() {
               <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" className="mt-1" checked={consent} disabled={busy}
                   onChange={(event) => setConsent(event.target.checked)} />
-                I agree to send this question and recent exchanges to the AI provider.
+                I agree to send this question, recent exchanges, and study context to the AI provider.
               </label>
               <button className={button} disabled={busy || !turns || !consent || !draft.trim()}>
                 {busy ? "Working…" : "Ask JARVIS"}
