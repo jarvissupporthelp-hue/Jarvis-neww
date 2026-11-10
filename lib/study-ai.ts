@@ -1,6 +1,6 @@
 const model = "google/gemini-2.5-flash-lite";
 
-export async function askStudyAI(prompt: string, credential: string): Promise<string | null> {
+export async function askStudyAI(prompt: string, credential: string, history: { prompt: string; answer: string }[] = []): Promise<string | null> {
   try {
     const response = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
       method: "POST",
@@ -12,6 +12,10 @@ export async function askStudyAI(prompt: string, credential: string): Promise<st
         max_tokens: 400,
         messages: [
           { role: "system", content: "You are JARVIS, a university study tutor. Explain concepts clearly in the student's language. Be concise and acknowledge uncertainty. You do not have access to the student's university records, files, grades, or calendar. Never invent them." },
+          ...history.flatMap((turn) => [
+            { role: "user", content: turn.prompt },
+            { role: "assistant", content: turn.answer.slice(0, 2_000) },
+          ]),
           { role: "user", content: prompt },
         ],
       }),

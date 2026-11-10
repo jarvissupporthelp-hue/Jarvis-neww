@@ -1,7 +1,6 @@
 "use client";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { StudyAssistant } from "./study-assistant";
+import { getClient, getAccessToken } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
@@ -11,20 +10,6 @@ import { useEffect, useState, type FormEvent } from "react";
 type Flow = "signin" | "forgot" | "invite" | "recovery";
 type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
-
-let client: SupabaseClient | undefined;
-
-function getClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("Authentication is not configured.");
-  return client ??= createClient(url, key);
-}
-
-async function getAccessToken() {
-  const { data } = await getClient().auth.getSession();
-  return data.session?.access_token;
-}
 
 async function currentRole(token: string): Promise<Role | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
@@ -194,10 +179,7 @@ export function AccountForm() {
             <>
               {role === "student" && <StudentDashboard getToken={getAccessToken} />}
               <div id="student-timetable"><Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} /></div>
-              {role === "student" && <>
-                <PersonalTasks client={getClient()} />
-                <StudyAssistant getToken={getAccessToken} />
-              </>}
+              {role === "student" && <PersonalTasks client={getClient()} />}
             </>
           )}
           <button type="button" className="underline" onClick={async () => {
