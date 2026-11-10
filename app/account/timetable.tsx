@@ -9,6 +9,8 @@ type Lesson = {
   offering_id: string; lecturer_id: string; course: string; student_group: string; lecturer: string;
 };
 
+type ConfirmedSession = { id: string; title: string; session_date: string; starts_at: string; ends_at: string };
+
 type AdminOptions = {
   offerings: { id: string; label: string }[];
   users: { id: string; display_name: string; role: string; status: string }[];
@@ -35,6 +37,7 @@ export function Timetable({ getToken, admin, personal }: {
 }) {
   const [week, setWeek] = useState(yerevanWeek);
   const [lessons, setLessons] = useState<Lesson[] | null>(null);
+  const [studySessions, setStudySessions] = useState<ConfirmedSession[]>([]);
   const [events, setEvents] = useState<PersonalEvent[]>([]);
   const [eventId, setEventId] = useState("");
   const [selected, setSelected] = useState("");
@@ -55,17 +58,17 @@ export function Timetable({ getToken, admin, personal }: {
         const official = await response.json();
         setLessons(official);
         if (personal) {
-          const result = await personal.from("personal_events")
-            .select("id,title,event_date,starts_at,ends_at")
-            .gte("event_date", week).lt("event_date", shiftDate(week, 7))
-            .abortSignal(controller.signal);
+          const until = shiftDate(week, 7);
+          const [eventsResult, sessionsResult] = await Promise.all([
+            personal.from("personal_events").select("id,title,event_date,starts_at,ends_at")
+              .gte("event_date", week).lt("event_date", until).abortSignal(controller.signal),
+            personal.from("study_sessions").select("id,title,session_date,starts_at,ends_at")
+              .gte("session_date", week).lt("session_date", until).abortSignal(controller.signal),
+          ]);
           if (controller.signal.aborted) return;
-          if (result.error) {
-            setEvents([]);
-            setMessage("Could not load personal events.");
-          } else {
-            setEvents(result.data);
-          }
+          setEvents(eventsResult.data ?? []);
+          setStudySessions(sessionsResult.data ?? []);
+          if (eventsResult.error || sessionsResult.error) setMessage("Could not load all personal calendar entries.");
         }
       } catch {
         if (!controller.signal.aborted) setMessage("Could not load the timetable.");
@@ -75,7 +78,7 @@ export function Timetable({ getToken, admin, personal }: {
   }, [getToken, week, revision, personal]);
 
   function changeWeek(date: string) {
-    setWeek(date); setLessons(null); setEvents([]); setEventId(""); setSelected(""); setOffering(""); setMessage("");
+    setWeek(date); setLessons(null); setEvents([]); setStudySessions([]); setEventId(""); setSelected(""); setOffering(""); setMessage("");
   }
 
   async function mutate(action: "save" | "remove", data: object) {
@@ -106,6 +109,7 @@ export function Timetable({ getToken, admin, personal }: {
 
   const entries = [
     ...(lessons ?? []).map((item) => ({ source: "official" as const, date: item.lesson_date, item })),
+    ...studySessions.map((item) => ({ source: "study" as const, date: item.session_date, item })),
     ...events.map((item) => ({ source: "personal" as const, date: item.event_date, item })),
   ].sort((a, b) => a.date.localeCompare(b.date) || a.item.starts_at.localeCompare(b.item.starts_at));
   const lesson = lessons?.find((item) => item.id === selected);
@@ -126,7 +130,7 @@ export function Timetable({ getToken, admin, personal }: {
       <ul className="space-y-2">
         {entries.map((entry) => (
           <li key={entry.source + entry.item.id} className="rounded bg-white p-3">
-            <p className="text-xs font-semibold uppercase">{entry.source === "official" ? "Official class" : "Personal event"}</p>
+            <p className="text-xs font-semibold uppercase">{entry.source === "official" ? "Official class" : entry.source === "study" ? "Study session" : "Personal event"}</p>
             <strong className="break-words">{entry.source === "official" ? entry.item.course : entry.item.title}</strong>
             <p>{entry.date} · {entry.item.starts_at.slice(0, 5)}–{entry.item.ends_at.slice(0, 5)}</p>
             {entry.source === "official" ? (
@@ -136,7 +140,7 @@ export function Timetable({ getToken, admin, personal }: {
                   setSelected(entry.item.id); setOffering(entry.item.offering_id); setMessage("");
                 }}>Edit lesson</button>}
               </>
-            ) : <button type="button" className="underline" onClick={() => setEventId(entry.item.id)}>Edit event</button>}
+            ) : entry.source === "personal" && <button type="button" className="underline" onClick={() => setEventId(entry.item.id)}>Edit event</button>}
           </li>
         ))}
       </ul>

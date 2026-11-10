@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { getAccessToken } from "@/lib/browser-supabase";
 import type { StudySchedule } from "@/lib/study-scheduler";
 
 export function SchedulePreview({ planId }: { planId: string }) {
   const [schedule, setSchedule] = useState<StudySchedule | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,8 +26,35 @@ export function SchedulePreview({ planId }: { planId: string }) {
         return;
       }
       setSchedule(result);
+      setConfirmed(result.confirmed === true);
     } catch {
       setError("Could not generate the schedule. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirm() {
+    if (!schedule?.sessions.length || busy || confirmed) return;
+    setBusy(true);
+    setError("");
+    try {
+      const token = await getAccessToken();
+      const response = await fetch(`/api/study-plans/${planId}/schedule`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmed: true, sessions: schedule.sessions }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) setSchedule(null);
+        setError(result.error || "Could not confirm the schedule.");
+        return;
+      }
+      // Reload the stored sessions, including when this request was a retry.
+      await generate();
+    } catch {
+      setError("Could not confirm the schedule. Try again shortly.");
     } finally {
       setBusy(false);
     }
@@ -35,12 +64,12 @@ export function SchedulePreview({ planId }: { planId: string }) {
     <section className="mt-3 space-y-2 border-t border-[#afbeb3] pt-3" aria-label="Schedule preview">
       <button type="button" disabled={busy} onClick={() => void generate()}
         className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">
-        {busy ? "Finding study time…" : "Generate schedule preview"}
+        {busy ? "Working…" : "Generate schedule preview"}
       </button>
       {error && <p role="alert">{error}</p>}
       {schedule && (
         <div className="space-y-2" aria-live="polite">
-          <h3 className="font-semibold">Proposed sessions · Yerevan time</h3>
+          <h3 className="font-semibold">{confirmed ? "Confirmed sessions" : "Proposed sessions"} · Yerevan time</h3>
           {schedule.sessions.length ? (
             <ol className="list-decimal space-y-1 pl-5">{schedule.sessions.map((session) => (
               <li key={session.topicPosition ?? "review"} className="break-words">
@@ -52,7 +81,17 @@ export function SchedulePreview({ planId }: { planId: string }) {
             <p><strong>Topics that didn’t fit:</strong> {schedule.unscheduled.map((topic) => topic.name).join(", ")}.
               {" "}Try widening your availability or shortening sessions.</p>
           )}
-          <p className="text-sm">Preview only. Sessions haven’t been saved to your calendar.</p>
+          {confirmed ? (
+            <p className="text-sm">Saved to your calendar. <Link href="/account#student-timetable" className="underline">Open calendar</Link></p>
+          ) : (
+            <>
+              <p className="text-sm">Preview only. Sessions haven’t been saved to your calendar.</p>
+              {schedule.sessions.length > 0 && (
+                <button type="button" disabled={busy} onClick={() => void confirm()}
+                  className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">Confirm schedule</button>
+              )}
+            </>
+          )}
         </div>
       )}
     </section>

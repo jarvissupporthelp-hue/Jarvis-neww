@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { studyPlanHandoffKey, type StudyPlanHandoff } from "@/lib/study-plan-handoff";
 import { SchedulePreview } from "./schedule-preview";
 import { useEffect, useState, type FormEvent } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
@@ -54,6 +55,7 @@ export function StudyPlanWorkspace() {
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [plans, setPlans] = useState<SavedPlan[]>([]);
   const [topics, setTopics] = useState<Topic[]>([{ name: "", confidence: 3 }]);
+  const [prefill, setPrefill] = useState<StudyPlanHandoff | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [showForm, setShowForm] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -79,6 +81,17 @@ export function StudyPlanWorkspace() {
         if (!response.ok) throw new Error();
         const [dashboard, saved] = await Promise.all([response.json(), readPlans(controller.signal)]);
         if (controller.signal.aborted) return;
+        try {
+          const handoff = sessionStorage.getItem(studyPlanHandoffKey);
+          if (handoff) {
+            const suggested: StudyPlanHandoff = JSON.parse(handoff);
+            sessionStorage.removeItem(studyPlanHandoffKey);
+            setPrefill(suggested);
+            setTopics([{ name: suggested.topic, confidence: 3 }]);
+          }
+        } catch {
+          // The standard form still works when browser storage is unavailable.
+        }
         setCourses(dashboard.courses);
         setPlans(saved);
       } catch {
@@ -120,6 +133,7 @@ export function StudyPlanWorkspace() {
       if (error) throw error;
       saved = true;
       setDraft(null);
+      setPrefill(null);
       setTopics([{ name: "", confidence: 3 }]);
       setRevision((value) => value + 1);
       setShowForm(true);
@@ -142,14 +156,14 @@ export function StudyPlanWorkspace() {
         <form key={revision} hidden={!showForm} className={card} onSubmit={preview}>
           <h2 className="text-xl font-semibold">New study plan</h2>
           <label className="block">Course
-            <select name="course" defaultValue="" required className={field}>
+            <select name="course" defaultValue={prefill && courses.length === 1 ? courses[0].id : ""} required className={field}>
               <option value="" disabled>Choose an enrolled course</option>
               {courses.map((course) => <option key={course.id} value={course.id}>{course.name} · {course.semester}</option>)}
             </select>
           </label>
-          <label className="block">Exam date<input className={field} name="examDate" type="date" min={today} required /></label>
+          <label className="block">Exam date<input className={field} name="examDate" type="date" min={today} defaultValue={prefill?.examDate} required /></label>
           <label className="block">Target outcome<input className={field} name="target" maxLength={240} required /></label>
-          <label className="block">Session duration in minutes<input className={field} name="minutes" type="number" min={15} max={180} defaultValue={45} required /></label>
+          <label className="block">Session duration in minutes<input className={field} name="minutes" type="number" min={15} max={180} defaultValue={prefill?.minutes ?? 45} required /></label>
           <fieldset className="grid gap-2 sm:grid-cols-2">
             <legend className="font-semibold">Daily study window (Yerevan time)</legend>
             <label className="block">Available from<input className={field} name="start" type="time" defaultValue="17:00" required /></label>
