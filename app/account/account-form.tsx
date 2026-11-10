@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { getClient, getAccessToken } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
@@ -175,6 +176,7 @@ export function AccountForm() {
               <button className={buttonClass} disabled={busy}>Send or resend invitation</button>
             </form>
           )}
+          {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}
           {role === "admin" ? <AdminWorkspace getToken={getAccessToken} /> : (
             <>
               {role === "student" && <StudentDashboard getToken={getAccessToken} />}
