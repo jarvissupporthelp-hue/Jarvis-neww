@@ -20,7 +20,9 @@ export async function POST(request: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const token = request.headers.get("authorization");
-  const credential = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+  // Vercel Functions receive a fresh platform token on the request.
+  const runtimeToken = process.env.VERCEL === "1" ? request.headers.get("x-vercel-oidc-token") : null;
+  const credential = process.env.AI_GATEWAY_API_KEY || runtimeToken || process.env.VERCEL_OIDC_TOKEN;
   if (!url || !key || !token || !credential) {
     return reply({ error: "The study assistant is unavailable. Your draft is still here." }, 503);
   }
