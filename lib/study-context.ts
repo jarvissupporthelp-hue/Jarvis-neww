@@ -12,6 +12,13 @@ export type StudyContext = {
   taskDueDates: { date: string; count: number }[];
   officialDeadlinesAvailable: boolean;
   officialExamDatesAvailable: boolean;
+  professorProfiles?: {
+    course: string;
+    teachingStyle: string;
+    explanationPreferences: string;
+    assessmentStyle: string;
+    courseRules: string;
+  }[];
 };
 
 export function createStudyClient(authorization: string) {
