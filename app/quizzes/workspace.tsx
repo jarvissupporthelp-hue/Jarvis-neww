@@ -11,7 +11,7 @@ type Quiz = { id: string; name: string; semester: string; questions: NonNullable
 type Result = NonNullable<ReturnType<typeof gradeQuiz>>;
 
 const card = "space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4";
-const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 export function QuizWorkspace() {
   const router = useRouter();

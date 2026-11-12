@@ -14,7 +14,7 @@ type Snapshot = {
 };
 type Action = "read" | "start" | "pause" | "resume" | "reset";
 const card = "space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4 sm:p-5";
-const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 const field = "block w-full rounded border border-[#789181] bg-white p-2";
 const historyDate = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Yerevan",

@@ -7,27 +7,35 @@ import { getClient, getAccessToken } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
-import { AdminWorkspace } from "./admin-workspace";
+import { AdminWorkspace, type AdminSection } from "./admin-workspace";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 type Flow = "signin" | "forgot" | "invite" | "recovery";
 type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
 
-async function currentRole(token: string): Promise<Role | null> {
+async function currentIdentity(token: string): Promise<{ role: Role; displayName: string } | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
   if (response.status === 401 || response.status === 403) return null;
   if (!response.ok) throw new Error("Membership check unavailable");
-  return (await response.json()).role;
+  const identity = await response.json();
+  return { role: identity.role, displayName: identity.displayName };
 }
 
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
 const buttonClass = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
 
-export function AccountForm({ locale }: { locale: Locale }) {
+export type AccountView = "dashboard" | "calendar" | "tasks";
+
+export function AccountForm({ locale = "en", view = "dashboard", adminSection }: {
+  locale?: Locale;
+  view?: AccountView;
+  adminSection?: AdminSection;
+}) {
   const copy = accountCopy[locale];
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
+  const [displayName, setDisplayName] = useState("");
   const [groups, setGroups] = useState<Group[]>([]);
   const [inviteRole, setInviteRole] = useState("student");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
@@ -62,7 +70,9 @@ export function AccountForm({ locale }: { locale: Locale }) {
             : copy.invalidRecovery);
           window.history.replaceState(null, "", `/account?lang=${locale}`);
         } else if (data.session) {
-          setRole(await currentRole(data.session.access_token));
+          const identity = await currentIdentity(data.session.access_token);
+          setRole(identity?.role ?? null);
+          setDisplayName(identity?.displayName ?? "");
         }
       } catch {
         if (mounted) setError(copy.unavailable);
@@ -131,7 +141,7 @@ export function AccountForm({ locale }: { locale: Locale }) {
           : copy.invalid);
         return;
       }
-      const verified = await currentRole(data.session.access_token);
+      const verified = await currentIdentity(data.session.access_token);
       if (!verified) {
         await supabase.auth.signOut({ scope: "local" });
         setError(copy.inactive);
@@ -180,7 +190,7 @@ export function AccountForm({ locale }: { locale: Locale }) {
     <div className="space-y-4">
       {role ? (
         <>
-          <p ref={accountStatus} tabIndex={-1}>Signed in as <strong>{role}</strong>.</p>
+          <p ref={accountStatus} tabIndex={-1}>Signed in as <strong>{displayName}</strong> ({role}).</p>
           {role === "admin" && (
             <form onSubmit={invite} className="space-y-3">
               <h2 className="text-xl font-semibold">Approve and invite</h2>
@@ -202,17 +212,29 @@ export function AccountForm({ locale }: { locale: Locale }) {
             </form>
           )}
           {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}
-          {role === "admin" ? <AdminWorkspace getToken={getAccessToken} /> : (
-            <>
-              {role === "student" && <StudentDashboard getToken={getAccessToken} />}
-              <div id="student-timetable"><Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} /></div>
-              {role === "student" && <PersonalTasks client={getClient()} />}
-            </>
+          {role === "admin" ? <div className="jarvis-view-enter" key={adminSection ?? "admin-overview"}>
+            <AdminWorkspace getToken={getAccessToken} section={adminSection ?? "users"} />
+          </div> : (
+            <div key={view} className="jarvis-view-enter">
+              {role === "student" && view === "dashboard" && <StudentDashboard getToken={getAccessToken} />}
+              {view === "calendar" && <div id="student-timetable"><Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} /></div>}
+              {role === "student" && view === "tasks" && <PersonalTasks client={getClient()} />}
+              {role === "lecturer" && view === "dashboard" && (
+                <div className="jarvis-empty-state">
+                  <strong>Your teaching workspace</strong>
+                  <p>Open your timetable or manage courses and assignments.</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Link href="/account/calendar" className="jarvis-secondary-button">View timetable</Link>
+                    <Link href="/lecturer" className="jarvis-secondary-button">Manage courses</Link>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setError("Could not sign out. Try again.");
-            else { setRole(null); setMessage(""); }
+            else { setRole(null); setDisplayName(""); setMessage(""); }
           }}>Sign out</button>
         </>
       ) : (

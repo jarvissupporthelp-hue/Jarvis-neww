@@ -73,7 +73,7 @@ export function RebalancePreview({ planId, practiceTopics, onApplied }: {
           ) : <p>{preview.moves.length ? "Your current schedule already fits." : "No unfinished sessions are eligible to move."}</p>}
           {canApply && (
             <button type="button" disabled={busy} onClick={() => void submit(true)}
-              className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">Apply rebalance</button>
+              className="rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">Apply rebalance</button>
           )}
         </div>
       )}

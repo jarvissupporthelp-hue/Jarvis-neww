@@ -22,7 +22,7 @@ type SavedPlan = {
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const field = "w-full rounded border border-[#789181] bg-white p-2";
 const card = "space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4 sm:p-5";
-const button = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 function minutesAt(time: string) {
   const [hour, minute] = time.split(":").map(Number);
@@ -277,7 +277,7 @@ export function StudyPlanWorkspace() {
         <h2 className="text-xl font-semibold">Saved study plans</h2>
         {plans.length === 0 && <p>No study plans saved yet.</p>}
         {plans.map((plan) => (
-          <details key={plan.id} className="rounded bg-[#eef3ee] p-3">
+          <details key={plan.id} className="rounded jarvis-muted-panel p-3">
             <summary className="cursor-pointer break-words py-2 font-semibold">{plan.course_name} · {plan.exam_date}</summary>
             <div className="mt-2"><PlanDetails plan={{
               course: plan.course_name, examDate: plan.exam_date, target: plan.target_outcome,
