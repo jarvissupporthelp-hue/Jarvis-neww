@@ -5,6 +5,7 @@ import { CodeTrace } from "./code-trace";
 import { useState, type FormEvent } from "react";
 import { buildExamPlan, type Slot } from "./planner";
 import { reviewFlashcard } from "./practice";
+import { courseResources } from "./resources";
 import { learningCourses } from "./seed";
 import { button, field, useLearningData } from "./storage";
 import { CoursePicker, Pomodoro } from "./study-tools";
@@ -15,7 +16,7 @@ const pages = [
 ];
 type Course = (typeof learningCourses)[number];
 type Exam = { id: string; title: string; course: string; start: number };
-type Material = { id: string; title: string; type: string; content: string; tags: string[]; fileName?: string };
+type Material = { id: string; title: string; type: string; content: string; tags: string[]; fileName?: string; description?: string };
 
 function Smart() {
   return <span className="rounded-full bg-[#eee2fa] px-2 py-1 text-xs font-semibold text-[#653695]">Smart</span>;
@@ -25,6 +26,7 @@ function Materials({ course }: { course: Course }) {
   const [items, setItems] = useLearningData<Material[]>(`materials:${course.code}`, [
     { id: "seed", title: course.material, type: "note", content: course.questions.map((question) => question.why).join("\n"), tags: ["revision"] },
   ]);
+  const [showForm, setShowForm] = useState(false);
   const [kind, setKind] = useState("note");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
@@ -58,17 +60,28 @@ function Materials({ course }: { course: Course }) {
       const tags = String(data.get("tags") ?? "").split(",").map((value) => value.trim()).filter(Boolean);
       setItems([...items, { id: crypto.randomUUID(), title, type: kind, content, tags, fileName }]);
       form.reset();
+      setShowForm(false);
     } catch (error) {
       setMessage(error instanceof Error && ["Choose a file up to 1 MB.", "Use an HTTP or HTTPS link.", "Add material content."].includes(error.message)
         ? error.message : "Could not save. Check the link or available browser storage.");
     } finally { setBusy(false); }
   }
-  const tags = [...new Set(items.flatMap((item) => item.tags))].sort();
-  const found = items.filter((item) => (filter === "all" || item.type === filter)
+  const materials: Material[] = [...(courseResources[course.code] ?? []), ...items];
+  const tags = [...new Set(materials.flatMap((item) => item.tags))].sort();
+  const found = materials.filter((item) => (filter === "all" || item.type === filter)
     && (tag === "all" || item.tags.includes(tag))
-    && [item.title, item.type === "note" ? item.content : "", ...item.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
+    && [item.title, item.description ?? "", item.type === "note" ? item.content : "", ...item.tags].join(" ").toLowerCase().includes(query.toLowerCase()));
   return <div className="space-y-5">
-    <form className="grid gap-3 sm:grid-cols-2" onSubmit={add}>
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h3 className="text-lg font-semibold">Course materials</h3>
+        <p className="text-sm text-slate-600">Study resources and your saved materials.</p>
+      </div>
+      <button type="button" className={button} aria-expanded={showForm} aria-controls={showForm ? "add-learning-material" : undefined} onClick={() => setShowForm(!showForm)}>
+        {showForm ? "Close form" : "Add material"}
+      </button>
+    </div>
+    {showForm && <form id="add-learning-material" className="grid gap-3 rounded-xl border bg-slate-50 p-4 sm:grid-cols-2" onSubmit={add}>
       <label>Title <input className={`block w-full ${field}`} name="title" required maxLength={100} /></label>
       <label>Type <select className={`block w-full ${field}`} value={kind} onChange={(event) => setKind(event.target.value)}>
         <option value="note">Note</option><option value="link">Link</option><option value="file">File</option>
@@ -78,9 +91,9 @@ function Materials({ course }: { course: Course }) {
       <label>Tags (comma-separated) <input className={`block w-full ${field}`} name="tags" maxLength={250} /></label>
       <button className={`w-fit ${button}`} disabled={busy}>Add material</button>
       {message && <p role="alert">{message}</p>}
-    </form>
+    </form>}
     <div className="flex flex-wrap gap-3">
-      <label>Search <input className={field} type="search" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+      <label>Search <input className={field} type="search" placeholder="Find a resource or topic" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
       <label>Type <select className={field} value={filter} onChange={(event) => setFilter(event.target.value)}>
         <option value="all">All</option><option value="note">Note</option><option value="link">Link</option><option value="file">File</option>
       </select></label>
@@ -88,12 +101,16 @@ function Materials({ course }: { course: Course }) {
         <option value="all">All tags</option>{tags.map((item) => <option key={item}>{item}</option>)}
       </select></label>
     </div>
-    {found.length ? <ul className="space-y-2">{found.map((item) => <li key={item.id} className="rounded border p-3">
-      <strong>{item.title}</strong><p className="text-sm">{item.tags.join(" · ")}</p>
+    <p className="text-sm text-slate-600" aria-live="polite">{found.length} {found.length === 1 ? "material" : "materials"}</p>
+    {found.length ? <ul className="grid gap-3 lg:grid-cols-2">{found.map((item) => <li key={item.id} className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
+      <p className="mb-1 text-xs font-medium text-slate-600">{item.description ? "Recommended resource" : item.type === "note" ? "Note" : item.type === "file" ? "File" : "Link"}</p>
+      <h4 className="font-semibold text-slate-900">{item.title}</h4>
+      {item.description && <p className="mt-1 text-sm text-slate-700">{item.description}</p>}
+      <div className="my-2 flex flex-wrap gap-1.5">{item.tags.map((label, index) => <span key={index} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{label}</span>)}</div>
       {item.type === "note" ? <p className="whitespace-pre-wrap break-words">{item.content}</p>
-        : item.type === "link" ? <a className="underline" href={item.content} target="_blank" rel="noreferrer">Open link</a>
+        : item.type === "link" ? <a className="inline-block font-medium text-blue-700 underline underline-offset-4" href={item.content} target="_blank" rel="noreferrer" aria-label={`Open ${item.title} (new tab)`}>Open resource ↗</a>
           : <a className="underline" href={item.content} download={item.fileName}>Download {item.fileName}</a>}
-    </li>)}</ul> : <p>No matching materials.</p>}
+    </li>)}</ul> : <p className="rounded-xl border border-dashed p-4 text-sm text-slate-600">No materials match. Try a different search or clear the filters.</p>}
   </div>;
 }
 
