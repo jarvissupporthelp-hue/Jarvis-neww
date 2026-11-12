@@ -27,7 +27,7 @@ export function StudyContextSummary() {
   }, []);
 
   return (
-    <details className="rounded bg-[#eef3ee] p-3 text-sm">
+    <details className="rounded jarvis-muted-panel p-3 text-sm">
       <summary className="cursor-pointer font-semibold">My study context</summary>
       {failed && <p>Could not load the context preview.</p>}
       {!context && !failed && <p>Loading study context…</p>}
