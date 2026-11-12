@@ -6,6 +6,7 @@ import { getAccessToken } from "@/lib/browser-supabase";
 import type { CourseAssignment } from "@/lib/course-assignments";
 import { CourseResources } from "../resources/workspace";
 import { Timetable } from "../account/timetable";
+import { LecturerPrivateVault } from "./private-vault";
 
 type Offering = {
   id: string;
@@ -108,8 +109,8 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
       <h1 className="text-3xl font-semibold">{offering.course.name}</h1>
       <p>{offering.course.code} · {offering.group.name} · {offering.semester.name}</p>
       <form className={card} onSubmit={saveProfile}>
-        <h2 className="text-xl font-semibold">JARVIS teaching profile</h2>
-        <p>Set the professor identity and course expectations JARVIS should use when a student asks for exam or project preparation.</p>
+        <h2 className="text-xl font-semibold">Student-visible teaching profile</h2>
+        <p>Everything here is visible to enrolled students and may be used in their JARVIS answers. Put confidential drafts in Private lecturer materials below.</p>
         <label className="block">Professor name<input className={field} maxLength={160} value={profile.professor_name} onChange={(event) => setProfile({ ...profile, professor_name: event.target.value })} placeholder="Name as students will ask for it" /></label>
         <label className="block">Course plan and exam or project requirements<textarea className={field} rows={5} maxLength={5000} value={profile.course_plan} onChange={(event) => setProfile({ ...profile, course_plan: event.target.value })} placeholder="Topics, assessment format, deliverables, evaluation criteria, and preparation strategy from approved course materials." /></label>
         <label className="block">Teaching approach<textarea className={field} rows={3} maxLength={2000} value={profile.teaching_style} onChange={(event) => setProfile({ ...profile, teaching_style: event.target.value })} placeholder="For example: start with intuition, then define terms and derive the formula." /></label>
@@ -119,6 +120,7 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
         <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={profileBusy}>{profileBusy ? "Saving…" : "Save teaching profile"}</button>
         {profileError && <p role="alert">{profileError}</p>}{profileMessage && <p role="status">{profileMessage}</p>}
       </form>
+      <LecturerPrivateVault offeringId={offering.id} />
       <form className={card} onSubmit={publish}>
         <h2 className="text-xl font-semibold">Publish an assignment</h2>
         <p>Enrolled students in {offering.group.name} can read the brief and see the deadline on their dashboard and calendar.</p>
