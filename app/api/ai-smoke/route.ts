@@ -19,11 +19,12 @@ async function check(provider: Provider) {
   if (!provider.endpoint || !provider.key?.trim()) {
     return { name: provider.name, model: provider.model, ok: false, status: 0, error: "Not configured" };
   }
+  const key = key;
   const started = Date.now();
   try {
     if (provider.name === "NVIDIA") {
       const catalog = await fetch("https://integrate.api.nvidia.com/v1/models", {
-        headers: { Authorization: `Bearer ${provider.key.trim()}` },
+        headers: { Authorization: `Bearer ${key}` },
         cache: "no-store",
         signal: AbortSignal.timeout(10_000),
       });
@@ -39,7 +40,7 @@ async function check(provider: Provider) {
     }
     const response = await fetch(provider.endpoint, {
       method: "POST",
-      headers: { Authorization: `Bearer ${provider.key.trim()}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       cache: "no-store",
       signal: AbortSignal.timeout(20_000),
       body: JSON.stringify({
