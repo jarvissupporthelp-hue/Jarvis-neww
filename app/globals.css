@@ -226,3 +226,54 @@ html[data-theme="light"] .jarvis-app [role="alert"] { color: #9a1c35; background
 @media (prefers-reduced-motion: reduce) {
   *, *:before, *:after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }
+
+
+/* UX refinement: accessible navigation and consistent workspace surfaces. */
+.jarvis-skip-link { position: fixed; z-index: 100; top: -80px; left: 18px; padding: 10px 16px; border-radius: 10px; background: var(--panel); color: var(--text); font-weight: 700; border: 2px solid var(--violet); }
+.jarvis-skip-link:focus { top: 12px; }
+#jarvis-main-content { scroll-margin-top: 82px; }
+#jarvis-main-content:focus { outline: none; }
+.jarvis-app :is(#student-timetable,#student-tasks,#student-courses,#admin-workspace) { scroll-margin-top: 91px; }
+.jarvis-muted { color: var(--muted) !important; font-size: 13px; }
+.jarvis-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
+.jarvis-section-heading h2 { color: var(--text); font-weight: 750; letter-spacing: -.04em; }
+.jarvis-section-heading p { color: var(--muted); font-size: 13px; margin-top: 5px; }
+.jarvis-secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 39px; padding: 8px 13px; border-radius: 10px; border: 1px solid var(--stroke); background: var(--panel-raised); color: var(--text); font-size: 13px; font-weight: 650; text-decoration: none; }
+.jarvis-secondary-button:hover { background: var(--highlight); }
+.jarvis-admin-tabs .jarvis-admin-tab[aria-pressed="true"] { color: #fff; background: linear-gradient(105deg,#7650ef,#427af0); box-shadow: 0 5px 14px -10px #704cef; }
+.jarvis-admin-hero { position: relative; overflow: hidden; }
+.jarvis-admin-hero::after { content: ""; position: absolute; width: 220px; height: 220px; right: -125px; top: -110px; border: 1px solid #e2dfff38; border-radius: 50%; pointer-events:none; }
+.jarvis-directory { display: grid; grid-template-columns: minmax(220px, 0.87fr) minmax(0, 1.13fr); gap: 19px; margin-top: 16px; }
+.jarvis-directory-list { min-width: 0; border: 1px solid var(--stroke); border-radius: 14px; overflow: hidden; background: var(--panel-raised); }
+.jarvis-directory-filters { padding: 15px; border-bottom: 1px solid var(--stroke); }
+.jarvis-directory-filter-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.jarvis-directory-filter-row label { min-width: 0; font-size: 11px; }
+.jarvis-directory-filters input, .jarvis-directory-filters select { width: 100%; }
+.jarvis-directory-count { margin-top: 10px; font-size: 11px; color: var(--muted); }
+.jarvis-directory-results { display: grid; gap: 3px; padding: 7px; max-height: min(52vh, 540px); overflow-y: auto; }
+.jarvis-directory-person { display: flex; gap: 11px; align-items: center; min-width: 0; width: 100%; text-align: left; padding: 11px; border-radius: 10px; border: 1px solid transparent; background: transparent; color: var(--text); }
+.jarvis-directory-person:hover { background: var(--highlight); }
+.jarvis-directory-person[aria-pressed="true"] { background: var(--highlight); border-color: #8d6bff70; }
+.jarvis-person-avatar { flex-shrink: 0; display:grid; place-items:center; width: 35px; height: 35px; border-radius: 11px; color: #fdfaff; background: linear-gradient(145deg,#6544b8,#376bb0); font-size: 13px; font-weight: 750; }
+.jarvis-directory-person-text { display: block; min-width: 0; }
+.jarvis-directory-person-text strong { display: block; font-size: 12px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jarvis-directory-person-text small { display: block; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.jarvis-directory-person-text span { color: var(--subtle); font-size: 11px; text-transform: capitalize; }
+.jarvis-directory-detail { min-width: 0; padding: 20px; border: 1px solid var(--stroke); border-radius: 14px; background: var(--panel-raised); }
+.jarvis-directory-person-heading { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--stroke); padding-bottom: 18px; margin-bottom: 18px; }
+.jarvis-directory-person-heading h4 { color: var(--text); font-size: 18px; font-weight: 750; letter-spacing: -.03em; }
+.jarvis-directory-person-heading p { font-size: 12px; color: var(--muted); }
+.jarvis-person-avatar-lg { width: 48px; height: 48px; font-size: 17px; border-radius: 14px; }
+.jarvis-directory-detail form { background: var(--panel) !important; }
+.jarvis-empty-state { display: grid; justify-items: start; align-content: center; min-height: 112px; gap: 6px; padding: 18px; border: 1px dashed var(--stroke); border-radius: 13px; background: var(--panel-raised); color: var(--text); }
+.jarvis-empty-state strong { font-weight: 730; font-size: 14px; }
+.jarvis-empty-state p { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.jarvis-empty-state button { margin-top: 8px; }
+.jarvis-feedback { border-radius: 10px; background: var(--highlight); padding: 11px 13px; color: var(--text); border: 1px solid var(--stroke); }
+.jarvis-invite-form { border-left: 3px solid #8466ef !important; }
+.jarvis-signin-heading { text-align: center; margin-bottom: 20px; }
+.jarvis-signin-heading h2 { color: var(--text); font-size: 24px; font-weight: 780; letter-spacing: -.05em; margin-top: 10px; }
+.jarvis-signin-heading p { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 7px auto 0; }
+.jarvis-signin-mark { display:grid; place-items:center; margin:auto; width: 44px; height: 44px; border-radius: 13px; color:white; font-size: 24px; background: linear-gradient(135deg,#9751ee,#3479ec); }
+@media (max-width: 1080px) { .jarvis-directory { grid-template-columns: 1fr; } .jarvis-directory-results { max-height: 280px; } }
+@media (max-width: 520px) { .jarvis-admin-body { padding: 14px; } .jarvis-directory-detail { padding: 13px; } .jarvis-directory-filter-row { grid-template-columns: 1fr 1fr; } }

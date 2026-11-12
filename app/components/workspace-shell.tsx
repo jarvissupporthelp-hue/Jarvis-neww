@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
 import { getClient } from "@/lib/browser-supabase";
 
 type Role = "student" | "lecturer" | "admin";
@@ -81,6 +81,17 @@ function readTheme(): Theme {
   }
 }
 
+function subscribeHash(callback: () => void) {
+  window.addEventListener("hashchange", callback);
+  window.addEventListener("jarvis-section-changed", callback);
+  return () => {
+    window.removeEventListener("hashchange", callback);
+    window.removeEventListener("jarvis-section-changed", callback);
+  };
+}
+
+function readHash() { return window.location.hash; }
+
 function subscribeTheme(callback: () => void) {
   window.addEventListener("storage", callback);
   window.addEventListener("jarvis-theme-changed", callback);
@@ -94,6 +105,8 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState<Role | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const activeHash = useSyncExternalStore(subscribeHash, readHash, () => "");
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "dark");
 
   useEffect(() => {
@@ -135,6 +148,18 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     } catch { return () => { active = false; }; }
   }, []);
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDrawerOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [drawerOpen]);
+
   function changeTheme(next: Theme) {
     try { window.localStorage.setItem("jarvis-theme", next); } catch { /* Storage may be disabled. */ }
     window.dispatchEvent(new Event("jarvis-theme-changed"));
@@ -146,9 +171,10 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const roleName = role === "admin" ? "Administration" : role === "lecturer" ? "Lecturer workspace" : "Student workspace";
   return (
     <div className="jarvis-app">
+      <a className="jarvis-skip-link" href="#jarvis-main-content">Skip to main content</a>
       <header className="jarvis-topbar">
         <div className="jarvis-topbar-start">
-          {workspace && <button className="jarvis-mobile-menu" aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
+          {workspace && <button ref={menuButton} className="jarvis-mobile-menu" aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
             aria-expanded={drawerOpen} type="button" onClick={() => setDrawerOpen((value) => !value)}><Icon name={drawerOpen ? "close" : "menu"}/></button>}
           <Link href="/" className="jarvis-brand" aria-label="JARVIS home">
             <span className="jarvis-brand-symbol"><span>J</span></span>
@@ -173,8 +199,9 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               <div className="jarvis-sidebar-title">{roleName}</div>
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
-                  const current = item.href === "/account" ? pathname === "/account" && !windowHash(item.href) : pathname === item.href.split("#")[0] && !item.href.includes("#");
-                  return <Link key={item.href} href={item.href} className={"jarvis-side-link" + (current ? " is-active" : "")} onClick={() => setDrawerOpen(false)}>
+                  const [itemPath, itemHash] = item.href.split("#");
+                  const current = pathname === itemPath && (itemHash ? activeHash === "#" + itemHash : !activeHash || !activeHash.startsWith("#admin-"));
+                  return <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "")} onClick={() => setDrawerOpen(false)}>
                     <Icon name={item.icon}/><span>{item.label}</span>
                   </Link>;
                 })}
@@ -186,12 +213,9 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
             </div>
           </aside>
         </>}
-        <div className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>{children}</div>
+        <div id="jarvis-main-content" tabIndex={-1} className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>{children}</div>
       </div>
     </div>
   );
 }
 
-function windowHash(href: string) {
-  return href.includes("#");
-}

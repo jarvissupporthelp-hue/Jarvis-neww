@@ -180,8 +180,11 @@ export function AccountForm() {
             <span className="jarvis-admin-status">Connected to JARVIS</span>
           </div>
           {role === "admin" && (
-            <form onSubmit={invite} className="space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
-              <h2 className="text-xl font-semibold">Approve and invite</h2>
+            <form onSubmit={invite} className="jarvis-invite-form space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
+              <div className="jarvis-section-heading">
+                <div><span className="jarvis-eyebrow">ACCESS MANAGEMENT</span><h2 className="text-xl font-semibold">Invite a new member</h2>
+                <p>Only approved students and lecturers can activate an account.</p></div>
+              </div>
               <label className="block">Email<input className={inputClass} name="email" type="email" required /></label>
               <label className="block">Role
                 <select className={inputClass} value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
@@ -196,7 +199,7 @@ export function AccountForm() {
                   </select>
                 </label>
               )}
-              <button className={buttonClass} disabled={busy}>Send or resend invitation</button>
+              <button className={buttonClass} disabled={busy}>{busy ? "Sending invitation…" : "Send or resend invitation"}</button>
             </form>
           )}
           {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}
@@ -216,7 +219,11 @@ export function AccountForm() {
       ) : (
         <>
           {(!callback || linkReady) && (
-            <form key={flow} onSubmit={submit} className="space-y-3" aria-busy={busy}>
+            <form key={flow} onSubmit={submit} className="space-y-4" aria-busy={busy}>
+              <div className="jarvis-signin-heading"><div className="jarvis-signin-mark">✦</div>
+                <h2>{flow === "signin" ? "Welcome back" : flow === "forgot" ? "Reset your password" : flow === "invite" ? "Activate your account" : "Choose a new password"}</h2>
+                <p>{flow === "signin" ? "Use your invited university account to continue." : flow === "forgot" ? "We will send a reset link if this address is registered." : "Follow the steps to secure your account."}</p>
+              </div>
               {callback && <h2 className="text-xl font-semibold">{flow === "invite" ? "Activate your JARVIS account" : "Set a new password"}</h2>}
               {!callback && <label className="block">Email<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
               {flow === "invite" && <label className="block">Display name<input className={inputClass} name="displayName" maxLength={100} required /></label>}
