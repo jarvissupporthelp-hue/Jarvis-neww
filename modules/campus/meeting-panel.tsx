@@ -53,8 +53,11 @@ export function MeetingPanel() {
     const form = event.currentTarget;
     const values = new FormData(form);
     const startAt = new Date(`${values.get("start")}:00+04:00`).toISOString();
+    const question = String(values.get("agenda") ?? "").trim();
+    const context = String(values.get("context") ?? "").trim();
+    const agenda = context ? question + "\n\nAdditional context: " + context : question;
     void save({ action: "request", lecturerId: values.get("lecturerId"), topic: values.get("topic"),
-      agenda: values.get("agenda"), startAt, participants: values.getAll("participants") })
+      agenda, startAt, participants: values.getAll("participants") })
       .then((saved) => { if (saved) form.reset(); });
   }
   const lecturers = data?.people.filter(({ role }) => role === "lecturer") ?? [];
@@ -64,16 +67,18 @@ export function MeetingPanel() {
     <div><h2 className="text-xl font-semibold">Academic meetings</h2><p className="text-slate-600">Request 30 minutes with a lecturer to ask a question, discuss coursework, or get project feedback.</p></div>
     {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message} {message.startsWith("Sign in") && <Link href="/account" className="underline">Open account</Link>}</p>}
     {!data && !message && <p>Loading meeting requests…</p>}
-    {data?.role === "student" && <form className="grid gap-4 rounded-xl border bg-white p-5 sm:grid-cols-2" onSubmit={submit}>
-      <label>Lecturer <select required name="lecturerId" className={field}><option value="">Choose a lecturer</option>{lecturers.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>
+    {data?.role !== "lecturer" && <form className="grid gap-4 rounded-xl border bg-white p-5 sm:grid-cols-2" onSubmit={submit}>
+      <h3 className="text-lg font-semibold sm:col-span-2">Request a meeting</h3>
+      <label>Lecturer <select required disabled={!lecturers.length} name="lecturerId" className={field}><option value="">{lecturers.length ? "Choose a lecturer" : "Lecturer directory unavailable"}</option>{lecturers.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>
       <label>Preferred time (Yerevan) <input required name="start" type="datetime-local" className={field} /></label>
       <label className="sm:col-span-2">Topic <input required maxLength={100} name="topic" className={field} placeholder="e.g. Questions about the Networks assignment" /></label>
-      <label className="sm:col-span-2">Question or agenda <textarea required maxLength={1000} name="agenda" className={field} rows={3} /></label>
+      <label className="sm:col-span-2">Question or agenda <textarea required maxLength={700} name="agenda" className={field} rows={3} placeholder="What would you like to discuss?" /></label>
+      <label className="sm:col-span-2">Additional context (optional) <textarea maxLength={275} name="context" className={field} rows={2} placeholder="Course, assignment, deadline, or what you have already tried" /></label>
       {students.length > 0 && <fieldset className="space-y-2 sm:col-span-2"><legend>Invite classmates (optional)</legend>
         {students.map((person) => <label key={person.id} className="mr-4 inline-flex items-center gap-2"><input type="checkbox" name="participants" value={person.id} />{person.name}</label>)}
       </fieldset>}
-      <button className={`${button} w-fit`} disabled={pending || !lecturers.length}>Request meeting</button>
-      {!lecturers.length && <p>No active lecturers are available in the directory.</p>}
+      <button className={`${button} w-fit`} disabled={pending || !lecturers.length}>{pending ? "Sending…" : "Send request"}</button>
+      {data && !lecturers.length && <p>No active lecturers are available in the directory.</p>}
     </form>}
     {data && <div className="space-y-3"><h3 className="font-semibold">{data.role === "lecturer" ? "Incoming requests" : "My meetings"}</h3>
       {!data.meetings.length && <p>No meetings yet.</p>}
