@@ -269,6 +269,20 @@ function Management() {
   </Card>;
 }
 
+function SubjectsForDay({ timetable, today }: { timetable: Event[]; today: string }) {
+  const [date, setDate] = useState(today);
+  const subjects = [...new Map(timetable
+    .filter((item) => item.start.startsWith(date) && item.status !== "Cancelled")
+    .map((item) => [item.course, item])).values()];
+  return <Card title={date === today ? "Today's subjects" : "Subjects for selected day"}>
+    <label className="block">Choose a date <input type="date" className={field} value={date}
+      onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+    {subjects.length ? <ul className="space-y-2">{subjects.map((item) => (
+      <li key={item.course}><Link className="underline" href={`/academics/courses/${item.course}`}>{item.title}</Link></li>
+    ))}</ul> : <p>No subjects scheduled for this date.</p>}
+  </Card>;
+}
+
 export function AcademicsWorkspace({ page, code }: { page: string; code?: string }) {
   const [role, setRole] = useDemoValue<Role | null>("jarvis-academics-role", null);
   const [published, publish] = useDemoValue<Published>("jarvis-academics-published", {});
@@ -332,8 +346,12 @@ export function AcademicsWorkspace({ page, code }: { page: string; code?: string
         })}</ul>
       </Card>;
       default: return role === "student" ? <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="My day"><Events items={schedule.timetable.filter((item) => item.start.startsWith(schedule.day))} /></Card>
-        <Card title="Due today">{schedule.assignments.filter((item) => item.due.startsWith(schedule.day)).map((item) => <p key={item.id}>{item.title} · {dateLabel(item.due, "time")}</p>)}</Card>
+        <Card title="My Day">
+          <p className="font-semibold">Computer Science</p>
+          <p className="text-sm">Sample timetable</p>
+          <Events items={schedule.timetable.filter((item) => item.start.startsWith(schedule.day))} />
+        </Card>
+        <SubjectsForDay timetable={schedule.timetable} today={schedule.day} />
         <Card title="Exams today"><Events items={schedule.exams.filter((item) => item.start.startsWith(schedule.day))} /></Card>
       </div> : <Card title={role === "lecturer" ? "Teaching workspace" : "Academic administration"}>
         <Link className="underline" href={role === "lecturer" ? "/academics/gradebook" : "/academics/manage"}>{role === "lecturer" ? "Open gradebook" : "Manage Academics"}</Link>
