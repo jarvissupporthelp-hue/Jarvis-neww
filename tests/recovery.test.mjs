@@ -63,22 +63,25 @@ test("failed email delivery keeps one pending approval and the same invitation c
 test("an AI outage saves no partial turn and a retry saves one complete turn", async () => {
   process.env.AI_GATEWAY_API_KEY = "test";
   const turns = [];
+  const rpcCalls = [];
   const query = {
     select: () => query, eq: () => query, order: () => query,
     maybeSingle: () => ({ data: { id } }), limit: () => ({ data: [] }),
     insert: (turn) => { turns.push(turn); return query; },
     single: () => ({ data: turns.at(-1) }),
   };
-  doubles.chat = { from: () => query, rpc: () => ({ data: true }) };
+  doubles.chat = { from: () => query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
   doubles.ai = () => null;
   const body = { prompt: "Explain routing", conversationId: id, consent: true };
   const failure = await chat(post(body));
   assert.equal(failure.status, 502);
   assert.match((await failure.json()).error, /draft is still here/);
   assert.deepEqual(turns, []);
+  assert.deepEqual(rpcCalls, ["search_course_pdf_pages"]);
   doubles.ai = () => ({ answer: "Routers forward packets.", inputTokens: null, outputTokens: null });
   assert.equal((await chat(post(body))).status, 200);
   assert.deepEqual(turns, [{ conversation_id: id, prompt: body.prompt, answer: "Routers forward packets." }]);
+  assert.deepEqual(rpcCalls, ["search_course_pdf_pages", "search_course_pdf_pages", "reserve_chat_attempt"]);
 });
 
 test("a PDF processing failure can be recorded on retry against the same resource", async () => {
