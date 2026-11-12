@@ -16,10 +16,10 @@ function configuredProviders(): Provider[] {
 }
 
 async function check(provider: Provider) {
-  if (!provider.endpoint || !provider.key?.trim()) {
+  const key = provider.key?.trim();
+  if (!provider.endpoint || !key) {
     return { name: provider.name, model: provider.model, ok: false, status: 0, error: "Not configured" };
   }
-  const key = key;
   const started = Date.now();
   try {
     if (provider.name === "NVIDIA") {
