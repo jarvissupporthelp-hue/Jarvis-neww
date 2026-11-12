@@ -118,11 +118,3 @@ test deployment. Use dedicated test accounts.
 Career students can upload a private PDF CV up to 1 MB in CV Builder. It is
 stored with their Career profile and can be replaced, downloaded or removed.
 The Mentors tab has been retired. Existing requests remain available to reviewers.
-
-AI Interview Practice is available without signing in. Set
-`CAREER_INTERVIEW_PROVIDER=gemini` and `GEMINI_API_KEY` for Gemini, or set
-`CAREER_INTERVIEW_PROVIDER=ollama`, `OLLAMA_INTERVIEW_URL` and `OLLAMA_INTERVIEW_MODEL`
-for Ollama. Vercel can also route Gemini through AI Gateway using its OIDC token. A local Ollama server can be reached by a local JARVIS instance.
-A hosted JARVIS deployment needs an HTTPS Ollama endpoint reachable from the
-deployment. Set `OLLAMA_INTERVIEW_API_KEY` if the endpoint requires a bearer token.
-Conversation text goes to the configured provider. Uploaded CVs stay in Career.

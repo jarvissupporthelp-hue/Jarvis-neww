@@ -2,17 +2,17 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { InterviewPanel } from "./interview-panel";
+import { pathways } from "./pathways";
 import { getAccessToken } from "@/lib/browser-supabase";
 import { mentors, postings, skills } from "./catalog";
-import { canonicalSkill, cvFields, evidenceLevels, jobMatch, newProfile, portfolioScore, sampleCv, stages,
+import { canonicalSkill, cvFields, newProfile, portfolioScore, sampleCv, stages,
   type Cv, type MentorRequest, type Profile, type Project } from "./rules";
 
 const panel = "rounded-2xl border border-slate-200 bg-white p-5";
 const field = "mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm";
 const primary = "inline-block rounded-lg bg-[#214c3b] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
 const secondary = "inline-block rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50";
-const sections = ["Opportunities", "Applications", "CV builder", "Interview practice", "Skill portfolio", "Job match"] as const;
+const sections = ["Opportunities", "Applications", "CV builder", "Skill portfolio"] as const;
 type Section = typeof sections[number] | "Review";
 type Posting = typeof postings[number];
 type Snapshot = { role: "student"; profile: Profile; completed: string[] } | {
@@ -91,7 +91,7 @@ function Opportunities({ profile, save, pending }: { profile: Profile; save: Sav
   </section>;
 }
 
-function Job({ job, profile, save, pending, onMatch }: { job: Posting; profile: Profile; save: Save; pending: boolean; onMatch: () => void }) {
+function Job({ job, profile, save, pending }: { job: Posting; profile: Profile; save: Save; pending: boolean }) {
   const checklist = profile.internship[job.id];
   return <section className="space-y-4">
     <Link className={secondary} href="/career">All opportunities</Link>
@@ -101,7 +101,7 @@ function Job({ job, profile, save, pending, onMatch }: { job: Posting; profile: 
       <p className="my-4">{job.description}</p>
       <h3 className="font-semibold">Requirements</h3><ul className="my-2 list-disc pl-5">{job.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
       <div className="mt-4 flex flex-wrap gap-2"><button className={primary} disabled={pending || !!profile.applications[job.id]} onClick={() => void save({ action: "application", id: job.id, stage: "saved" })}>
-        {profile.applications[job.id] ? "On your board" : "Save opportunity"}</button><button className={secondary} onClick={onMatch}>See job match</button></div>
+        {profile.applications[job.id] ? "On your board" : "Save opportunity"}</button></div>
     </article>
     {job.type === "Internship" && <form className={`${panel} space-y-3`} key={job.id} onSubmit={(event) => {
       event.preventDefault(); const form = new FormData(event.currentTarget);
@@ -208,9 +208,17 @@ function CvBuilder({ initial, uploaded, save, pending }: { initial: Cv; uploaded
 }
 
 function Portfolio({ profile, completed, save, pending, demo }: { profile: Profile; completed: string[]; save: Save; pending: boolean; demo: boolean }) {
-  const [skill, setSkill] = useState("SQL");
+  const [profession, setProfession] = useState<string>(pathways[0].title);
+  const [selectedSkill, setSelectedSkill] = useState<string>(pathways[0].requirements[0][0]);
+  const pathway = pathways.find(({ title }) => title === profession) ?? pathways[0];
+  const skill = selectedSkill;
+  const projects = demo ? [sampleProject] : profile.projects;
+  const requirements = pathway.requirements.map(([name, description, priority]) => ({
+    name, description, priority, evidence: portfolioScore(name, completed, projects),
+  }));
+  const evidenced = requirements.filter(({ evidence }) => evidence.courses.length || evidence.work.length).length;
   const [message, setMessage] = useState("");
-  const result = portfolioScore(skill, completed, demo ? [sampleProject] : profile.projects);
+  const result = portfolioScore(skill, completed, projects);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -228,9 +236,36 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
     if (await save({ action: "project", skill, title: values.get("title"), level: values.get("level"), link: values.get("link"), file: sample })) form.reset();
   }
   return <section className="space-y-4">
+    <div className="rounded-2xl bg-[#183b30] p-6 text-white sm:p-8">
+      <h2 className="text-2xl font-semibold">Skill Portfolio <span className={badge}>Smart</span></h2>
+      <p className="mt-2 text-sm text-emerald-50">Choose a profession, review its requirements, and attach evidence of your skills.</p>
+      <label className="mt-5 block max-w-md text-sm font-semibold">Target profession
+        <select className={`${field} text-slate-900`} value={profession} onChange={(event) => {
+          const next = pathways.find(({ title }) => title === event.target.value);
+          if (next) { setProfession(next.title); setSelectedSkill(next.requirements[0][0]); setMessage(""); }
+        }}>
+          {pathways.map(({ title }) => <option key={title}>{title}</option>)}
+        </select>
+      </label>
+    </div>
+    <section className={`${panel} space-y-4`}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div><h3 className="text-xl font-semibold">{pathway.title}</h3><p className="text-sm text-slate-600">{pathway.description}</p></div>
+        <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">{evidenced} of {requirements.length} skills with evidence</p>
+      </div>
+      {"qualifications" in pathway && <p className="rounded-xl bg-slate-50 p-3 text-sm">{pathway.qualifications}</p>}
+      {demo && <p className="text-sm text-slate-600">You’re viewing sample evidence. Sign in to build your own portfolio.</p>}
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {requirements.map(({ name, description, priority, evidence }) => <li key={name} className={`rounded-xl border p-4 ${skill === name ? "border-emerald-700 bg-emerald-50" : "border-slate-200"}`}>
+          <p className="text-xs font-semibold text-slate-600">{priority} · {evidence.score}% evidence</p>
+          <h4 className="mt-1 font-semibold">{name}</h4><p className="mt-1 text-sm">{description}</p>
+          <button type="button" aria-pressed={skill === name} className={`${secondary} mt-3`} onClick={() => { setSelectedSkill(name); setMessage(""); }}>View evidence</button>
+        </li>)}
+      </ul>
+      <div className="rounded-xl bg-slate-100 p-4"><h4 className="font-semibold">Suggested portfolio project</h4><p className="mt-1 text-sm">{pathway.project}</p></div>
+    </section>
     <div className={`${panel} space-y-3`}>
-      <h2 className="text-xl font-semibold">Skill portfolio <span className={badge}>Smart</span></h2>
-      <label className="block max-w-md">Skill<select className={field} value={skill} onChange={(e) => setSkill(e.target.value)}>{skills.map(([name]) => <option key={name}>{name}</option>)}</select></label>
+      <h3 className="text-xl font-semibold">{skill} evidence</h3>
       <p className="text-2xl font-semibold">{result.score}% complete</p>
       <p className="text-sm text-slate-600">Course evidence 40% · Project 30% · Verified sample 30%</p>
       <div className="grid gap-3 md:grid-cols-3">
@@ -240,7 +275,7 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
       </div>
       {result.missing.length > 0 && <ul className="list-disc pl-5 text-sm">{result.missing.map((item) => <li key={item}>{item}</li>)}</ul>}
     </div>
-    <form className={`${panel} grid gap-3 sm:grid-cols-2`} onSubmit={(event) => void submit(event)}>
+    <form key={skill} className={`${panel} grid gap-3 sm:grid-cols-2`} onSubmit={(event) => void submit(event)}>
       <h3 className="font-semibold sm:col-span-2">Add a project using {skill}</h3>
       <label>Project title<input className={field} required name="title" maxLength={120} /></label>
       <label>Skill level<select className={field} name="level" defaultValue="2"><option value="1">1 · Learning</option><option value="2">2 · Can apply</option><option value="3">3 · Can work independently</option></select></label>
@@ -249,21 +284,6 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
       <button className={`${primary} w-fit`} disabled={pending}>Add project</button>
       {message && <p role="status">{message}</p>}
     </form>
-  </section>;
-}
-
-function Match({ completed, projects, initial }: { completed: string[]; projects: Project[]; initial: string }) {
-  const [id, setId] = useState(initial);
-  const job = postings.find((item) => item.id === id) ?? postings[0];
-  const result = jobMatch(job.requirements, evidenceLevels(completed, projects));
-  return <section className={`${panel} space-y-4`}>
-    <h2 className="text-xl font-semibold">Job match <span className={badge}>Smart</span></h2>
-    <label className="block max-w-xl">Opportunity<select className={field} value={job.id} onChange={(e) => setId(e.target.value)}>{postings.map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
-    <p className="text-3xl font-semibold">{result.score === null ? "No scored requirements" : `${Math.round(result.score)}% match`}</p>
-    <p className="text-sm text-slate-600">Matched ÷ (matched + gaps). Unknown requirements are excluded.</p>
-    <ul className="space-y-2">{result.rows.map((item) => <li key={item.requirement} className="rounded-xl border p-3">
-      <p className="font-semibold">{item.requirement} · {item.status}</p><p className="text-sm">{item.rule}</p>{item.suggestion && <p className="text-sm text-[#305f4a]">{item.suggestion}</p>}
-    </li>)}</ul>
   </section>;
 }
 
@@ -308,13 +328,11 @@ export function CareerWorkspace({ initialJob }: { initialJob?: string }) {
     )}</nav>
     {notice && <p role="status" className="rounded-lg bg-slate-100 p-3">{notice} {notice.startsWith("Sign in") && <Link href="/account" className="underline">Open account</Link>}</p>}
     {!loading && !snapshot && !notice && <p className="text-sm text-slate-600">Browse sample opportunities, or <Link href="/account" className="underline">sign in</Link> to save your work.</p>}
-    {section === "Opportunities" && (job ? <Job key={job.id} job={job} profile={profile} save={save} pending={pending} onMatch={() => setSection("Job match")} /> :
+    {section === "Opportunities" && (job ? <Job key={job.id} job={job} profile={profile} save={save} pending={pending} /> :
       <Opportunities profile={profile} save={save} pending={pending} />)}
     {section === "Applications" && <Board profile={profile} save={save} pending={pending} />}
     {section === "CV builder" && !loading && <CvBuilder initial={profile.cv} uploaded={profile.uploadedCv} save={save} pending={pending} />}
-    {section === "Interview practice" && <InterviewPanel />}
     {section === "Skill portfolio" && <Portfolio profile={profile} completed={completed} save={save} pending={pending} demo={!snapshot} />}
-    {section === "Job match" && <Match initial={selected} completed={completed} projects={snapshot ? profile.projects : [sampleProject]} />}
     {section === "Review" && review && <section className="space-y-3"><h2 className="text-xl font-semibold">Review work samples and mentoring requests</h2>
       {!review.length && <p>Nothing to review.</p>}
       {review.map(({ userId, projects, requests }) => <div className={`${panel} space-y-3`} key={userId}>
