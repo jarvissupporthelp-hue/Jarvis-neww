@@ -45,7 +45,8 @@ export type AIReply = { answer: string; inputTokens: number | null; outputTokens
 export type AIProviderFailure = { errorStatus: number };
 
 export function providerFailureMessage(status: number): string {
-  if (status === 401 || status === 403) return "The AI provider rejected JARVIS authentication. The server model connection needs attention.";
+  if (status === 401) return "The AI Gateway credential is missing or invalid. Add an AI Gateway API key to the server settings.";
+  if (status === 403) return "The AI Gateway denied this deployment. Add an AI Gateway API key to the server settings, then redeploy.";
   if (status === 402) return "The AI provider requires account credits or billing access before it can answer.";
   if (status === 404) return "The selected AI model is unavailable. The server model setting needs attention.";
   if (status === 429) return "The AI provider is rate limited. Please try again shortly.";
