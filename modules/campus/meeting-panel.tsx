@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { computerScienceTimetable } from "@/modules/academics/demo";
 import { getAccessToken } from "@/lib/browser-supabase";
 
 type Person = { id: string; name: string; role: string };
@@ -10,6 +11,13 @@ type Data = { people: Person[]; meetings: Meeting[]; viewer: string; role: "stud
 const field = "block w-full rounded-lg border border-slate-300 p-2";
 const button = "rounded-lg bg-[#1e3328] px-4 py-2 font-medium text-white disabled:opacity-50";
 const displayTime = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Yerevan", dateStyle: "medium", timeStyle: "short" });
+
+const timetableLecturers = new Map(
+  computerScienceTimetable.flatMap(({ lecturer, title }) => lecturer ? [[lecturer, title] as const] : []),
+);
+// The previous timetable sheet lists the Computer Architecture lecturer.
+timetableLecturers.set("Armelle Bonenfant", "Computer Architecture");
+const normalizeName = (name: string) => name.normalize("NFKD").replace(/\p{M}/gu, "").trim().toLowerCase().replace(/\s+/g, " ");
 
 async function load(payload?: Record<string, unknown>) {
   const token = await getAccessToken().catch(() => undefined);
@@ -61,6 +69,9 @@ export function MeetingPanel() {
       .then((saved) => { if (saved) form.reset(); });
   }
   const lecturers = data?.people.filter(({ role }) => role === "lecturer") ?? [];
+  const lecturerByName = new Map(lecturers.map((person) => [normalizeName(person.name), person]));
+  const timetableNames = new Set([...timetableLecturers.keys()].map(normalizeName));
+  const otherLecturers = lecturers.filter(({ name }) => !timetableNames.has(normalizeName(name)));
   const students = data?.people.filter(({ role, id }) => role === "student" && id !== data.viewer) ?? [];
   const name = (id: string, fallback: string) => data?.people.find((person) => person.id === id)?.name ?? fallback;
   return <section className="space-y-5">
@@ -69,7 +80,20 @@ export function MeetingPanel() {
     {!data && !message && <p>Loading meeting requests…</p>}
     {data?.role !== "lecturer" && <form className="grid gap-4 rounded-xl border bg-white p-5 sm:grid-cols-2" onSubmit={submit}>
       <h3 className="text-lg font-semibold sm:col-span-2">Request a meeting</h3>
-      <label>Lecturer <select required disabled={!lecturers.length} name="lecturerId" className={field}><option value="">{lecturers.length ? "Choose a lecturer" : "Lecturer directory unavailable"}</option>{lecturers.map((person) => <option key={person.id} value={person.id}>{person.name}</option>)}</select></label>
+      <label>Lecturer <select required name="lecturerId" className={field}>
+        <option value="">Choose a lecturer</option>
+        <optgroup label="From your timetable">
+          {[...timetableLecturers].map(([name, course]) => {
+            const account = lecturerByName.get(normalizeName(name));
+            return <option key={name} value={account?.id ?? ""} disabled={!account}>
+              {name} · {course}{!account && " (account unavailable)"}
+            </option>;
+          })}
+        </optgroup>
+        {otherLecturers.length > 0 && <optgroup label="Other lecturers">
+          {otherLecturers.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+        </optgroup>}
+      </select></label>
       <label>Preferred time (Yerevan) <input required name="start" type="datetime-local" className={field} /></label>
       <label className="sm:col-span-2">Topic <input required maxLength={100} name="topic" className={field} placeholder="e.g. Questions about the Networks assignment" /></label>
       <label className="sm:col-span-2">Question or agenda <textarea required maxLength={700} name="agenda" className={field} rows={3} placeholder="What would you like to discuss?" /></label>
