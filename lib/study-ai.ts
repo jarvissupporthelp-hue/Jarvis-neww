@@ -20,7 +20,7 @@ function providerConfig() {
   return {
     endpoint: gatewayUrl,
     credential: "",
-    model: process.env.AI_GATEWAY_MODEL?.trim() || "google/gemini-2.5-flash-lite",
+    model: process.env.AI_GATEWAY_MODEL?.trim() || "nvidia/nemotron-3.5-lightning-free",
   };
 }
 
@@ -32,7 +32,7 @@ export async function askLecturerAI(prompt: string, credential: string, course: 
     const response = await fetch(provider.endpoint, {
       method: "POST",
       headers: { Authorization: `Bearer ${provider.credential || credential}`, "Content-Type": "application/json" },
-      cache: "no-store", signal: AbortSignal.timeout(12_000),
+      cache: "no-store", signal: AbortSignal.timeout(20_000),
       body: JSON.stringify({
         model: provider.model, max_tokens: 700, temperature: 0.35,
         messages: [
@@ -62,7 +62,7 @@ export async function askStudyAI(
       method: "POST",
       headers: { Authorization: `Bearer ${provider.credential || credential}`, "Content-Type": "application/json" },
       cache: "no-store",
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(20_000),
       body: JSON.stringify({
         model: provider.model,
         max_tokens: 550,

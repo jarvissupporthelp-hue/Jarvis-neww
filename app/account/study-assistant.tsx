@@ -290,7 +290,7 @@ export function StudyAssistant() {
               </label>
               {coursePdfSearch ? (
                 <p className="text-sm">Find passages with page references in your course PDFs. Results are temporary and stay inside JARVIS. <Link href="/resources" className="underline">Open course resources</Link></p>
-              ) : <p className="text-sm">AI requests send your question, up to four recent exchanges, and the study context shown above through Vercel AI Gateway to an external model provider. Personal event titles and task titles are excluded. Leave out confidential information.</p>}
+              ) : <p className="text-sm">AI requests send your question, up to four recent exchanges, and the study context shown above through Vercel AI Gateway to an external model provider. Personal event titles and task titles are excluded. The free preview model provider may retain or use requests for model improvement. Leave out confidential information.</p>}
               <label className="block">Study question
                 <textarea className={field} rows={4} maxLength={MAX_STUDY_PROMPT} required readOnly={busy}
                   value={draft} onChange={(event) => setDrafts({ ...drafts, [selected.id]: event.target.value })} />
@@ -298,7 +298,7 @@ export function StudyAssistant() {
               {!coursePdfSearch && <label className="flex items-start gap-2 text-sm">
                 <input type="checkbox" className="mt-1" checked={consent} disabled={busy}
                   onChange={(event) => setConsent(event.target.checked)} />
-                I agree to send this question, recent exchanges, and study context to the AI provider.
+                I agree to send this question, recent exchanges, and study context to the AI provider, which may retain or use them for model improvement.
               </label>}
               <button className={button} disabled={busy || !turns || (!coursePdfSearch && !consent) || !draft.trim()}>
                 {busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Ask JARVIS"}

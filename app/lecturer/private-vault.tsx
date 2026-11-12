@@ -133,7 +133,7 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
         </select>
       </label>
       <label className="block">Question<textarea className="block w-full rounded border p-2" rows={3} maxLength={2000} required value={question} onChange={(event) => setQuestion(event.target.value)} /></label>
-      <label className="flex gap-2 text-sm"><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} />I agree to send my question and selected private excerpts to the configured external AI provider.</label>
+      <label className="flex gap-2 text-sm"><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} />I agree to send my question and selected private excerpts to the external AI provider. The free preview provider may retain or use them for model improvement.</label>
       <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={busy || !aiConsent || !question.trim()}>{busy ? "Thinking…" : "Ask JARVIS"}</button>
       {answer && <div className="whitespace-pre-wrap rounded bg-[#eef3ee] p-3" role="status">{answer}</div>}
     </form>

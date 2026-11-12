@@ -11,9 +11,13 @@
 
 Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for the matching staging or production database. Configure either Vercel AI Gateway or all three `FREE_LLM_*` variables in `.env.example` on the server. The free provider must implement OpenAI-compatible chat completions and return `usage.prompt_tokens` and `usage.completion_tokens` for exact token display; otherwise the sidebar labels token totals as partial.
 
+The preview defaults to the zero-priced `nvidia/nemotron-3.5-lightning-free` Gateway model. Its provider may retain and use requests for model improvement. Both chat interfaces ask for consent; do not select lecturer private materials or include confidential student data unless the provider's data practices are acceptable. A private/self-hosted provider can be configured with `FREE_LLM_*` instead.
+
 Optional semantic retrieval requires Chroma Cloud `CHROMA_API_KEY`, `CHROMA_TENANT`, `CHROMA_DATABASE`, plus an OpenAI-compatible embeddings endpoint with `EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, and `EMBEDDING_MODEL`. Use the same embedding model for indexing and querying. Without these settings, student PDF search uses the existing Supabase index. Uploading a new public course PDF indexes its pages in Supabase and attempts Chroma indexing when configured. Existing PDFs need the lecturer's Reindex action or a controlled backfill.
 
 Apply the new migrations in filename order, `20261203000100` through `20261207000100`, to staging before previewing the branch. Verify migration history and the RLS policies there. Do not apply to production until the existing production migration gap has been reconciled.
+
+Staging received the five SQL changes through the Supabase migration API on 2026-11-12. That API assigned history versions `20261112085004`, `20261112085023`, `20261112085029`, `20261112085036`, and `20261112085042` while the repository files use `20261203`–`20261207`. The schema is present, but the migration histories are not aligned. Reconcile them with the team's normal Supabase migration workflow before running `db push`, resetting a database, or merging. Do not replay the five SQL files on staging.
 
 ## Merge checks
 
