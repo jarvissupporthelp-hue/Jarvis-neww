@@ -114,3 +114,15 @@ after accepting the student's mentoring request.
 The two-account privacy check runs when `CAREER_TEST_URL`,
 `CAREER_TEST_STUDENT_A_TOKEN` and `CAREER_TEST_STUDENT_B_TOKEN` are set for a migrated
 test deployment. Use dedicated test accounts.
+
+Career students can upload a private PDF CV up to 1 MB in CV Builder. It is
+stored with their Career profile and can be replaced, downloaded or removed.
+The Mentors tab has been retired. Existing requests remain available to reviewers.
+
+AI Interview Practice is available to signed-in students. Set
+`CAREER_INTERVIEW_PROVIDER=gemini` and `GEMINI_API_KEY` for Gemini, or set
+`CAREER_INTERVIEW_PROVIDER=ollama`, `OLLAMA_INTERVIEW_URL` and `OLLAMA_INTERVIEW_MODEL`
+for Ollama. A local Ollama server can be reached by a local JARVIS instance.
+A hosted JARVIS deployment needs an HTTPS Ollama endpoint reachable from the
+deployment. Set `OLLAMA_INTERVIEW_API_KEY` if the endpoint requires a bearer token.
+Conversation text goes to the configured provider. Uploaded CVs stay in Career.

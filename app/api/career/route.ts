@@ -1,6 +1,6 @@
 import { authorize } from "@/lib/authorization";
 import { foundationDb } from "@/lib/foundation/db";
-import { mentors, postings, questions } from "@/modules/career/catalog";
+import { postings, questions } from "@/modules/career/catalog";
 import { CareerInput, completedCourses, mentorKey, text, updateProfile } from "@/modules/career/profile";
 import { applicationStage, canVerify, canonicalSkill, cvFields, newProfile, stages, type Profile, type Stage } from "@/modules/career/rules";
 
@@ -88,11 +88,20 @@ export async function POST(request: Request) {
           current.practice[id] = { answer: text(body.answer, 2500, true), rating };
           break;
         }
-        case "request": {
-          if (!mentors.some((mentor) => mentor.id === id) || current.requests.length >= 30) throw new CareerInput("Choose a mentor or review your existing requests.");
-          current.requests.push({ id: crypto.randomUUID(), mentorId: id, message: text(body.message, 1000, true), at, status: "pending" });
+        case "upload-cv": {
+          const name = text(body.name, 140, true);
+          const data = text(body.data, 1400000, true);
+          const pdf = Buffer.from(data, "base64");
+          if (!name.toLowerCase().endsWith(".pdf") || pdf.length > 1048576 || pdf.toString("base64") !== data
+            || pdf.subarray(0, 5).toString("ascii") !== "%PDF-" || !pdf.subarray(-1024).includes(Buffer.from("%%EOF"))) {
+            throw new CareerInput("Choose a PDF file up to 1 MB.");
+          }
+          current.uploadedCv = { name, data };
           break;
         }
+        case "remove-cv":
+          delete current.uploadedCv;
+          break;
         case "project": {
           const skill = canonicalSkill(text(body.skill, 100, true));
           const level = Number(body.level);

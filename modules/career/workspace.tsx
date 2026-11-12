@@ -2,8 +2,9 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { InterviewPanel } from "./interview-panel";
 import { getAccessToken } from "@/lib/browser-supabase";
-import { mentors, postings, questions, skills } from "./catalog";
+import { mentors, postings, skills } from "./catalog";
 import { canonicalSkill, cvFields, evidenceLevels, jobMatch, newProfile, portfolioScore, sampleCv, stages,
   type Cv, type MentorRequest, type Profile, type Project } from "./rules";
 
@@ -11,7 +12,7 @@ const panel = "rounded-2xl border border-slate-200 bg-white p-5";
 const field = "mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm";
 const primary = "inline-block rounded-lg bg-[#214c3b] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
 const secondary = "inline-block rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50";
-const sections = ["Opportunities", "Applications", "CV builder", "Interview practice", "Mentors", "Skill portfolio", "Job match"] as const;
+const sections = ["Opportunities", "Applications", "CV builder", "Interview practice", "Skill portfolio", "Job match"] as const;
 type Section = typeof sections[number] | "Review";
 type Posting = typeof postings[number];
 type Snapshot = { role: "student"; profile: Profile; completed: string[] } | {
@@ -133,7 +134,7 @@ function Board({ profile, save, pending }: { profile: Profile; save: Save; pendi
   </section>;
 }
 
-function CvBuilder({ initial, save, pending }: { initial: Cv; save: Save; pending: boolean }) {
+function CvBuilder({ initial, uploaded, save, pending }: { initial: Cv; uploaded?: Profile["uploadedCv"]; save: Save; pending: boolean }) {
   const [cv, setCv] = useState(initial);
   const [exportMessage, setExportMessage] = useState("");
   const [exporting, setExporting] = useState(false);
@@ -152,56 +153,56 @@ function CvBuilder({ initial, save, pending }: { initial: Cv; save: Save; pendin
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Could not export PDF."); }
     finally { setExporting(false); }
   }
-  return <section className="grid gap-4 lg:grid-cols-2">
+  async function upload(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const file = new FormData(form).get("cv");
+    setExportMessage("");
+    if (!(file instanceof File) || !file.size || file.size > 1048576 || !file.name.toLowerCase().endsWith(".pdf")) {
+      setExportMessage("Choose a PDF file up to 1 MB.");
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      if (await save({ action: "upload-cv", name: file.name, data: btoa(binary) })) form.reset();
+    } catch {
+      setExportMessage("Could not read this PDF.");
+    }
+  }
+  function downloadUpload() {
+    if (!uploaded) return;
+    const bytes = Uint8Array.from(atob(uploaded.data), (letter) => letter.charCodeAt(0));
+    const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    const anchor = document.createElement("a");
+    anchor.href = url; anchor.download = uploaded.name; anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  return <section className="space-y-4">
+    <form className={`${panel} space-y-3`} onSubmit={(event) => void upload(event)}>
+      <h2 className="text-xl font-semibold">Upload an existing CV</h2>
+      <label className="block max-w-md">CV PDF (up to 1 MB)<input required name="cv" type="file" accept=".pdf,application/pdf" className={field} /></label>
+      <button className={primary} disabled={pending}>{uploaded ? "Replace PDF" : "Upload PDF"}</button>
+      {uploaded && <div className="flex flex-wrap items-center gap-2 text-sm">
+        <span className="break-all">{uploaded.name}</span>
+        <button type="button" className={secondary} onClick={downloadUpload}>Download</button>
+        <button type="button" className={secondary} disabled={pending} onClick={() => void save({ action: "remove-cv" })}>Remove PDF</button>
+      </div>}
+    </form>
+    {exportMessage && <p role="status">{exportMessage}</p>}
+    <div className="grid gap-4 lg:grid-cols-2">
+
     <form className={`${panel} space-y-3`} onSubmit={(event) => { event.preventDefault(); void save({ action: "cv", cv }); }}>
       <h2 className="text-xl font-semibold">CV builder</h2>
       {cvFields.map((name) => <label key={name} className="block capitalize">{name}<textarea className={field} maxLength={2200} rows={2} value={cv[name]} onChange={(e) => setCv({ ...cv, [name]: e.target.value })} /></label>)}
       <div className="flex flex-wrap gap-2"><button className={primary} disabled={pending}>Save CV</button><button type="button" className={secondary} onClick={() => setCv(sampleCv)}>Use sample</button>
       <button type="button" className={secondary} disabled={exporting} onClick={() => void exportPdf()}>{exporting ? "Exporting…" : "Export PDF"}</button>
       <Link className={secondary} href="/api/career/pdf" prefetch={false}>Sample PDF</Link></div>
-      {exportMessage && <p role="status">{exportMessage}</p>}
     </form>
     <article className={`${panel} space-y-4`}><h2 className="text-xl font-semibold">Live preview</h2>
       {cvFields.map((name) => cv[name] && <div key={name}><h3 className="font-semibold capitalize">{name}</h3><p className="whitespace-pre-wrap break-words">{cv[name]}</p></div>)}
     </article>
-  </section>;
-}
-
-function Practice({ profile, save, pending }: { profile: Profile; save: Save; pending: boolean }) {
-  const [category, setCategory] = useState("");
-  const [selected, setSelected] = useState(0);
-  const options = questions.map(([kind, question], id) => ({ kind, question, id })).filter(({ kind }) => !category || kind === category);
-  const question = options.find(({ id }) => id === selected) ?? options[0];
-  const practice = profile.practice[String(question.id)];
-  return <section className={`${panel} max-w-3xl space-y-4`}>
-    <h2 className="text-xl font-semibold">Interview practice</h2>
-    <label className="block">Category<select className={field} value={category} onChange={(e) => setCategory(e.target.value)}><option value="">All categories</option>{[...new Set(questions.map(([kind]) => kind))].map((kind) => <option key={kind}>{kind}</option>)}</select></label>
-    <label className="block">Question<select className={field} value={question.id} onChange={(e) => setSelected(+e.target.value)}>{options.map(({ id, question }) => <option key={id} value={id}>{question}</option>)}</select></label>
-    <form key={question.id} className="space-y-3" onSubmit={(event) => void save({ ...formValues(event), action: "practice", id: question.id })}>
-      <label className="block">Your answer<textarea required name="answer" className={field} rows={6} maxLength={2500} defaultValue={practice?.answer} /></label>
-      <label className="block">Self-rating (1–5)<input required className={field} name="rating" type="number" min={1} max={5} defaultValue={practice?.rating ?? 3} /></label>
-      <button className={primary} disabled={pending}>Save practice answer</button>
-    </form>
-  </section>;
-}
-
-function Mentoring({ profile, save, pending }: { profile: Profile; save: Save; pending: boolean }) {
-  const [selected, setSelected] = useState("");
-  return <section className="space-y-4">
-    <h2 className="text-xl font-semibold">Mentor directory</h2>
-    <p className="text-sm text-slate-600">Sample mentors for this Career pilot.</p>
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{mentors.map((mentor) => <li key={mentor.id} className={panel}>
-      <h3 className="font-semibold">{mentor.name}</h3><p className="mb-3">{mentor.specialty}</p><button className={secondary} onClick={() => setSelected(mentor.id)}>Request mentoring</button>
-    </li>)}</ul>
-    {selected && <form className={`${panel} space-y-3`} onSubmit={(event) => {
-      const values = formValues(event); void save({ ...values, action: "request", id: selected }).then((ok) => { if (ok) setSelected(""); });
-    }}><h3 className="font-semibold">Request mentoring from {mentors.find(({ id }) => id === selected)?.name}</h3>
-      <label className="block">What would you like help with?<textarea required maxLength={1000} name="message" className={field} rows={4} /></label>
-      <button className={primary} disabled={pending}>Send request</button>
-    </form>}
-    <div className={panel}><h3 className="font-semibold">My mentor requests</h3>
-      {!profile.requests.length && <p>No requests yet.</p>}
-      <ul>{profile.requests.map((item) => <li key={item.id} className="border-t py-2">{mentors.find(({ id }) => id === item.mentorId)?.name} · <span className="capitalize">{item.status}</span> · {date(item.at)}<p className="whitespace-pre-wrap break-words text-sm">{item.message}</p></li>)}</ul>
     </div>
   </section>;
 }
@@ -310,9 +311,8 @@ export function CareerWorkspace({ initialJob }: { initialJob?: string }) {
     {section === "Opportunities" && (job ? <Job key={job.id} job={job} profile={profile} save={save} pending={pending} onMatch={() => setSection("Job match")} /> :
       <Opportunities profile={profile} save={save} pending={pending} />)}
     {section === "Applications" && <Board profile={profile} save={save} pending={pending} />}
-    {section === "CV builder" && !loading && <CvBuilder initial={profile.cv} save={save} pending={pending} />}
-    {section === "Interview practice" && !loading && <Practice profile={profile} save={save} pending={pending} />}
-    {section === "Mentors" && <Mentoring profile={profile} save={save} pending={pending} />}
+    {section === "CV builder" && !loading && <CvBuilder initial={profile.cv} uploaded={profile.uploadedCv} save={save} pending={pending} />}
+    {section === "Interview practice" && <InterviewPanel />}
     {section === "Skill portfolio" && <Portfolio profile={profile} completed={completed} save={save} pending={pending} demo={!snapshot} />}
     {section === "Job match" && <Match initial={selected} completed={completed} projects={snapshot ? profile.projects : [sampleProject]} />}
     {section === "Review" && review && <section className="space-y-3"><h2 className="text-xl font-semibold">Review work samples and mentoring requests</h2>
