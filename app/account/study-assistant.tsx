@@ -23,7 +23,6 @@ export function StudyAssistant() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
   const [coursePdfSearch, setCoursePdfSearch] = useState(false);
-  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [threadsAttempt, setThreadsAttempt] = useState(0);
   const [turnsAttempt, setTurnsAttempt] = useState(0);
@@ -184,7 +183,7 @@ export function StudyAssistant() {
 
   async function ask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !selectedId || !turns || !draft.trim() || (!coursePdfSearch && !consent)) return;
+    if (busy || !selectedId || !turns || !draft.trim()) return;
     const question = draft.trim();
     setSendStatus(coursePdfSearch ? "Searching course PDFs…" : "Waiting for JARVIS…");
     setPendingPrompt(question);
@@ -197,7 +196,7 @@ export function StudyAssistant() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: selectedId, prompt: question, consent, mode: coursePdfSearch ? "course-pdfs" : "general" }),
+        body: JSON.stringify({ conversationId: selectedId, prompt: question, mode: coursePdfSearch ? "course-pdfs" : "general" }),
       });
       const result = await response.json();
       if (!response.ok) {
@@ -270,7 +269,7 @@ export function StudyAssistant() {
     </nav>
     <details className="shrink-0 rounded-xl border border-[#d9e2d7] bg-white p-3">
       <summary className="cursor-pointer text-sm font-semibold">My study memory</summary>
-      <p className="mt-2 text-xs text-[#647868]">Only your account can edit this. JARVIS uses it with your consent.</p>
+      <p className="mt-2 text-xs text-[#647868]">Only your account can edit this. JARVIS uses it only to personalize your account.</p>
       {memory ? <form className="mt-3 space-y-3" onSubmit={saveMemory}>
         <label className="block text-xs font-medium">How I learn best<textarea className={field} rows={2} maxLength={1000} value={memory.learning_preferences} onChange={(event) => setMemory({ ...memory, learning_preferences: event.target.value })} /></label>
         <label className="block text-xs font-medium">Current goal<textarea className={field} rows={2} maxLength={1000} value={memory.current_goal} onChange={(event) => setMemory({ ...memory, current_goal: event.target.value })} /></label>
@@ -372,31 +371,36 @@ export function StudyAssistant() {
             </div>
           </li>}
         </ol>
-        {selected ? <form className="shrink-0 space-y-3 border-t border-[#e4ece2] bg-white px-4 py-3 sm:px-6" onSubmit={ask} aria-busy={busy}>
+        {selected ? <form className="jarvis-chat-composer shrink-0 space-y-3 border-t px-4 py-3 sm:px-6" onSubmit={ask} aria-busy={busy}>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-[#3a5b42]"><input type="checkbox" checked={coursePdfSearch} disabled={busy}
-              onChange={(event) => setCoursePdfSearch(event.target.checked)} /> Search course PDFs only</label>
-            <span className="text-xs text-[#708473]">{coursePdfSearch ? "No AI message used" : usage ? usage.remaining + " AI messages left today" : "AI study mode"}</span>
+            <label className={"jarvis-pdf-mode " + (coursePdfSearch ? "is-active" : "")}>
+              <input className="sr-only" type="checkbox" checked={coursePdfSearch} disabled={busy}
+                onChange={(event) => setCoursePdfSearch(event.target.checked)} />
+              <span className="jarvis-pdf-icon" aria-hidden="true">PDF</span>
+              <span><strong>Course sources</strong><small>{coursePdfSearch ? "Search PDFs only" : "Use general AI"}</small></span>
+              <span className="jarvis-mode-switch" aria-hidden="true"><i /></span>
+            </label>
+            <span className="text-xs text-[#708473]">{coursePdfSearch ? "Cited pages · no AI message used" : usage ? usage.remaining + " AI messages left today" : "AI study mode"}</span>
           </div>
           <label className="sr-only" htmlFor="study-question">Study question</label>
-          <textarea id="study-question" className={field + " block max-h-40 min-h-20 resize-y"} rows={3} maxLength={MAX_STUDY_PROMPT} required readOnly={busy}
+          <textarea id="study-question" className={field + " jarvis-chat-input block max-h-40 min-h-20 resize-y"} rows={3} maxLength={MAX_STUDY_PROMPT} required readOnly={busy}
             placeholder={coursePdfSearch ? "Search your course material…" : "Ask JARVIS anything about your studies…"}
-            value={draft} onChange={(event) => setDrafts((items) => ({ ...items, [selected.id]: event.target.value }))} />
+            value={draft}
+            onChange={(event) => setDrafts((items) => ({ ...items, [selected.id]: event.target.value }))}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }} />
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0 flex-1 text-xs text-[#637766]">
-              {coursePdfSearch ? <p>Results include source pages. <Link href="/resources" className="underline">Course resources</Link></p>
-                : <div>
-                  <label className="flex items-start gap-2"><input type="checkbox" className="mt-0.5" checked={consent} disabled={busy}
-                    onChange={(event) => setConsent(event.target.checked)} />
-                    <span>I agree to send my question, recent chat, and study context to the AI provider, which may retain them for model improvement.</span>
-                  </label>
-                  <details className="mt-1 pl-5"><summary className="cursor-pointer underline">What data is sent?</summary>
-                    <p className="pt-1">Up to four recent exchanges and your study context are included. The free preview provider may retain requests for model improvement. Leave out confidential information.</p>
-                  </details>
-                </div>}
-            </div>
-            <button className={button + " min-w-28"} disabled={busy || !turns || (!coursePdfSearch && !consent) || !draft.trim()}>
-              {busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Send ↗"}
+            <p className="min-w-0 flex-1 text-xs text-[#637766]">
+              {coursePdfSearch ? <>Answers include source pages. <Link href="/resources" className="underline">View course resources</Link></>
+                : <>Enter to send · Shift + Enter for a new line</>}
+            </p>
+            <button className={button + " jarvis-chat-send min-w-28"} disabled={busy || !turns || !draft.trim()}>
+              {busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Send"}
+              {!busy && <span aria-hidden="true">↗</span>}
             </button>
           </div>
           <p role="status" className="sr-only">{sendStatus}</p>
