@@ -17,6 +17,7 @@ export type Application = { stage: Stage; notes: string; history: { stage: Stage
 export type Project = { id: string; skill: string; title: string; level: number; link: string; file?: { name: string; data: string }; verified: boolean };
 export type MentorRequest = { id: string; mentorId: string; message: string; at: string; status: "pending" | "accepted" | "declined" };
 export type Profile = {
+  completedSkills?: string[];
   cv: Cv; uploadedCv?: { name: string; data: string }; applications: Record<string, Application>; projects: Project[];
   internship: Record<string, { documents: string[]; report: string }>;
   practice: Record<string, { answer: string; rating: number }>;

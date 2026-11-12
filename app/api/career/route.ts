@@ -102,6 +102,15 @@ export async function POST(request: Request) {
         case "remove-cv":
           delete current.uploadedCv;
           break;
+        case "skill-completion": {
+          const skill = canonicalSkill(text(body.skill, 100, true));
+          if (!skill || typeof body.complete !== "boolean") throw new CareerInput("Choose a skill and completion status.");
+          const selected = new Set(current.completedSkills ?? []);
+          if (body.complete) selected.add(skill);
+          else selected.delete(skill);
+          current.completedSkills = [...selected];
+          break;
+        }
         case "project": {
           const skill = canonicalSkill(text(body.skill, 100, true));
           const level = Number(body.level);

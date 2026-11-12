@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useLearningData } from "@/modules/learning/storage";
 import { pathways } from "./pathways";
 import { getAccessToken } from "@/lib/browser-supabase";
 import { mentors, postings, skills } from "./catalog";
@@ -212,6 +213,23 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
   const [selectedSkill, setSelectedSkill] = useState<string>(pathways[0].requirements[0][0]);
   const pathway = pathways.find(({ title }) => title === profession) ?? pathways[0];
   const skill = selectedSkill;
+  const [guestSkills, setGuestSkills] = useLearningData<string[]>("career-completed-skills", []);
+  const tracked = new Set(demo ? guestSkills : profile.completedSkills ?? []);
+  const count = pathway.requirements.filter(([name]) => tracked.has(name)).length;
+  const recommendations = pathways.filter(({ title }) => title !== profession).map((item) => ({
+    item, shared: item.requirements.map(([name]) => name).filter((name) => tracked.has(name)),
+  })).filter(({ shared }) => shared.length).sort((a, b) => b.shared.length - a.shared.length || a.item.title.localeCompare(b.item.title));
+  function chooseProfession(title: string) {
+    const next = pathways.find((item) => item.title === title);
+    if (next) { setProfession(next.title); setSelectedSkill(next.requirements[0][0]); setMessage(""); }
+  }
+  function toggleSkill(name: string, complete: boolean) {
+    if (demo) {
+      if (complete) tracked.add(name);
+      else tracked.delete(name);
+      setGuestSkills([...tracked]);
+    } else void save({ action: "skill-completion", skill: name, complete });
+  }
   const projects = demo ? [sampleProject] : profile.projects;
   const requirements = pathway.requirements.map(([name, description, priority]) => ({
     name, description, priority, evidence: portfolioScore(name, completed, projects),
@@ -240,10 +258,7 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
       <h2 className="text-2xl font-semibold">Skill Portfolio <span className={badge}>Smart</span></h2>
       <p className="mt-2 text-sm text-emerald-50">Choose a profession, review its requirements, and attach evidence of your skills.</p>
       <label className="mt-5 block max-w-md text-sm font-semibold">Target profession
-        <select className={`${field} text-slate-900`} value={profession} onChange={(event) => {
-          const next = pathways.find(({ title }) => title === event.target.value);
-          if (next) { setProfession(next.title); setSelectedSkill(next.requirements[0][0]); setMessage(""); }
-        }}>
+        <select className={`${field} text-slate-900`} value={profession} onChange={(event) => chooseProfession(event.target.value)}>
           {pathways.map(({ title }) => <option key={title}>{title}</option>)}
         </select>
       </label>
@@ -251,14 +266,15 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
     <section className={`${panel} space-y-4`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div><h3 className="text-xl font-semibold">{pathway.title}</h3><p className="text-sm text-slate-600">{pathway.description}</p></div>
-        <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">{evidenced} of {requirements.length} skills with evidence</p>
+        <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">{count} of {requirements.length} complete · {evidenced} with evidence</p>
       </div>
       {"qualifications" in pathway && <p className="rounded-xl bg-slate-50 p-3 text-sm">{pathway.qualifications}</p>}
-      {demo && <p className="text-sm text-slate-600">You’re viewing sample evidence. Sign in to build your own portfolio.</p>}
+      {demo && <p className="text-sm text-slate-600">Your checklist is saved in this browser. Sign in to track skills in your Career profile.</p>}
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {requirements.map(({ name, description, priority, evidence }) => <li key={name} className={`rounded-xl border p-4 ${skill === name ? "border-emerald-700 bg-emerald-50" : "border-slate-200"}`}>
           <p className="text-xs font-semibold text-slate-600">{priority} · {evidence.score}% evidence</p>
           <h4 className="mt-1 font-semibold">{name}</h4><p className="mt-1 text-sm">{description}</p>
+          <label className="mt-3 flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={tracked.has(name)} disabled={pending} onChange={(event) => toggleSkill(name, event.target.checked)} />{tracked.has(name) ? "Complete" : "Mark complete"}</label>
           <button type="button" aria-pressed={skill === name} className={`${secondary} mt-3`} onClick={() => { setSelectedSkill(name); setMessage(""); }}>View evidence</button>
         </li>)}
       </ul>
@@ -266,7 +282,8 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
     </section>
     <div className={`${panel} space-y-3`}>
       <h3 className="text-xl font-semibold">{skill} evidence</h3>
-      <p className="text-2xl font-semibold">{result.score}% complete</p>
+      <label className="flex items-center gap-2 font-semibold"><input type="checkbox" checked={tracked.has(skill)} disabled={pending} onChange={(event) => toggleSkill(skill, event.target.checked)} />{tracked.has(skill) ? "Complete" : "Mark skill complete"}</label>
+      <p className="text-sm text-slate-600">Completion is self-reported. Evidence score: {result.score}%.</p>
       <p className="text-sm text-slate-600">Course evidence 40% · Project 30% · Verified sample 30%</p>
       <div className="grid gap-3 md:grid-cols-3">
         <div><h3 className="font-semibold">Course → Skill</h3><p>{result.courses.join(", ") || "No completed course evidence"}</p><p>{skill}</p></div>
@@ -275,6 +292,15 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
       </div>
       {result.missing.length > 0 && <ul className="list-disc pl-5 text-sm">{result.missing.map((item) => <li key={item}>{item}</li>)}</ul>}
     </div>
+    <section className={`${panel} space-y-3`}>
+      <h3 className="text-lg font-semibold">Related professions</h3>
+      {!recommendations.length && <p className="text-sm text-slate-600">Mark a skill complete to see professions that use it.</p>}
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recommendations.map(({ item, shared }) => <li className="rounded-xl border p-4" key={item.title}>
+        <h4 className="font-semibold">{item.title}</h4><p className="text-sm">{shared.length} of {item.requirements.length} skills complete</p>
+        <p className="mt-1 text-sm text-slate-600">{shared.join(", ")}</p>
+        <button type="button" className={`${secondary} mt-3`} onClick={() => chooseProfession(item.title)}>Explore {item.title}</button>
+      </li>)}</ul>
+    </section>
     <form key={skill} className={`${panel} grid gap-3 sm:grid-cols-2`} onSubmit={(event) => void submit(event)}>
       <h3 className="font-semibold sm:col-span-2">Add a project using {skill}</h3>
       <label>Project title<input className={field} required name="title" maxLength={120} /></label>
