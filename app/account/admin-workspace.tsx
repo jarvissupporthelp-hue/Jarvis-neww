@@ -176,7 +176,7 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
               {filteredUsers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select></label>
             {user && <p className="text-sm"><strong>{user.display_name}</strong> · {user.role} · <span className="jarvis-admin-status">{user.status}</span></p>}
-            {!data.users.length && <p>No members have been registered yet.</p>
+            {!data.users.length && <p>No members have been registered yet.</p>}
             {user && user.role !== "admin" && (
               <div key={user.id} className="space-y-3">
                 {user.status !== "pending" && (
