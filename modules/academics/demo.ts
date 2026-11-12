@@ -36,10 +36,10 @@ export const currentModules = exampleModules.map((module) => ({
 export type Event = { id: string; course: string; title: string; start: string; end: string; status: "Scheduled" | "Changed" | "Cancelled"; reason?: string; lecturer?: string };
 
 // Year 3 Computer Science, semester 1. Only the two days visible on the source sheet.
-const classDates = ["2026-11-09", "2026-11-10"];
+export const computerScienceDays = ["2026-11-09", "2026-11-10"];
 const classTimes = [["10:30", "11:50"], ["12:00", "13:20"], ["14:00", "15:20"], ["15:30", "16:50"]];
 
-export const computerScienceTimetable: Event[] = classDates.flatMap((date) =>
+export const computerScienceTimetable: Event[] = computerScienceDays.flatMap((date) =>
   classTimes.map(([start, end]) => ({
     id: `${date}-${start}`,
     course: "ARC301",

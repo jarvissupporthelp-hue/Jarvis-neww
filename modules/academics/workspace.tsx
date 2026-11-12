@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { annualGrade, decimal, displayCourseGrade, formatGrade, requiredScore, selectedScore, semesterGrade, type GradeModule, type MissingMode, type RetakePolicy } from "./grading";
-import { courses, currentModules, demoSchedule, exampleModules, lecturers, prerequisites, semesters, type Event } from "./demo";
+import { computerScienceDays, courses, currentModules, demoSchedule, exampleModules, lecturers, prerequisites, semesters, type Event } from "./demo";
 import { pages } from "./routes";
 
 type Role = "student" | "lecturer" | "staff" | "admin";
@@ -65,19 +65,58 @@ function Events({ items }: { items: Event[] }) {
   })}</ul> : <p>No scheduled events.</p>;
 }
 
+const timetableSlots = [
+  ["09:00", "10:20"], ["10:30", "11:50"], ["12:00", "13:20"],
+  ["13:30", "14:00"], ["14:00", "15:20"], ["15:30", "16:50"],
+  ["17:00", "18:20"], ["18:30", "19:50"], ["20:00", "21:20"],
+];
+
 function Timetable({ items, day }: { items: Event[]; day: string }) {
   const [daily, setDaily] = useState(false);
   const [date, setDate] = useState(day);
   const first = new Date(date + "T00:00:00+04:00");
   if (!daily) first.setUTCDate(first.getUTCDate() - ((new Date(date + "T00:00:00Z").getUTCDay() + 6) % 7));
   const end = first.getTime() + (daily ? 1 : 7) * 86_400_000;
+  const days = computerScienceDays.filter((value) => {
+    const start = Date.parse(value + "T00:00:00+04:00");
+    return start >= first.getTime() && start < end;
+  });
+  const dayLabel = new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Yerevan" });
+
   return <Card title={daily ? "Daily timetable" : "Weekly timetable"}>
+    <p className="font-semibold">ՀԱՄԱԿԱՐԳՉԱՅԻՆ ԳԻՏՈՒԹՅՈՒՆ (ինֆորմատիկա) / Computer Science</p>
+    <p className="text-sm">Year 3 · 2026–2027 · Semester 1 · 9–14 November · Asia/Yerevan</p>
     <div className="flex flex-wrap items-center gap-3">
       <button className={button} type="button" aria-pressed={!daily} onClick={() => setDaily(false)}>Week</button>
       <button className={button} type="button" aria-pressed={daily} onClick={() => setDaily(true)}>Day</button>
-      <label> Date <input className={field} type="date" value={date} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+      <label>Date <input className={field} type="date" value={date} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
     </div>
-    <Events items={items.filter((item) => Date.parse(item.start) >= first.getTime() && Date.parse(item.start) < end)} />
+    {days.length ? days.map((value) => (
+      <div key={value} className="overflow-x-auto">
+        <table className="w-full min-w-[460px] table-fixed border-collapse text-center text-sm">
+          <caption className="bg-[#234c3c] p-2 font-semibold text-white">{dayLabel.format(new Date(value + "T12:00:00+04:00"))}</caption>
+          <thead className="bg-[#e5eee6]">
+            <tr><th rowSpan={3} scope="col" className="w-28 border border-[#a6b8aa] p-2">Time</th><th colSpan={4} scope="colgroup" className="border border-[#a6b8aa] p-1">CM A</th></tr>
+            <tr>{["TD 1", "TD 2"].map((group) => <th key={group} colSpan={2} scope="colgroup" className="border border-[#a6b8aa] p-1">{group}</th>)}</tr>
+            <tr>{["TP 1", "TP 2", "TP 3", "TP 4"].map((group) => <th key={group} scope="col" className="border border-[#a6b8aa] p-1">{group}</th>)}</tr>
+          </thead>
+          <tbody>{timetableSlots.map(([start, finish]) => {
+            const item = items.find((event) => event.start.startsWith(`${value}T${start}:`));
+            const breakTime = start === "13:30";
+            return <tr key={start}>
+              <th scope="row" className="border border-[#a6b8aa] p-2 font-medium">{start}–{finish}</th>
+              {item ? <td colSpan={4} className="border border-[#a6b8aa] bg-[#eff5ef] p-3">
+                <Link className="font-semibold underline" href={`/academics/courses/${item.course}`}>{item.title}</Link>
+                {item.lecturer && <p>{item.lecturer}</p>}
+                {item.status !== "Scheduled" && <Badge warning>{item.status}</Badge>}
+                {item.reason && <p>{item.reason}</p>}
+              </td> : breakTime ? <td colSpan={4} className="border border-[#a6b8aa] bg-[#ebeee9] p-2">Break</td>
+                : [1, 2, 3, 4].map((group) => <td key={group} className="h-9 border border-[#a6b8aa]" />)}
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    )) : <p>No timetable sheet for this date.</p>}
   </Card>;
 }
 
