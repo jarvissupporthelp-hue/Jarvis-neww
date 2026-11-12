@@ -1,5 +1,5 @@
 import { authorize } from "@/lib/authorization";
-import { askStudyAI } from "@/lib/study-ai";
+import { askStudyAI, resolveProviderAccess } from "@/lib/study-ai";
 import { createStudyClient, examDateClarification, loadStudyContext } from "@/lib/study-context";
 import { formatCoursePdfSearch, type CoursePdfSearchResult } from "@/lib/course-pdf-search";
 import { getCourseProfessorGuides } from "@/lib/professor-guides";
@@ -97,10 +97,8 @@ export async function POST(request: Request) {
 
   let answer = examDateClarification(prompt, context);
   if (!answer) {
-    // Vercel Functions receive a fresh platform token on the request.
-    const runtimeToken = process.env.VERCEL === "1" ? request.headers.get("x-vercel-oidc-token") : null;
-    const credential = process.env.FREE_LLM_API_KEY || process.env.AI_GATEWAY_API_KEY || runtimeToken || process.env.VERCEL_OIDC_TOKEN;
-    if (!credential) return reply({ error: "The study assistant is unavailable. Your draft is still here." }, 503);
+    const provider = resolveProviderAccess(request);
+    if ("error" in provider) return reply({ error: `${provider.error} Your draft is still here.` }, 503);
 
     const history = await supabase.from("study_turns").select("prompt,answer")
       .eq("conversation_id", conversationId).order("created_at", { ascending: false })
@@ -113,7 +111,7 @@ export async function POST(request: Request) {
     if (reserved === false) return reply({ error: "You reached 20 attempts today. Try again after midnight UTC." }, 429);
 
     const passages = await findPassages(supabase, prompt).catch(() => null);
-    const generated = await askStudyAI(prompt, credential, history.data.reverse(), context, passages?.matches ?? []);
+    const generated = await askStudyAI(prompt, provider.credential, history.data.reverse(), context, passages?.matches ?? []);
     if (!generated) return reply({ error: "The AI provider did not respond. Your draft is still here. Try again shortly." }, 502);
     answer = generated.answer;
     if (generated.inputTokens !== null && generated.outputTokens !== null) {

@@ -1,6 +1,42 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { askStudyAI } from "../lib/study-ai.ts";
+import { askStudyAI, resolveProviderAccess } from "../lib/study-ai.ts";
+
+test("Vercel OIDC works without a personal model API key", () => {
+  const keys = ["FREE_LLM_BASE_URL", "FREE_LLM_API_KEY", "FREE_LLM_MODEL", "AI_GATEWAY_API_KEY", "VERCEL", "VERCEL_OIDC_TOKEN"];
+  const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  try {
+    for (const key of keys) delete process.env[key];
+    assert.match(resolveProviderAccess(new Request("https://example.test")).error, /No AI provider/);
+    process.env.VERCEL = "1";
+    const request = new Request("https://example.test", { headers: { "x-vercel-oidc-token": "platform-token" } });
+    assert.deepEqual(resolveProviderAccess(request), { credential: "platform-token" });
+  } finally {
+    for (const key of keys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  }
+});
+
+test("partial direct provider setup never sends its key to the gateway", () => {
+  const keys = ["FREE_LLM_BASE_URL", "FREE_LLM_API_KEY", "FREE_LLM_MODEL", "VERCEL_OIDC_TOKEN"];
+  const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  try {
+    for (const key of keys) delete process.env[key];
+    process.env.FREE_LLM_API_KEY = "direct-provider-secret";
+    process.env.VERCEL_OIDC_TOKEN = "gateway-token";
+    assert.match(resolveProviderAccess(new Request("https://example.test")).error, /setup is incomplete/);
+    process.env.FREE_LLM_BASE_URL = "https://provider.example/v1/chat/completions";
+    process.env.FREE_LLM_MODEL = "example-model";
+    assert.deepEqual(resolveProviderAccess(new Request("https://example.test")), { credential: "direct-provider-secret" });
+  } finally {
+    for (const key of keys) {
+      if (saved[key] === undefined) delete process.env[key];
+      else process.env[key] = saved[key];
+    }
+  }
+});
 
 test("free gateway model returns a concise answer and reported token usage", async () => {
   const originalFetch = globalThis.fetch;

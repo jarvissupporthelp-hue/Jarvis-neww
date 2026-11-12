@@ -9,7 +9,7 @@
 
 ## Configuration
 
-Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for the matching staging or production database. Configure either Vercel AI Gateway or all three `FREE_LLM_*` variables in `.env.example` on the server. The free provider must implement OpenAI-compatible chat completions and return `usage.prompt_tokens` and `usage.completion_tokens` for exact token display; otherwise the sidebar labels token totals as partial.
+Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` for the matching staging or production database. Vercel deployments can authenticate AI Gateway through a rotating OIDC token without the user's own model API key; local runs need a gateway key or all three `FREE_LLM_*` settings. Set those three together: a partial direct-provider setup is rejected so its key is never sent to the gateway. A direct provider must implement OpenAI-compatible chat completions and return `usage.prompt_tokens` and `usage.completion_tokens` for exact token display; otherwise the sidebar labels token totals as partial. A deployed page or passing build does not verify that a model request succeeded; test a signed-in chat response and inspect safe HTTP status logs if it fails.
 
 The preview defaults to the zero-priced `nvidia/nemotron-3.5-lightning-free` Gateway model. Its provider may retain and use requests for model improvement. Both chat interfaces ask for consent; do not select lecturer private materials or include confidential student data unless the provider's data practices are acceptable. A private/self-hosted provider can be configured with `FREE_LLM_*` instead.
 

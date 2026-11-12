@@ -2,6 +2,23 @@ import type { StudyContext } from "./study-context";
 
 const gatewayUrl = "https://ai-gateway.vercel.sh/v1/chat/completions";
 
+export function resolveProviderAccess(request: Request): { credential: string } | { error: string } {
+  const endpoint = process.env.FREE_LLM_BASE_URL?.trim();
+  const key = process.env.FREE_LLM_API_KEY?.trim();
+  const model = process.env.FREE_LLM_MODEL?.trim();
+  if (endpoint || key || model) {
+    if (!endpoint || !key || !model) {
+      return { error: "AI provider setup is incomplete. Configure FREE_LLM_BASE_URL, FREE_LLM_API_KEY, and FREE_LLM_MODEL together." };
+    }
+    return { credential: key };
+  }
+  const gatewayCredential = process.env.AI_GATEWAY_API_KEY?.trim()
+    || (process.env.VERCEL === "1" ? request.headers.get("x-vercel-oidc-token")?.trim() : "")
+    || process.env.VERCEL_OIDC_TOKEN?.trim();
+  return gatewayCredential ? { credential: gatewayCredential }
+    : { error: "No AI provider credential is available. Configure a provider or Vercel AI Gateway." };
+}
+
 const systemPrompt = `You are JARVIS, a fast and thoughtful university study coach for UFAR students.
 
 Help the student understand, remember, and act on coursework. Reply in the language the student used. Be warm, direct, and concise by default; expand when asked. Use clear steps, a small example, and a quick check question when useful. Avoid generic motivational filler.
@@ -42,11 +59,11 @@ export async function askLecturerAI(prompt: string, credential: string, course: 
         ],
       }),
     });
-    if (!response.ok) return null;
+    if (!response.ok) { console.error("JARVIS lecturer AI provider HTTP status:", response.status); return null; }
     const body = await response.json();
     const answer = body?.choices?.[0]?.message?.content;
     return typeof answer === "string" ? answer.trim() || null : null;
-  } catch { return null; }
+  } catch (error) { console.error("JARVIS lecturer AI request failed:", error instanceof Error ? error.name : "unknown"); return null; }
 }
 
 export async function askStudyAI(
@@ -79,7 +96,7 @@ export async function askStudyAI(
         ],
       }),
     });
-    if (!response.ok) return null;
+    if (!response.ok) { console.error("JARVIS student AI provider HTTP status:", response.status); return null; }
     const body = await response.json();
     const answer = body?.choices?.[0]?.message?.content;
     if (typeof answer !== "string" || !answer.trim()) return null;
@@ -90,7 +107,8 @@ export async function askStudyAI(
       inputTokens: Number.isSafeInteger(inputTokens) && inputTokens >= 0 ? inputTokens : null,
       outputTokens: Number.isSafeInteger(outputTokens) && outputTokens >= 0 ? outputTokens : null,
     };
-  } catch {
+  } catch (error) {
+    console.error("JARVIS student AI request failed:", error instanceof Error ? error.name : "unknown");
     return null;
   }
 }
