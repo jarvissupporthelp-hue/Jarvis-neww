@@ -5,12 +5,13 @@ import { getClient, getAccessToken } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
-import { AdminWorkspace } from "./admin-workspace";
+import { AdminWorkspace, type AdminSection } from "./admin-workspace";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 type Flow = "signin" | "forgot" | "invite" | "recovery";
 type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
+export type AccountView = "dashboard" | "calendar" | "tasks";
 
 async function currentRole(token: string): Promise<Role | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
@@ -22,7 +23,10 @@ async function currentRole(token: string): Promise<Role | null> {
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
 const buttonClass = "min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
-export function AccountForm() {
+export function AccountForm({ view = "dashboard", adminSection }: {
+  view?: AccountView;
+  adminSection?: AdminSection;
+}) {
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -168,7 +172,10 @@ export function AccountForm() {
     if (role) accountStatus.current?.focus();
   }, [role]);
 
-  if (!ready) return <p role="status">Checking your session…</p>;
+  if (!ready) return <div className="jarvis-view-loading" role="status">
+    <span className="jarvis-view-loading-spinner" aria-hidden="true"/>
+    <span>Opening your workspace…</span>
+  </div>;
 
   const callback = flow === "invite" || flow === "recovery";
   return (
@@ -203,12 +210,24 @@ export function AccountForm() {
             </form>
           )}
           {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}
-          {role === "admin" ? <AdminWorkspace getToken={getAccessToken} /> : (
-            <>
-              {role === "student" && <StudentDashboard getToken={getAccessToken} />}
-              <div id="student-timetable"><Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} /></div>
-              {role === "student" && <PersonalTasks client={getClient()} />}
-            </>
+          {role === "admin" ? <div className="jarvis-view-enter" key={adminSection ?? "admin-overview"}>
+            <AdminWorkspace getToken={getAccessToken} section={adminSection ?? "users"} />
+          </div> : (
+            <div key={view} className="jarvis-view-enter">
+              {role === "student" && view === "dashboard" && <StudentDashboard getToken={getAccessToken} />}
+              {view === "calendar" && <Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} />}
+              {role === "student" && view === "tasks" && <PersonalTasks client={getClient()} />}
+              {role === "lecturer" && view === "dashboard" && (
+                <div className="jarvis-empty-state">
+                  <strong>Your teaching workspace</strong>
+                  <p>Open your timetable or manage courses and assignments.</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Link href="/account/calendar" className="jarvis-secondary-button">View timetable</Link>
+                    <Link href="/lecturer" className="jarvis-secondary-button">Manage courses</Link>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });

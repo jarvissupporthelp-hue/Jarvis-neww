@@ -36,8 +36,8 @@ type NavItem = { href: string; label: string; icon: IconName };
 
 const studentNav: NavItem[] = [
   { href: "/account", label: "Dashboard", icon: "dashboard" },
-  { href: "/account#student-timetable", label: "Calendar", icon: "calendar" },
-  { href: "/account#student-tasks", label: "My tasks", icon: "tasks" },
+  { href: "/account/calendar", label: "Calendar", icon: "calendar" },
+  { href: "/account/tasks", label: "My tasks", icon: "tasks" },
   { href: "/resources", label: "Course library", icon: "courses" },
   { href: "/study-plans", label: "Study plans", icon: "plans" },
   { href: "/chat", label: "Ask JARVIS", icon: "chat" },
@@ -46,18 +46,18 @@ const studentNav: NavItem[] = [
 ];
 const lecturerNav: NavItem[] = [
   { href: "/lecturer", label: "My courses", icon: "courses" },
-  { href: "/account", label: "Timetable", icon: "calendar" },
+  { href: "/account/calendar", label: "Timetable", icon: "calendar" },
   { href: "/resources", label: "Course resources", icon: "layers" },
 ];
 const adminNav: NavItem[] = [
   { href: "/account", label: "Overview", icon: "dashboard" },
-  { href: "/account#admin-users", label: "Users & access", icon: "users" },
-  { href: "/account#admin-group", label: "Student groups", icon: "layers" },
-  { href: "/account#admin-semester", label: "Semesters", icon: "calendar" },
-  { href: "/account#admin-course", label: "Courses", icon: "courses" },
-  { href: "/account#admin-offering", label: "Course offerings", icon: "plans" },
-  { href: "/account#admin-timetable", label: "Timetable", icon: "calendar" },
-  { href: "/account#admin-audit", label: "Audit history", icon: "shield" },
+  { href: "/account/admin/users", label: "Users & access", icon: "users" },
+  { href: "/account/admin/group", label: "Student groups", icon: "layers" },
+  { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },
+  { href: "/account/admin/course", label: "Courses", icon: "courses" },
+  { href: "/account/admin/offering", label: "Course offerings", icon: "plans" },
+  { href: "/account/admin/timetable", label: "Timetable", icon: "calendar" },
+  { href: "/account/admin/audit", label: "Audit history", icon: "shield" },
 ];
 
 function ThemeSelector({ theme, onChange }: { theme: Theme; onChange: (theme: Theme) => void }) {
@@ -81,17 +81,6 @@ function readTheme(): Theme {
   }
 }
 
-function subscribeHash(callback: () => void) {
-  window.addEventListener("hashchange", callback);
-  window.addEventListener("jarvis-section-changed", callback);
-  return () => {
-    window.removeEventListener("hashchange", callback);
-    window.removeEventListener("jarvis-section-changed", callback);
-  };
-}
-
-function readHash() { return window.location.hash; }
-
 function subscribeTheme(callback: () => void) {
   window.addEventListener("storage", callback);
   window.addEventListener("jarvis-theme-changed", callback);
@@ -106,7 +95,6 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<Role | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
-  const activeHash = useSyncExternalStore(subscribeHash, readHash, () => "");
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "dark");
 
   useEffect(() => {
@@ -199,8 +187,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               <div className="jarvis-sidebar-title">{roleName}</div>
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
-                  const [itemPath, itemHash] = item.href.split("#");
-                  const current = pathname === itemPath && (itemHash ? activeHash === "#" + itemHash : !activeHash || !activeHash.startsWith("#admin-"));
+                  const current = pathname === item.href;
                   return <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "")} onClick={() => setDrawerOpen(false)}>
                     <Icon name={item.icon}/><span>{item.label}</span>
                   </Link>;

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Timetable } from "./timetable";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -19,7 +20,8 @@ type Workspace = {
   audit: { id: string; actor_id: string; action: string; resource_id: string; created_at: string }[];
 };
 
-type Section = "users" | "group" | "semester" | "course" | "offering" | "timetable" | "audit";
+export type AdminSection = "users" | "group" | "semester" | "course" | "offering" | "timetable" | "audit";
+type Section = AdminSection;
 
 const adminSections: { id: Section; title: string }[] = [
   { id: "users", title: "People & access" },
@@ -47,9 +49,8 @@ function Select({ name, label, options, value = "" }: {
   );
 }
 
-export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | undefined> }) {
+export function AdminWorkspace({ getToken, section = "users" }: { getToken: () => Promise<string | undefined>; section?: AdminSection }) {
   const [data, setData] = useState<Workspace | null>(null);
-  const [section, setSection] = useState<Section>("users");
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,29 +58,6 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [loadAttempt, setLoadAttempt] = useState(0);
-
-  useEffect(() => {
-    const readHash = () => {
-      const hash = window.location.hash.slice(1);
-      if (!hash.startsWith("admin-")) return;
-      const next = hash.slice(6) as Section;
-      if (adminSections.some((item) => item.id === next)) {
-        setSection(next);
-        setSelected("");
-      }
-    };
-    readHash();
-    window.addEventListener("hashchange", readHash);
-    return () => window.removeEventListener("hashchange", readHash);
-  }, []);
-
-  function openSection(next: Section) {
-    setSection(next);
-    setSelected("");
-    setMessage("");
-    window.history.replaceState(null, "", "#admin-" + next);
-    window.dispatchEvent(new Event("jarvis-section-changed"));
-  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -171,8 +149,8 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
       </div>
       <nav className="jarvis-admin-tabs" aria-label="Administration sections">
         {adminSections.map((item) => (
-          <button key={item.id} type="button" className="jarvis-admin-tab"
-            aria-pressed={section === item.id} aria-controls="admin-panel" onClick={() => openSection(item.id)}>{item.title}</button>
+          <Link key={item.id} href={"/account/admin/" + item.id} className="jarvis-admin-tab"
+            aria-current={section === item.id ? "page" : undefined}>{item.title}</Link>
         ))}
       </nav>
       <div className="jarvis-admin-body" id="admin-panel">

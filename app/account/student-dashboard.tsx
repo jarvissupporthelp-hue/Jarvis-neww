@@ -69,8 +69,8 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
         <p>Here is what is happening across your studies.</p>
       </div>
       <nav aria-label="Quick actions" className="ui-overview-actions">
-        <a href="#student-tasks" className="ui-action-secondary">My tasks</a>
-        <a href="#student-timetable" className="ui-action-primary">Open calendar <span aria-hidden="true">↗</span></a>
+        <a href="/account/tasks" className="ui-action-secondary">My tasks</a>
+        <a href="/account/calendar" className="ui-action-primary">Open calendar <span aria-hidden="true">↗</span></a>
       </nav>
     </header>
 
@@ -102,7 +102,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
           <strong>A clear day ahead</strong>
           <p>No university classes scheduled today.</p>
         </div>}
-        <a href="#student-timetable" className="ui-panel-footer-link">Explore weekly calendar <span aria-hidden="true">→</span></a>
+        <a href="/account/calendar" className="ui-panel-footer-link">Explore weekly calendar <span aria-hidden="true">→</span></a>
       </section>
 
       <aside className="ui-next-panel" aria-labelledby="ui-next-title">
