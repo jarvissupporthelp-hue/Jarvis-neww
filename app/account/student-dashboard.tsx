@@ -78,7 +78,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
         </h2>
         <nav aria-label="Student quick actions" className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
           <a href="#student-timetable" className="font-semibold underline">Open weekly calendar</a>
-          <Link href="/chat" className="font-semibold underline">Ask JARVIS</Link>
+          <Link href="/chat" className="font-semibold underline">Course PDF search</Link>
           <Link href="/study-plans" className="font-semibold underline">Study Plans</Link>
           <Link href="/quizzes" className="font-semibold underline">Course quizzes</Link>
           <Link href="/resources" className="font-semibold underline">Course resources</Link>

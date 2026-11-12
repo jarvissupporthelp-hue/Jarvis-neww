@@ -19,8 +19,6 @@ export function StudyAssistant() {
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
-  const [coursePdfSearch, setCoursePdfSearch] = useState(false);
-  const [consent, setConsent] = useState(false);
   const [error, setError] = useState("");
   const [threadsAttempt, setThreadsAttempt] = useState(0);
   const [turnsAttempt, setTurnsAttempt] = useState(0);
@@ -131,8 +129,8 @@ export function StudyAssistant() {
 
   async function ask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy || !selectedId || !turns || !draft.trim() || (!coursePdfSearch && !consent)) return;
-    setSendStatus(coursePdfSearch ? "Searching course PDFs…" : "Waiting for JARVIS…");
+    if (busy || !selectedId || !turns || !draft.trim()) return;
+    setSendStatus("Searching course PDFs…");
     setBusy(true);
     setError("");
     try {
@@ -140,20 +138,20 @@ export function StudyAssistant() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: selectedId, prompt: draft.trim(), consent, mode: coursePdfSearch ? "course-pdfs" : "general" }),
+        body: JSON.stringify({ conversationId: selectedId, prompt: draft.trim(), mode: "course-pdfs" }),
       });
       const result = await response.json();
       if (!response.ok) {
         setSendStatus("");
-        setError(result.error || "Could not get a reply. Your draft is still here.");
+        setError(result.error || "Could not search course PDFs. Your draft is still here.");
         return;
       }
       setTurns((items) => [...(items ?? []), result.turn].slice(-100));
-      setSendStatus("Reply ready. Read it in the conversation messages above.");
+      setSendStatus("Search results ready. Read it in the conversation messages above.");
       setDrafts((items) => ({ ...items, [selectedId]: "" }));
     } catch {
       setSendStatus("");
-      setError("Could not get a reply. Your draft is still here.");
+      setError("Could not search course PDFs. Your draft is still here.");
     } finally {
       setBusy(false);
     }
@@ -204,7 +202,7 @@ export function StudyAssistant() {
               setError("");
               setTurnsAttempt((value) => value + 1);
             }}>Retry loading messages</button>}
-            {turns?.length === 0 && <p>No messages yet. Ask a study question to begin.</p>}
+            {turns?.length === 0 && <p>No messages yet. Search course PDFs to begin.</p>}
             {!!turns?.length && (
               <ol ref={history} aria-label="Conversation messages" tabIndex={0}
                 className="max-h-[42vh] space-y-3 overflow-y-auto p-1">
@@ -217,26 +215,14 @@ export function StudyAssistant() {
               </ol>
             )}
             <form className="space-y-3" onSubmit={ask} aria-busy={busy}>
-              <h3 ref={composer} tabIndex={-1} className="font-semibold">Ask a study question</h3>
-              <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" className="mt-1" checked={coursePdfSearch} disabled={busy}
-                  onChange={(event) => setCoursePdfSearch(event.target.checked)} />
-                Search course PDFs
-              </label>
-              {coursePdfSearch ? (
-                <p className="text-sm">Find passages with page references in your course PDFs. Results are temporary and stay inside JARVIS. <Link href="/resources" className="underline">Open course resources</Link></p>
-              ) : <p className="text-sm">AI requests send your question, up to four recent exchanges, and the study context shown above through Vercel AI Gateway to an external model provider. Personal event titles and task titles are excluded. Leave out confidential information.</p>}
-              <label className="block">Study question
+              <h3 ref={composer} tabIndex={-1} className="font-semibold">Search course PDFs</h3>
+              <p className="text-sm">Find passages with page references. Search results are temporary. <Link href="/resources" className="underline">Open course resources</Link></p>
+              <label className="block">Search query
                 <textarea className={field} rows={4} maxLength={MAX_STUDY_PROMPT} required readOnly={busy}
                   value={draft} onChange={(event) => setDrafts({ ...drafts, [selected.id]: event.target.value })} />
               </label>
-              {!coursePdfSearch && <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" className="mt-1" checked={consent} disabled={busy}
-                  onChange={(event) => setConsent(event.target.checked)} />
-                I agree to send this question, recent exchanges, and study context to the AI provider.
-              </label>}
-              <button className={button} disabled={busy || !turns || (!coursePdfSearch && !consent) || !draft.trim()}>
-                {busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Ask JARVIS"}
+              <button className={button} disabled={busy || !turns || !draft.trim()}>
+                {busy ? "Searching…" : "Search PDFs"}
               </button>
               <p role="status">{sendStatus}</p>
             </form>

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { accountCopy } from "@/lib/foundation/copy";
+import type { Locale } from "@/lib/locales";
 import { getClient, getAccessToken } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
@@ -22,7 +24,8 @@ async function currentRole(token: string): Promise<Role | null> {
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
 const buttonClass = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
 
-export function AccountForm() {
+export function AccountForm({ locale }: { locale: Locale }) {
+  const copy = accountCopy[locale];
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
@@ -55,21 +58,21 @@ export function AccountForm() {
           setFlow(expected);
           setLinkReady(Boolean(validFragment && data.session));
           if (!validFragment || !data.session) setError(expected === "invite"
-            ? "This invitation link is invalid or expired. Ask your JARVIS administrator for a fresh invitation."
-            : "This reset link is invalid or expired. Request a new one from the sign-in form.");
-          window.history.replaceState(null, "", "/account");
+            ? copy.invalidInvite
+            : copy.invalidRecovery);
+          window.history.replaceState(null, "", `/account?lang=${locale}`);
         } else if (data.session) {
           setRole(await currentRole(data.session.access_token));
         }
       } catch {
-        if (mounted) setError("Authentication is unavailable. Try again shortly.");
+        if (mounted) setError(copy.unavailable);
       } finally {
         if (mounted) setReady(true);
       }
     }
     void initialize();
     return () => { mounted = false; };
-  }, [setError]);
+  }, [copy, locale, setError]);
 
   useEffect(() => {
     if (role !== "admin") return;
@@ -96,7 +99,7 @@ export function AccountForm() {
         await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: new URL("/account?flow=recovery", window.location.origin).toString(),
         });
-        setMessage("If the account can receive a reset email, check its inbox.");
+        setMessage(copy.resetSent);
         return;
       }
 
@@ -109,7 +112,7 @@ export function AccountForm() {
             p_display_name: String(fields.get("displayName") ?? "").trim(),
           });
           if (result.error || !result.data) {
-            setError("Your password was set, but JARVIS could not activate access. Contact the admin if retrying fails.");
+            setError(copy.activationError);
             return;
           }
         }
@@ -117,24 +120,26 @@ export function AccountForm() {
         setFlow("signin");
         setShowPassword(false);
         setLinkReady(false);
-        setMessage("Password saved. Sign in to continue.");
+        setMessage(copy.passwordSaved);
         return;
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.session) {
-        setError("Could not sign in. Check your email and password, or use Forgot password below.");
+        setError(error?.status === 429
+          ? copy.limited
+          : copy.invalid);
         return;
       }
       const verified = await currentRole(data.session.access_token);
       if (!verified) {
         await supabase.auth.signOut({ scope: "local" });
-        setError("Your sign-in worked, but your JARVIS access is inactive. Contact your administrator.");
+        setError(copy.inactive);
         return;
       }
-      setRole(verified);
+      window.location.assign(`/dashboard?lang=${locale}`);
     } catch {
-      setError("Could not finish the request. Check your details and try again.");
+      setError(copy.error);
     } finally {
       setBusy(false);
     }
@@ -168,7 +173,7 @@ export function AccountForm() {
     if (role) accountStatus.current?.focus();
   }, [role]);
 
-  if (!ready) return <p role="status">Checking your session…</p>;
+  if (!ready) return <p role="status">{copy.checking}</p>;
 
   const callback = flow === "invite" || flow === "recovery";
   return (
@@ -214,25 +219,25 @@ export function AccountForm() {
         <>
           {(!callback || linkReady) && (
             <form key={flow} onSubmit={submit} className="space-y-3" aria-busy={busy}>
-              {callback && <h2 className="text-xl font-semibold">{flow === "invite" ? "Activate your JARVIS account" : "Set a new password"}</h2>}
-              {!callback && <label className="block">Email<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
-              {flow === "invite" && <label className="block">Display name<input className={inputClass} name="displayName" maxLength={100} required /></label>}
+              {callback && <h2 className="text-xl font-semibold">{flow === "invite" ? copy.invite : copy.recovery}</h2>}
+              {!callback && <label className="block">{copy.email}<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
+              {flow === "invite" && <label className="block">{copy.name}<input className={inputClass} name="displayName" maxLength={100} required /></label>}
               {flow !== "forgot" && (
                 <div>
-                  <label className="block">Password<input className={inputClass} name="password" type={showPassword ? "text" : "password"} minLength={callback ? 8 : undefined} autoComplete={callback ? "new-password" : "current-password"} required /></label>
-                  {callback && <p className="mt-1 text-sm">Use at least 8 characters.</p>}
+                  <label className="block">{copy.password}<input className={inputClass} name="password" type={showPassword ? "text" : "password"} minLength={callback ? 8 : undefined} autoComplete={callback ? "new-password" : "current-password"} required /></label>
+                  {callback && <p className="mt-1 text-sm">{copy.length}</p>}
                   <button type="button" className="mt-1 min-h-11 underline" aria-pressed={showPassword}
-                    onClick={() => setShowPassword((value) => !value)}>Show password</button>
+                    onClick={() => setShowPassword((value) => !value)}>{copy.show}</button>
                 </div>
               )}
-              <button className={buttonClass} disabled={busy}>{busy ? "Working…" : flow === "signin" ? "Sign in" : flow === "forgot" ? "Send reset link" : flow === "invite" ? "Activate account" : "Save password"}</button>
+              <button className={buttonClass} disabled={busy}>{busy ? copy.working : flow === "signin" ? copy.signin : flow === "forgot" ? copy.reset : flow === "invite" ? copy.activate : copy.save}</button>
             </form>
           )}
           <button type="button" className="underline" onClick={() => {
             setFlow(flow === "signin" ? "forgot" : "signin");
             setShowPassword(false);
             setMessage("");
-          }}>{flow === "signin" ? "Forgot password?" : "Back to sign-in"}</button>
+          }}>{flow === "signin" ? copy.forgot : copy.back}</button>
         </>
       )}
       {notice && <p role={notice.error ? "alert" : "status"}>{notice.text}</p>}

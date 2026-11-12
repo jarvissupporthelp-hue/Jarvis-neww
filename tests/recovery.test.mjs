@@ -7,8 +7,6 @@ const id = "12345678-1234-4234-8234-123456789012";
 const doubles = globalThis.recoveryTestDoubles = {};
 const modules = {
   "@/lib/authorization": "export const authorize = () => ({ ok: true, userId: 'student' });",
-  "@/lib/study-ai": "export const askStudyAI = (...args) => globalThis.recoveryTestDoubles.ai(...args);",
-  "@/lib/study-context": "export const createStudyClient = () => globalThis.recoveryTestDoubles.chat; export const examDateClarification = () => null; export const loadStudyContext = () => ({ context: {} });",
   "@supabase/supabase-js": "export const createClient = () => globalThis.recoveryTestDoubles.email;",
 };
 const hooks = registerHooks({
@@ -24,7 +22,6 @@ const hooks = registerHooks({
 });
 
 const { POST: invite } = await import("../app/api/invitations/route.ts");
-const { POST: chat } = await import("../app/api/chat/route.ts");
 hooks.deregister();
 
 function post(body) {
@@ -58,27 +55,6 @@ test("failed email delivery keeps one pending approval and the same invitation c
   assert.equal((await invite(post(body))).status, 200);
   assert.equal(approvals.size, 1);
   assert.equal(attempts, 2);
-});
-
-test("an AI outage saves no partial turn and a retry saves one complete turn", async () => {
-  process.env.AI_GATEWAY_API_KEY = "test";
-  const turns = [];
-  const query = {
-    select: () => query, eq: () => query, order: () => query,
-    maybeSingle: () => ({ data: { id } }), limit: () => ({ data: [] }),
-    insert: (turn) => { turns.push(turn); return query; },
-    single: () => ({ data: turns.at(-1) }),
-  };
-  doubles.chat = { from: () => query, rpc: () => ({ data: true }) };
-  doubles.ai = () => null;
-  const body = { prompt: "Explain routing", conversationId: id, consent: true };
-  const failure = await chat(post(body));
-  assert.equal(failure.status, 502);
-  assert.match((await failure.json()).error, /draft is still here/);
-  assert.deepEqual(turns, []);
-  doubles.ai = () => "Routers forward packets.";
-  assert.equal((await chat(post(body))).status, 200);
-  assert.deepEqual(turns, [{ conversation_id: id, prompt: body.prompt, answer: "Routers forward packets." }]);
 });
 
 test("a PDF processing failure can be recorded on retry against the same resource", async () => {

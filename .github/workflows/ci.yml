@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, Vagharshak]
 
 permissions:
   contents: read
@@ -20,5 +20,5 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: node --test tests/*.test.mjs
+      - run: npm test
       - run: npm run build

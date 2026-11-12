@@ -42,3 +42,33 @@ See [Day 1 scope and deployment](docs/day-one.md).
 | 28 | Verified the public landing-to-sign-in flow in a signed-out browser at 390 px. Physical mobile-data and first-time invitation acceptance are pending. | [Public landing page](https://jarvis-three-olive.vercel.app/) · [Day 28 launch checks](docs/day-twenty-eight.md) |
 | 29 | Verified production liveness, checked runtime errors, reran recovery tests, and prepared the judge rehearsal. The authenticated production rehearsal is blocked. | [Judge rehearsal](docs/day-twenty-nine.md) · [Public JARVIS URL](https://jarvis-three-olive.vercel.app/) |
 | 30 | Rechecked the live public URL and local recovery suite. Prepared the competition pitch, judge access instructions, and operator checklist. Authenticated production acceptance remains on hold. | [Competition handoff](docs/day-thirty.md) · [Public JARVIS URL](https://jarvis-three-olive.vercel.app/) |
+
+## Hackathon development
+
+| Day | Work completed | Testing |
+| --- | --- | --- |
+| 1 | Armenian-default landing page with English switching. Removed hosted AI chat from the hackathon branch. Course PDF search and study planning remain available. | Open `/hy` and `/en` locally and follow the sign-in link. |
+| Foundation | Added the shared Prisma model, role-aware dashboard, per-user language preferences, module registry, and in-app notifications. | Run `npm run test:e2e` against a running app. |
+
+### Run the hackathon foundation locally
+
+With Node 24, Docker, and the Supabase CLI installed:
+
+1. Run `npm ci` and `supabase start`. On the first run Docker may need to download the local service images.
+2. Copy `.env.example` to `.env`. Set the local Supabase API URL, publishable key and secret key from `supabase status`. Set `DATABASE_URL` to the local direct PostgreSQL URL with `?schema=foundation` and choose a private `JARVIS_DEMO_PASSWORD` of at least 12 characters.
+3. Run `npm run db:migrate`, `npm run db:seed`, and `npm run dev`. Open `http://localhost:3000` and sign in as `jarvis-student@example.com`, `jarvis-staff@example.com`, or `jarvis-admin@example.com` using the configured demo password.
+4. Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. With the app running, use `npm run test:e2e` for the HTTP smoke checks. The authenticated cases require the local demo seed and environment values.
+
+The seed is restricted to local Supabase. Prisma migrations apply to the database selected in `DATABASE_URL`. Hosted previews need their own server-side connection with the foundation migration applied for saved preferences and notifications. See the [architecture note](docs/hackathon-foundation.md) for the module registry.
+
+### Academics hackathon demo
+
+Open the homepage and choose **Academics**. Use `student@example.com`, `lecturer@example.com`, `staff@example.com`, or `admin@example.com` with the public demo password `JarvisDemo2026`. Switch roles in the same browser tab to demonstrate draft publishing and assignment feedback. Demo changes live in that tab's session storage. The GPA calculator keeps hypothetical values only in memory.
+
+The demo uses synthetic records and role-specific navigation. File submission records the selected filename. Management edits change demo lists. Production authentication, database persistence, file storage, and cross-device sharing for these new screens are separate integration work. Run `npm test` for the exact grading example and scheduling checks.
+
+### Learning hackathon demo
+
+Open **Learning** and choose a class date to start a quiz, flashcards, or focus session for a timetable subject. The six decks cover Mathematics for CS, Computer Networks 1, French, English, Algorithms, and Computer Architecture. Each contains twelve cards grouped by topic. Quiz mistakes can be retried separately.
+
+Use Code Trace to predict JavaScript output and Pomodoro presets for quick review, problem solving, and coding sprints. Exam Plan still uses Academics exam dates and availability. Progress is stored in the current browser.

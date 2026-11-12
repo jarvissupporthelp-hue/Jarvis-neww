@@ -3,7 +3,7 @@
 body {
   background: #f7f5ed;
   color: #1e3328;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, "Noto Sans Armenian", "Arial Armenian", "Segoe UI", sans-serif;
 }
 
 :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {

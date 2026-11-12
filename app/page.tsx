@@ -2,16 +2,14 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="mx-auto grid min-h-dvh max-w-4xl content-center px-6 py-16 sm:px-12">
-      <p className="mb-5 text-sm font-semibold tracking-widest uppercase">UFAR pilot · In development</p>
-      <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">JARVIS</h1>
-      <p className="mt-5 max-w-xl text-xl sm:text-2xl">
-        An academic workspace for your courses, timetable, and exam preparation.
-      </p>
-      <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4">
-        Pilot access is by invitation.
-      </p>
-      <Link href="/account" className="mt-5 w-fit font-semibold underline">Sign in to JARVIS</Link>
+    <main className="mx-auto grid min-h-dvh max-w-6xl content-center px-6 py-16">
+      <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[#426852]">University workspace</p>
+      <h1 className="text-6xl font-semibold tracking-tight sm:text-8xl">JARVIS</h1>
+      <p className="mt-5 max-w-xl text-xl">Your courses, schedule, grades, and assignments in one place.</p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link href="/academics" className="w-fit rounded-lg bg-[#1e3328] px-6 py-3 font-semibold text-white">Academics</Link>
+        <Link href="/learning" className="w-fit rounded-lg bg-[#1e3328] px-6 py-3 font-semibold text-white">Learning</Link>
+      </div>
     </main>
   );
 }
