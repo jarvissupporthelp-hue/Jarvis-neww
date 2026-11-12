@@ -20,7 +20,7 @@ async function currentRole(token: string): Promise<Role | null> {
 }
 
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
-const buttonClass = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const buttonClass = "min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 export function AccountForm() {
   const [flow, setFlow] = useState<Flow>("signin");
@@ -172,12 +172,15 @@ export function AccountForm() {
 
   const callback = flow === "invite" || flow === "recovery";
   return (
-    <div className="space-y-4">
+    <div className="jarvis-account-flow space-y-4">
       {role ? (
-        <>
-          <p ref={accountStatus} tabIndex={-1}>Signed in as <strong>{role}</strong>.</p>
+        <div className="authenticated-workspace space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4" style={{ borderColor: "var(--stroke)", background: "var(--panel)" }}>
+            <p ref={accountStatus} tabIndex={-1} className="text-sm">Signed in as <strong className="capitalize">{role}</strong></p>
+            <span className="jarvis-admin-status">Connected to JARVIS</span>
+          </div>
           {role === "admin" && (
-            <form onSubmit={invite} className="space-y-3">
+            <form onSubmit={invite} className="space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
               <h2 className="text-xl font-semibold">Approve and invite</h2>
               <label className="block">Email<input className={inputClass} name="email" type="email" required /></label>
               <label className="block">Role
@@ -209,7 +212,7 @@ export function AccountForm() {
             if (error) setError("Could not sign out. Try again.");
             else { setRole(null); setMessage(""); }
           }}>Sign out</button>
-        </>
+        </div>
       ) : (
         <>
           {(!callback || linkReady) && (

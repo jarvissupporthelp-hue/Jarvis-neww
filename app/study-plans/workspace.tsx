@@ -22,7 +22,7 @@ type SavedPlan = {
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const field = "w-full rounded border border-[#789181] bg-white p-2";
 const card = "space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4 sm:p-5";
-const button = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 function minutesAt(time: string) {
   const [hour, minute] = time.split(":").map(Number);

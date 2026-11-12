@@ -21,8 +21,18 @@ type Workspace = {
 
 type Section = "users" | "group" | "semester" | "course" | "offering" | "timetable" | "audit";
 
+const adminSections: { id: Section; title: string }[] = [
+  { id: "users", title: "People & access" },
+  { id: "group", title: "Groups" },
+  { id: "semester", title: "Semesters" },
+  { id: "course", title: "Courses" },
+  { id: "offering", title: "Offerings" },
+  { id: "timetable", title: "Timetable" },
+  { id: "audit", title: "Audit history" },
+];
+
 const field = "w-full rounded border border-[#789181] bg-white p-2";
-const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 function Select({ name, label, options, value = "" }: {
   name: string; label: string; options: Option[]; value?: string;
@@ -43,6 +53,29 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
+
+  useEffect(() => {
+    const readHash = () => {
+      const hash = window.location.hash.slice(1);
+      if (!hash.startsWith("admin-")) return;
+      const next = hash.slice(6) as Section;
+      if (adminSections.some((item) => item.id === next)) {
+        setSection(next);
+        setSelected("");
+      }
+    };
+    readHash();
+    window.addEventListener("hashchange", readHash);
+    return () => window.removeEventListener("hashchange", readHash);
+  }, []);
+
+  function openSection(next: Section) {
+    setSection(next);
+    setSelected("");
+    setMessage("");
+    window.history.replaceState(null, "", "#admin-" + next);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -103,26 +136,47 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
   const offerings = data.offerings.map((item) => ({ id: item.id, name: item.label }));
   const assignments = data.assignments.filter((item) => item.user_id === user?.id);
   const eligible = offerings.filter((item) => !assignments.some((assignment) => assignment.offering_id === item.id));
+  const filteredUsers = users.filter((item) => item.name.toLocaleLowerCase().includes(userSearch.trim().toLocaleLowerCase()));
+  const activeUsers = data.users.filter((item) => item.status === "active").length;
+  const sectionTitle = adminSections.find((item) => item.id === section)?.title ?? "Overview";
 
   return (
-    <section className="space-y-4 rounded border border-[#789181] p-4">
-      <h2 className="text-2xl font-semibold">Admin workspace</h2>
-      <label className="block">Section
-        <select className={field} value={section} onChange={(event) => {
-          setSection(event.target.value as Section); setSelected(""); setMessage("");
-        }}>
-          <option value="users">Users</option><option value="group">Groups</option>
-          <option value="semester">Semesters</option><option value="course">Courses</option>
-          <option value="offering">Course offerings</option><option value="timetable">Timetable</option><option value="audit">Audit log</option>
-        </select>
-      </label>
-      <fieldset disabled={busy} className="space-y-3">
+    <section id="admin-workspace" className="jarvis-admin space-y-4">
+      <div className="jarvis-admin-hero">
+        <div>
+          <span className="jarvis-eyebrow">UNIVERSITY CONTROL CENTER</span>
+          <h2>Administration</h2>
+          <p>Manage university people, academic structure, and teaching schedules.</p>
+        </div>
+        <span className="jarvis-admin-hero-badge">● Secure workspace</span>
+      </div>
+      <div className="jarvis-admin-metrics" aria-label="University overview">
+        <div className="jarvis-admin-metric"><span>Total members</span><strong>{data.users.length}</strong></div>
+        <div className="jarvis-admin-metric"><span>Active accounts</span><strong>{activeUsers}</strong></div>
+        <div className="jarvis-admin-metric"><span>Student groups</span><strong>{data.groups.length}</strong></div>
+        <div className="jarvis-admin-metric"><span>Course offerings</span><strong>{data.offerings.length}</strong></div>
+      </div>
+      <div className="jarvis-admin-tabs" role="tablist" aria-label="Administration sections">
+        {adminSections.map((item) => (
+          <button key={item.id} id={"admin-tab-" + item.id} role="tab" type="button" className="jarvis-admin-tab"
+            aria-selected={section === item.id} aria-controls="admin-panel" onClick={() => openSection(item.id)}>{item.title}</button>
+        ))}
+      </div>
+      <div className="jarvis-admin-body" id="admin-panel" role="tabpanel" aria-labelledby={"admin-tab-" + section}>
+        <h3 className="jarvis-admin-panel-title">{sectionTitle}</h3>
+        <fieldset disabled={busy} className="space-y-3">
         {section === "users" && (
           <>
-            <label className="block">User<select className={field} value={selected} onChange={(event) => setSelected(event.target.value)}>
-              <option value="">Choose a user</option>
-              {users.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            <label className="block">Search people
+              <input className={field + " jarvis-admin-search"} type="search" placeholder="Search by name, email or role"
+                value={userSearch} onChange={(event) => setUserSearch(event.target.value)} />
+            </label>
+            <label className="block">Select account<select className={field} value={selected} onChange={(event) => setSelected(event.target.value)}>
+              <option value="">Choose a user ({filteredUsers.length} matching)</option>
+              {filteredUsers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
             </select></label>
+            {user && <p className="text-sm"><strong>{user.display_name}</strong> · {user.role} · <span className="jarvis-admin-status">{user.status}</span></p>}
+            {!data.users.length && <p>No members have been registered yet.</p>
             {user && user.role !== "admin" && (
               <div key={user.id} className="space-y-3">
                 {user.status !== "pending" && (
@@ -210,8 +264,9 @@ export function AdminWorkspace({ getToken }: { getToken: () => Promise<string | 
           </ul> : <p>No admin changes recorded yet.</p>
         )}
       </fieldset>
-      {section === "timetable" && <Timetable getToken={getToken} admin={data} />}
-      {message && <p role="status">{message}</p>}
+        {section === "timetable" && <Timetable getToken={getToken} admin={data} />}
+        {message && <p role="status">{message}</p>}
+      </div>
     </section>
   );
 }

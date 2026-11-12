@@ -10,7 +10,7 @@ export type PersonalEvent = {
 type Task = { id: string; title: string; due_on: string | null; completed: boolean };
 
 const field = "w-full rounded border border-[#789181] bg-white p-2";
-const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 export function PersonalTasks({ client }: { client: SupabaseClient }) {
   const [tasks, setTasks] = useState<Task[] | null>(null);

@@ -10,7 +10,7 @@ import { MAX_STUDY_PROMPT } from "@/lib/study-chat-limits";
 type Thread = { id: string; title: string };
 type Turn = { id: string; prompt: string; answer: string };
 
-const button = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 const field = "w-full rounded border border-[#789181] p-2";
 
 export function StudyAssistant() {
@@ -179,7 +179,7 @@ export function StudyAssistant() {
           {threads.map((thread) => (
             <li key={thread.id}>
               <button type="button" disabled={busy} aria-pressed={thread.id === selectedId}
-                className="w-full rounded p-2 text-left break-words aria-pressed:bg-[#dfe9df]"
+                className="w-full rounded p-2 text-left break-words aria-pressed:jarvis-highlight"
                 onClick={() => open(thread)}>{thread.title}</button>
             </li>
           ))}

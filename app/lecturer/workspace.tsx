@@ -74,7 +74,7 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
             <label>Due date<input className={field} type="date" name="dueOn" min={today} required /></label>
             <label>Due time (Yerevan)<input className={field} type="time" name="dueAt" defaultValue="23:59" required /></label>
           </div>
-          <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">
+          <button className="rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">
             {busy ? "Publishing…" : "Publish assignment"}
           </button>
         </fieldset>

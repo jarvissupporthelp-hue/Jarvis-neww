@@ -9,7 +9,7 @@ type Offering = { id: string; course: { name: string }; group: { name: string };
 
 const field = "block w-full rounded border border-[#789181] bg-white p-2";
 const indexLabels = { pending: "Awaiting indexing", indexed: "Searchable in Ask JARVIS", unsearchable: "Text could not be indexed" };
-const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const button = "rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
 async function resourceRequest(query: string, options: RequestInit = {}) {
   const token = await getAccessToken();

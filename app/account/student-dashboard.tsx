@@ -71,7 +71,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
 
   return (
     <section className="space-y-4" aria-labelledby="student-dashboard-heading">
-      <header className="rounded-xl bg-[#dfe9df] p-5">
+      <header className="rounded-xl jarvis-highlight p-5">
         <p className="text-sm">Student dashboard · {formatDate(data.date)}</p>
         <h2 id="student-dashboard-heading" className="mt-1 break-words text-2xl font-semibold">
           Welcome, {data.name}
