@@ -33,26 +33,25 @@ function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-type NavItem = { href: string; label: string; icon: IconName };
+type NavItem = { href: string; label: string; icon: IconName; nested?: boolean };
 
 const studentNav: NavItem[] = [
   { href: "/account", label: "My day", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academics", icon: "courses" },
   { href: "/learning", label: "Learning tools", icon: "plans" },
-  { href: "/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
   { href: "/resources", label: "Course library", icon: "courses" },
   { href: "/study-plans", label: "Study plans", icon: "plans" },
-  { href: "/chat", label: "Ask JARVIS", icon: "chat" },
+  { href: "/chat", label: "AI Agent", icon: "chat" },
+  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math", nested: true },
   { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
   { href: "/focus", label: "Focus timer", icon: "focus" },
 ];
 const lecturerNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "dashboard" },
   { href: "/academics", label: "Academics", icon: "layers" },
-  { href: "/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/lecturer", label: "My courses", icon: "courses" },
   { href: "/account/calendar", label: "Timetable", icon: "calendar" },
   { href: "/resources", label: "Course resources", icon: "layers" },
@@ -61,7 +60,6 @@ const adminNav: NavItem[] = [
   { href: "/account", label: "Administration", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academic tools", icon: "courses" },
-  { href: "/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/account/admin/users", label: "Users & access", icon: "users" },
   { href: "/account/admin/group", label: "Student groups", icon: "layers" },
   { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },
@@ -199,7 +197,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
                   const current = pathname === item.href || pathname.startsWith(item.href + "/");
-                  return <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "")} onClick={() => setDrawerOpen(false)}>
+                  return <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onClick={() => setDrawerOpen(false)}>
                     <Icon name={item.icon}/><span>{item.label}</span>
                   </Link>;
                 })}

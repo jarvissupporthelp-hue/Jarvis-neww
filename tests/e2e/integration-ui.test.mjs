@@ -6,7 +6,7 @@ const paths = [
   "/", "/account", "/account/calendar", "/account/tasks",
   "/account/admin/users", "/account/admin/group", "/account/admin/timetable",
   "/dashboard", "/academics", "/learning",
-  "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/math-visualization",
+  "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/chat", "/chat/math-visualization",
   "/hy", "/en",
 ];
 
@@ -23,13 +23,15 @@ test("UI and functionality routes respond successfully", async (t) => {
 
 test("merged landing offers both new academic modules and account login", async () => {
   const html = await (await fetch(origin)).text();
-  for (const href of ['/account', '/academics', '/learning', '/dashboard', '/math-visualization']) {
+  for (const href of ['/account', '/academics', '/learning', '/dashboard', '/chat']) {
     assert.ok(html.includes('href="' + href + '"'), "missing landing link " + href);
   }
 });
 
 test("math lab topics deep-link to bundled same-origin visualizations", async () => {
-  const page = await fetch(origin + "/math-visualization?lang=en&module=integrals");
+  const agent = await (await fetch(origin + "/chat")).text();
+  assert.match(agent, /href="\/chat\/math-visualization"/);
+  const page = await fetch(origin + "/chat/math-visualization?lang=en&module=integrals");
   assert.equal(page.status, 200);
   const html = await page.text();
   assert.match(html, /Math visualizations/);
@@ -42,6 +44,9 @@ test("math lab topics deep-link to bundled same-origin visualizations", async ()
   const asset = (await lab.text()).match(/src="(\/math-lab\/assets\/[^"]+\.js)"/);
   assert.ok(asset, "the lab needs a built JavaScript asset");
   assert.equal((await fetch(origin + asset[1])).status, 200);
+  const legacy = await fetch(origin + "/math-visualization?lang=en&module=integrals", { redirect: "manual" });
+  assert.equal(legacy.status, 307);
+  assert.equal(legacy.headers.get("location"), "/chat/math-visualization?lang=en&module=integrals");
 });
 
 test("account pages are server-routable (not hash-only navigation)", async () => {

@@ -112,6 +112,7 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 .jarvis-side-link:hover { background: var(--panel-raised); color: var(--text); }
 .jarvis-side-link.is-active { background: linear-gradient(95deg,rgba(129,79,242,.2),rgba(59,123,239,.10)); border-color: rgba(129,106,236,.35); color: var(--text); box-shadow: inset 3px 0 0 #8d6bff; }
 .jarvis-side-link.is-active svg { color: var(--violet); }
+.jarvis-side-link.is-nested { margin-left: 19px; padding-left: 12px; border-left: 1px solid var(--stroke); border-radius: 0 10px 10px 0; font-size: 12px; }
 .jarvis-sidebar-foot { display: flex; align-items: center; gap: 11px; padding: 16px 10px 4px; border-top: 1px solid var(--stroke); color: var(--text); }
 .jarvis-sidebar-foot-mark { color: #9f7aff; font-size: 23px; }
 .jarvis-sidebar-foot strong { display: block; font-size: 11px; font-weight: 700; }

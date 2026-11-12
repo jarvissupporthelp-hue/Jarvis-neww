@@ -19,23 +19,23 @@ export const landing = {
 
 export const mathVisualization = {
   hy: {
-    eyebrow: "JARVIS · ՈՒՍՈՒՄՆԱԿԱՆ ԳՈՐԾԻՔՆԵՐ",
+    eyebrow: "JARVIS · AI AGENT",
     title: "Մաթեմատիկայի պատկերացում",
     description: "Ընտրիր թեմա, փոխիր պարամետրերը և տես, թե ինչպես են աշխատում բանաձևերը։ Գործիքը բացվում է հենց JARVIS-ում։",
     topics: "Ընտրիր թեմա",
     all: "Բոլոր թեմաները",
-    back: "Վերադառնալ ուսումնական գործիքներին",
+    back: "Վերադառնալ AI Agent բաժին",
     language: "Լեզու",
     note: "Ինտերակտիվ լաբորատորիայի միջերեսը ներկայումս անգլերեն է։",
     frame: "Ինտերակտիվ մաթեմատիկական լաբորատորիա",
   },
   en: {
-    eyebrow: "JARVIS · LEARNING TOOLS",
+    eyebrow: "JARVIS · AI AGENT",
     title: "Math visualizations",
     description: "Choose a topic, adjust the controls, and see the mathematics change in real time. Explore the lab right inside JARVIS.",
     topics: "Choose a topic",
     all: "All topics",
-    back: "Back to learning tools",
+    back: "Back to AI Agent",
     language: "Language",
     note: "The interactive lab is currently in English.",
     frame: "Interactive mathematics laboratory",
