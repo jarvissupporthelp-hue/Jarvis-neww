@@ -1,0 +1,6 @@
+CREATE TABLE "CareerProfile" (
+  "userId" UUID NOT NULL PRIMARY KEY,
+  "data" JSONB NOT NULL,
+  "version" INTEGER NOT NULL DEFAULT 0,
+  "updatedAt" TIMESTAMPTZ(3) NOT NULL
+);

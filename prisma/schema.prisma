@@ -212,3 +212,10 @@ model CampusMeeting {
   @@index([studentId, createdAt])
   @@index([lecturerId, createdAt])
 }
+
+model CareerProfile {
+  userId String @id @db.Uuid
+  data Json
+  version Int @default(0)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}

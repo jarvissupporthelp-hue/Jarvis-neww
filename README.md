@@ -95,3 +95,22 @@ to their source editions. Under Team booking, students can request a 30-minute
 academic meeting and invite classmates. Lecturers review and answer requests in
 the same tab. Meetings require the Campus Meetings migration and a database
 connection to the same Supabase project used by JARVIS Auth.
+
+### Career
+
+Open Career from the JARVIS home page. The public catalog contains sample
+postings. Apply the foundation migrations using `npm run db:migrate` before
+testing private CVs, internship reports, applications, projects and mentor
+requests with real accounts.
+
+Set `CAREER_DEMO_STUDENT_USER_ID` to the Auth UUID that owns the Academics demo
+transcript. Other students can add project evidence. The current Academics
+service serves one demo transcript. Set `CAREER_MENTOR_ACCOUNTS` to a comma-separated
+list of `catalogKey=lecturerAuthUuid` pairs to enable mentor access (keys:
+`frontend`, `data`, `systems`, `interviews`, `internships`). The app's existing lecturer
+and admin roles can act as staff reviewers. Mapped mentors can review work samples
+after accepting the student's mentoring request.
+
+The two-account privacy check runs when `CAREER_TEST_URL`,
+`CAREER_TEST_STUDENT_A_TOKEN` and `CAREER_TEST_STUDENT_B_TOKEN` are set for a migrated
+test deployment. Use dedicated test accounts.

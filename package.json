@@ -17,6 +17,9 @@
     "pretypecheck": "npm run db:generate"
   },
   "dependencies": {
+    "@fontsource/noto-sans": "^5.3.0",
+    "@fontsource/noto-sans-armenian": "^5.3.0",
+    "@pdf-lib/fontkit": "^1.1.1",
     "@prisma/client": "6.19.0",
     "@supabase/supabase-js": "2.90.1",
     "chromadb": "3.5.0",
