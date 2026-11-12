@@ -46,6 +46,26 @@ export async function POST(request: Request) {
     return reply({ error: "Could not load your study context. Your draft is still here." }, forbidden ? 403 : 503);
   }
 
+  const { data: profiles } = await supabase.from("professor_ai_profiles")
+    .select("teaching_style,explanation_preferences,assessment_style,course_rules,offering:course_offerings!inner(course:courses!inner(code,name))");
+  if (profiles) {
+    type ProfileRow = {
+      teaching_style: string; explanation_preferences: string; assessment_style: string; course_rules: string;
+      offering: { course: { code: string; name: string } | { code: string; name: string }[] } | { course: { code: string; name: string } | { code: string; name: string }[] }[];
+    };
+    context.professorProfiles = (profiles as unknown as ProfileRow[]).map((row) => {
+      const offering = Array.isArray(row.offering) ? row.offering[0] : row.offering;
+      const course = Array.isArray(offering?.course) ? offering.course[0] : offering?.course;
+      return {
+        course: course ? `${course.code}: ${course.name}` : "Course",
+        teachingStyle: row.teaching_style,
+        explanationPreferences: row.explanation_preferences,
+        assessmentStyle: row.assessment_style,
+        courseRules: row.course_rules,
+      };
+    });
+  }
+
   let answer = examDateClarification(prompt, context);
   if (!answer) {
     // Vercel Functions receive a fresh platform token on the request.
