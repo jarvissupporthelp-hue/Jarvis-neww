@@ -66,3 +66,9 @@ The seed is restricted to local Supabase. Prisma migrations apply to the databas
 Open the homepage and choose **Academics**. Use `student@example.com`, `lecturer@example.com`, `staff@example.com`, or `admin@example.com` with the public demo password `JarvisDemo2026`. Switch roles in the same browser tab to demonstrate draft publishing and assignment feedback. Demo changes live in that tab's session storage. The GPA calculator keeps hypothetical values only in memory.
 
 The demo uses synthetic records and role-specific navigation. File submission records the selected filename. Management edits change demo lists. Production authentication, database persistence, file storage, and cross-device sharing for these new screens are separate integration work. Run `npm test` for the exact grading example and scheduling checks.
+
+### Learning hackathon demo
+
+Open **Learning** from the home page. Algorithms and Computer Architecture have sample materials, questions, and multilingual terms. Exam Plan uses the Academics demo exams and availability. Materials, flashcard progress, completed focus sessions, mind-map versions, and language edits are saved in the current browser. The Learning demo does not use an AI provider.
+
+Run `npm test` for exam-plan, flashcard, and mind-map tests.
