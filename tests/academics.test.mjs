@@ -36,19 +36,19 @@ test("thresholds, malformed grading data, retakes, and missing grades", () => {
   assert.equal(requiredScore(impossible, 0, 1), null);
 });
 
-test("demo services merge overlapping events, ignore cancellations and keep exact gaps", () => {
+test("Computer Science timetable keeps the eight sessions on their source dates", () => {
   const { timetable, exams } = demoSchedule();
-  const day = timetable[0].start.slice(0, 10);
-  const at = (time) => new Date(`${day}T${time}:00+04:00`);
-  const gaps = getFreeTimeSlots(demoStudentId, at("09:00"), at("13:00"), 60);
-  assert.deepEqual(gaps.map(({ start, end }) => [start.toISOString(), end.toISOString()]), [
-    [at("09:00").toISOString(), at("10:00").toISOString()],
-    [at("12:00").toISOString(), at("13:00").toISOString()],
-  ]);
-  const cancelled = timetable.find((event) => event.status === "Cancelled");
-  assert.equal(getFreeTimeSlots(demoStudentId, new Date(cancelled.start), new Date(cancelled.end), 90).length, 1);
+  const times = ["10:30", "12:00", "14:00", "15:30"];
+  assert.equal(timetable.length, 8);
+  for (const day of ["2026-11-09", "2026-11-10"]) {
+    const at = (time) => new Date(`${day}T${time}:00+04:00`);
+    const events = getTimetable(demoStudentId, at("00:00"), at("23:59"));
+    assert.deepEqual(events.map(({ start }) => start.slice(11, 16)), times);
+    assert.ok(events.every(({ lecturer, course }) => lecturer === "Armelle Bonenfant" && course === "ARC301"));
+    assert.deepEqual(getFreeTimeSlots(demoStudentId, at("10:00"), at("12:00"), 30),
+      [{ start: at("10:00"), end: at("10:30") }]);
+  }
   assert.equal(getExamSchedule(demoStudentId, new Date(exams[0].start), new Date(exams[0].end)).length, 1);
-  assert.equal(getTimetable(demoStudentId, at("10:00"), at("12:00")).length, 2);
   assert.ok(getUpcomingDeadlines(demoStudentId, 2).length > 0);
   assert.equal(getCurrentGpa(demoStudentId).gpa, null);
   assert.ok(getCompletedCourses(demoStudentId).length > 0);

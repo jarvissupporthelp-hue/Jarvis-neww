@@ -30,6 +30,7 @@ function useDemoValue<T>(key: string, initial: T) {
 }
 
 function courseLecturer(code: string) {
+  if (code === "ARC301") return "Armelle Bonenfant";
   return lecturers[courses.findIndex((course) => course.code === code) % lecturers.length];
 }
 
@@ -58,6 +59,7 @@ function Events({ items }: { items: Event[] }) {
         {item.status !== "Scheduled" && <Badge warning>{item.status}</Badge>}{overlaps && <Badge warning>Overlap</Badge>}
       </div>
       <p className="text-sm">{dateLabel(item.start)} – {dateLabel(item.end, "time")}</p>
+      {item.lecturer && <p className="text-sm">{item.lecturer}</p>}
       {item.reason && <p className="text-sm">{item.reason}</p>}
     </li>;
   })}</ul> : <p>No scheduled events.</p>;
@@ -269,25 +271,25 @@ function Management() {
   </Card>;
 }
 
-function SubjectsForDay({ timetable, today }: { timetable: Event[]; today: string }) {
-  const [date, setDate] = useState(today);
+function SubjectsForDay({ timetable, today, date, onDateChange }: { timetable: Event[]; today: string; date: string; onDateChange: (date: string) => void }) {
   const subjects = [...new Map(timetable
     .filter((item) => item.start.startsWith(date) && item.status !== "Cancelled")
     .map((item) => [item.course, item])).values()];
   return <Card title={date === today ? "Today's subjects" : "Subjects for selected day"}>
     <label className="block">Choose a date <input type="date" className={field} value={date}
-      onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+      onChange={(event) => { if (event.target.value) onDateChange(event.target.value); }} /></label>
     {subjects.length ? <ul className="space-y-2">{subjects.map((item) => (
       <li key={item.course}><Link className="underline" href={`/academics/courses/${item.course}`}>{item.title}</Link></li>
     ))}</ul> : <p>No subjects scheduled for this date.</p>}
   </Card>;
 }
 
-export function AcademicsWorkspace({ page, code }: { page: string; code?: string }) {
+export function AcademicsWorkspace({ page, code, initialDate }: { page: string; code?: string; initialDate?: string }) {
   const [role, setRole] = useDemoValue<Role | null>("jarvis-academics-role", null);
   const [published, publish] = useDemoValue<Published>("jarvis-academics-published", {});
   const [loginError, setLoginError] = useState(false);
   const schedule = demoSchedule();
+  const [selectedDate, setSelectedDate] = useState(initialDate ?? schedule.day);
   if (!role) return <main className="mx-auto max-w-lg space-y-5 px-5 py-12">
     <Link href="/" className="underline">JARVIS home</Link><h1 className="text-4xl font-semibold">Academics</h1>
     <Card title="Sign in to the demo">
@@ -327,7 +329,7 @@ export function AcademicsWorkspace({ page, code }: { page: string; code?: string
       </Card> : <div className="grid gap-3 sm:grid-cols-2">{visibleCourses.map((item) => <Card key={item.code} title={item.title}>
         <p>{item.code} · {item.ects} ECTS · {courseLecturer(item.code)}</p><Link className="underline" href={`/academics/courses/${item.code}`}>Open course</Link>
       </Card>)}</div>;
-      case "timetable": return <Timetable items={schedule.timetable} day={schedule.day} />;
+      case "timetable": return <Timetable key={initialDate} items={schedule.timetable} day={initialDate ?? schedule.day} />;
       case "exams": return <div className="grid gap-4 sm:grid-cols-2">{schedule.exams.map((item) => {
         const days = Math.round((Date.parse(item.start.slice(0, 10)) - Date.parse(schedule.day)) / 86_400_000);
         return <Card key={item.id} title={item.title}><p>{dateLabel(item.start)} – {dateLabel(item.end, "time")}</p><Badge>{days === 0 ? "Today" : `in ${days} days`}</Badge></Card>;
@@ -348,10 +350,11 @@ export function AcademicsWorkspace({ page, code }: { page: string; code?: string
       default: return role === "student" ? <div className="grid gap-4 lg:grid-cols-3">
         <Card title="My Day">
           <p className="font-semibold">Computer Science</p>
-          <p className="text-sm">Sample timetable</p>
-          <Events items={schedule.timetable.filter((item) => item.start.startsWith(schedule.day))} />
+          <p className="text-sm">Year 3 · Semester 1 · 9–14 November 2026</p>
+          <p className="text-sm">Selected date: {selectedDate}</p>
+          <Events items={schedule.timetable.filter((item) => item.start.startsWith(selectedDate))} />
         </Card>
-        <SubjectsForDay timetable={schedule.timetable} today={schedule.day} />
+        <SubjectsForDay timetable={schedule.timetable} today={schedule.day} date={selectedDate} onDateChange={setSelectedDate} />
         <Card title="Exams today"><Events items={schedule.exams.filter((item) => item.start.startsWith(schedule.day))} /></Card>
       </div> : <Card title={role === "lecturer" ? "Teaching workspace" : "Academic administration"}>
         <Link className="underline" href={role === "lecturer" ? "/academics/gradebook" : "/academics/manage"}>{role === "lecturer" ? "Open gradebook" : "Manage Academics"}</Link>

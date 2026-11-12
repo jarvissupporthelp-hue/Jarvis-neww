@@ -33,7 +33,23 @@ export const currentModules = exampleModules.map((module) => ({
   } : item),
 }));
 
-export type Event = { id: string; course: string; title: string; start: string; end: string; status: "Scheduled" | "Changed" | "Cancelled"; reason?: string };
+export type Event = { id: string; course: string; title: string; start: string; end: string; status: "Scheduled" | "Changed" | "Cancelled"; reason?: string; lecturer?: string };
+
+// Year 3 Computer Science, semester 1. Only the two days visible on the source sheet.
+const classDates = ["2026-11-09", "2026-11-10"];
+const classTimes = [["10:30", "11:50"], ["12:00", "13:20"], ["14:00", "15:20"], ["15:30", "16:50"]];
+
+export const computerScienceTimetable: Event[] = classDates.flatMap((date) =>
+  classTimes.map(([start, end]) => ({
+    id: `${date}-${start}`,
+    course: "ARC301",
+    title: "Computer Architecture",
+    lecturer: "Armelle Bonenfant",
+    start: `${date}T${start}:00+04:00`,
+    end: `${date}T${end}:00+04:00`,
+    status: "Scheduled",
+  })),
+);
 
 export function demoSchedule(now = new Date()) {
   const day = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Yerevan", dateStyle: "short" }).format(now);
@@ -42,12 +58,6 @@ export function demoSchedule(now = new Date()) {
     date.setUTCDate(date.getUTCDate() + offset);
     return `${date.toISOString().slice(0, 10)}T${hour}:00+04:00`;
   };
-  const timetable: Event[] = [
-    { id: "c1", course: "NUM301", title: "Numerical Methods", start: dateAt(0, "10:00"), end: dateAt(0, "11:30"), status: "Scheduled" },
-    { id: "c2", course: "ARC301", title: "Computer Architecture", start: dateAt(0, "11:00"), end: dateAt(0, "12:00"), status: "Changed", reason: "Moved to Room B204." },
-    { id: "c3", course: "FRE301", title: "French", start: dateAt(1, "14:00"), end: dateAt(1, "15:30"), status: "Cancelled", reason: "Lecturer unavailable." },
-    { id: "c4", course: "ALG301", title: "Algorithms", start: dateAt(2, "09:00"), end: dateAt(2, "10:30"), status: "Scheduled" },
-  ];
   const exams: Event[] = [
     { id: "e1", course: "ALG301", title: "Algorithms final", start: dateAt(12, "09:00"), end: dateAt(12, "11:00"), status: "Scheduled" },
     { id: "e2", course: "ARC301", title: "Architecture final", start: dateAt(15, "11:00"), end: dateAt(15, "13:00"), status: "Scheduled" },
@@ -57,5 +67,5 @@ export function demoSchedule(now = new Date()) {
     { id: "a2", title: "Cache simulation", course: "ARC301", due: dateAt(1, "10:00") },
     { id: "a3", title: "Graph traversal report", course: "ALG301", due: dateAt(13, "16:00") },
   ];
-  return { timetable, exams, assignments, day };
+  return { timetable: computerScienceTimetable, exams, assignments, day };
 }
