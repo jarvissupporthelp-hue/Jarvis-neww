@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { annualGrade, decimal, displayCourseGrade, formatGrade, requiredScore, selectedScore, semesterGrade, type GradeModule, type MissingMode, type RetakePolicy } from "./grading";
-import { computerScienceDays, courses, currentModules, demoSchedule, exampleModules, lecturers, prerequisites, semesters, type Event } from "./demo";
+import { computerScienceDays, computerScienceWeekLabel, courseCatalog, courses, currentModules, demoSchedule, exampleModules, lecturers, prerequisites, semesters, type Event } from "./demo";
 import { pages } from "./routes";
 
 type Role = "student" | "lecturer" | "staff" | "admin";
@@ -30,7 +30,8 @@ function useDemoValue<T>(key: string, initial: T) {
 }
 
 function courseLecturer(code: string) {
-  if (code === "ARC301") return "Armelle Bonenfant";
+  if (code === "MATH-CS") return "Aram Yesayan / Azat Aleksanyan";
+  if (code === "NET1") return "Robert Tadevosyan";
   return lecturers[courses.findIndex((course) => course.code === code) % lecturers.length];
 }
 
@@ -60,6 +61,7 @@ function Events({ items }: { items: Event[] }) {
       </div>
       <p className="text-sm">{dateLabel(item.start)} – {dateLabel(item.end, "time")}</p>
       {item.lecturer && <p className="text-sm">{item.lecturer}</p>}
+      {item.room && <p className="text-sm">Room {item.room}</p>}
       {item.reason && <p className="text-sm">{item.reason}</p>}
     </li>;
   })}</ul> : <p>No scheduled events.</p>;
@@ -85,10 +87,11 @@ function Timetable({ items, day }: { items: Event[]; day: string }) {
 
   return <Card title={daily ? "Daily timetable" : "Weekly timetable"}>
     <p className="font-semibold">ՀԱՄԱԿԱՐԳՉԱՅԻՆ ԳԻՏՈՒԹՅՈՒՆ (ինֆորմատիկա) / Computer Science</p>
-    <p className="text-sm">Year 3 · 2026–2027 · Semester 1 · 9–14 November · Asia/Yerevan</p>
+    <p className="text-sm">Year 3 · 2026–2027 · Semester 1 · {computerScienceWeekLabel} · Asia/Yerevan</p>
     <div className="flex flex-wrap items-center gap-3">
       <button className={button} type="button" aria-pressed={!daily} onClick={() => setDaily(false)}>Week</button>
       <button className={button} type="button" aria-pressed={daily} onClick={() => setDaily(true)}>Day</button>
+      <button type="button" className="underline" onClick={() => setDate(computerScienceDays[0])}>Open timetable week</button>
       <label>Date <input className={field} type="date" value={date} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
     </div>
     {days.length ? days.map((value) => (
@@ -109,7 +112,8 @@ function Timetable({ items, day }: { items: Event[]; day: string }) {
                 <Link className="font-semibold underline" href={`/academics/courses/${item.course}`}>{item.title}</Link>
                 {item.lecturer && <p>{item.lecturer}</p>}
                 {item.status !== "Scheduled" && <Badge warning>{item.status}</Badge>}
-                {item.reason && <p>{item.reason}</p>}
+                {item.room && <p className="text-sm">Room {item.room}</p>}
+      {item.reason && <p>{item.reason}</p>}
               </td> : breakTime ? <td colSpan={4} className="border border-[#a6b8aa] bg-[#ebeee9] p-2">Break</td>
                 : [1, 2, 3, 4].map((group) => <td key={group} className="h-9 border border-[#a6b8aa]" />)}
             </tr>;
@@ -349,7 +353,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
   const allowed = role === "student" ? pages.filter((entry) => !["gradebook", "manage"].includes(entry.key))
     : role === "lecturer" ? pages.filter((entry) => ["overview", "courses", "assignments", "gradebook"].includes(entry.key))
     : pages.filter((entry) => ["overview", "manage"].includes(entry.key));
-  const visibleCourses = role === "lecturer" ? courses.filter((item) => courseLecturer(item.code) === lecturers[0]) : courses;
+  const visibleCourses = role === "lecturer" ? courses.filter((item) => courseLecturer(item.code) === lecturers[0]) : courseCatalog;
   const official = currentModules.map((module) => ({ ...module, courses: module.courses.map((item) => ({
     ...item, components: item.components.map((component, index) => ({ ...component, score: published[`${item.code}:${index}`] ?? component.score })),
   })) }));
@@ -361,12 +365,12 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
     if (!allowed.some((entry) => entry.key === page) || (code && !course)) return <p role="alert">This section is unavailable for your demo role.</p>;
     switch (page) {
       case "courses": return course ? <Card title={course.title}>
-        <p>{course.code} · {course.ects} ECTS · {courseLecturer(course.code)}</p>
+        <p>{course.code} · {course.ects && `${course.ects} ECTS · `}{courseLecturer(course.code)}</p>
         <p>Develop practical and theoretical skills in {course.title.toLowerCase()} through lectures and assessed coursework.</p>
         <h3 className="font-semibold">Syllabus</h3><ul>{course.components.map((item) => <li key={item.name}>{item.name} · {formatGrade(decimal(item.weight) * 100n, decimal("1"))}%</li>)}</ul>
         <h3 className="font-semibold">Schedule</h3><Events items={schedule.timetable.filter((item) => item.course === code)} />
       </Card> : <div className="grid gap-3 sm:grid-cols-2">{visibleCourses.map((item) => <Card key={item.code} title={item.title}>
-        <p>{item.code} · {item.ects} ECTS · {courseLecturer(item.code)}</p><Link className="underline" href={`/academics/courses/${item.code}`}>Open course</Link>
+        <p>{item.code} · {item.ects && `${item.ects} ECTS · `}{courseLecturer(item.code)}</p><Link className="underline" href={`/academics/courses/${item.code}`}>Open course</Link>
       </Card>)}</div>;
       case "timetable": return <Timetable key={initialDate} items={schedule.timetable} day={initialDate ?? schedule.day} />;
       case "exams": return <div className="grid gap-4 sm:grid-cols-2">{schedule.exams.map((item) => {
@@ -389,7 +393,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
       default: return role === "student" ? <div className="grid gap-4 lg:grid-cols-3">
         <Card title="My Day">
           <p className="font-semibold">Computer Science</p>
-          <p className="text-sm">Year 3 · Semester 1 · 9–14 November 2026</p>
+          <p className="text-sm">Year 3 · Semester 1 · {computerScienceWeekLabel}</p>
           <p className="text-sm">Selected date: {selectedDate}</p>
           <Events items={schedule.timetable.filter((item) => item.start.startsWith(selectedDate))} />
         </Card>

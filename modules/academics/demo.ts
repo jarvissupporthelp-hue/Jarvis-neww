@@ -33,23 +33,38 @@ export const currentModules = exampleModules.map((module) => ({
   } : item),
 }));
 
-export type Event = { id: string; course: string; title: string; start: string; end: string; status: "Scheduled" | "Changed" | "Cancelled"; reason?: string; lecturer?: string };
+export type Event = { id: string; course: string; title: string; start: string; end: string; status: "Scheduled" | "Changed" | "Cancelled"; reason?: string; lecturer?: string; room?: string };
 
 // Year 3 Computer Science, semester 1. Only the two days visible on the source sheet.
-export const computerScienceDays = ["2026-11-09", "2026-11-10"];
-const classTimes = [["10:30", "11:50"], ["12:00", "13:20"], ["14:00", "15:20"], ["15:30", "16:50"]];
+export const computerScienceDays = ["2026-11-02", "2026-11-03"];
+export const computerScienceWeekLabel = "2–7 November 2026";
 
-export const computerScienceTimetable: Event[] = computerScienceDays.flatMap((date) =>
-  classTimes.map(([start, end]) => ({
-    id: `${date}-${start}`,
-    course: "ARC301",
-    title: "Computer Architecture",
-    lecturer: "Armelle Bonenfant",
-    start: `${date}T${start}:00+04:00`,
-    end: `${date}T${end}:00+04:00`,
-    status: "Scheduled",
-  })),
-);
+const sessions = [
+  ["2026-11-02", "09:00", "10:20", "MATH-CS", "Mathematics for CS (Algebra & Modeling)", "Aram Yesayan", ""],
+  ["2026-11-02", "10:30", "11:50", "NET1", "Computer Networks 1", "Robert Tadevosyan", ""],
+  ["2026-11-02", "12:00", "13:20", "NET1", "Computer Networks 1", "Robert Tadevosyan", ""],
+  ["2026-11-02", "14:00", "15:20", "FRE301", "French", "", "TP 1–4: 101, 102, 103, 104"],
+  ["2026-11-02", "15:30", "16:50", "MATH-CS", "Mathematics for CS (Algebra & Modeling)", "Azat Aleksanyan", "308"],
+  ["2026-11-03", "15:30", "16:50", "ENG301", "English", "", "TP 1–4: 101, 102, 103, 104"],
+];
+
+export const computerScienceTimetable: Event[] = sessions.map(([date, start, end, course, title, lecturer, room]) => ({
+  id: `${date}-${start}`,
+  course,
+  title,
+  lecturer: lecturer || undefined,
+  room: room || undefined,
+  start: `${date}T${start}:00+04:00`,
+  end: `${date}T${end}:00+04:00`,
+  status: "Scheduled",
+}));
+
+export const courseCatalog = [...courses, ...["MATH-CS", "NET1"].map((code) => ({
+  code,
+  title: computerScienceTimetable.find((event) => event.course === code)!.title,
+  ects: "",
+  components: [],
+}))];
 
 export function demoSchedule(now = new Date()) {
   const day = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Yerevan", dateStyle: "short" }).format(now);

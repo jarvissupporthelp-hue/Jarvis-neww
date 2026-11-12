@@ -36,18 +36,19 @@ test("thresholds, malformed grading data, retakes, and missing grades", () => {
   assert.equal(requiredScore(impossible, 0, 1), null);
 });
 
-test("Computer Science timetable keeps the eight sessions on their source dates", () => {
+test("the replacement Computer Science sheet keeps its six classes on the source dates", () => {
   const { timetable, exams } = demoSchedule();
-  const times = ["10:30", "12:00", "14:00", "15:30"];
-  assert.equal(timetable.length, 8);
-  for (const day of ["2026-11-09", "2026-11-10"]) {
-    const at = (time) => new Date(`${day}T${time}:00+04:00`);
-    const events = getTimetable(demoStudentId, at("00:00"), at("23:59"));
-    assert.deepEqual(events.map(({ start }) => start.slice(11, 16)), times);
-    assert.ok(events.every(({ lecturer, course }) => lecturer === "Armelle Bonenfant" && course === "ARC301"));
-    assert.deepEqual(getFreeTimeSlots(demoStudentId, at("10:00"), at("12:00"), 30),
-      [{ start: at("10:00"), end: at("10:30") }]);
-  }
+  assert.equal(timetable.length, 6);
+  const at = (day, time) => new Date(`${day}T${time}:00+04:00`);
+  const monday = "2026-11-02";
+  const tuesday = "2026-11-03";
+  assert.deepEqual(getTimetable(demoStudentId, at(monday, "00:00"), at(monday, "23:59"))
+    .map(({ course, start }) => [course, start.slice(11, 16)]),
+    [["MATH-CS", "09:00"], ["NET1", "10:30"], ["NET1", "12:00"], ["FRE301", "14:00"], ["MATH-CS", "15:30"]]);
+  assert.deepEqual(getTimetable(demoStudentId, at(tuesday, "00:00"), at(tuesday, "23:59"))
+    .map(({ course }) => course), ["ENG301"]);
+  assert.deepEqual(getFreeTimeSlots(demoStudentId, at(monday, "12:00"), at(monday, "14:00"), 40),
+    [{ start: at(monday, "13:20"), end: at(monday, "14:00") }]);
   assert.equal(getExamSchedule(demoStudentId, new Date(exams[0].start), new Date(exams[0].end)).length, 1);
   assert.ok(getUpcomingDeadlines(demoStudentId, 2).length > 0);
   assert.equal(getCurrentGpa(demoStudentId).gpa, null);
