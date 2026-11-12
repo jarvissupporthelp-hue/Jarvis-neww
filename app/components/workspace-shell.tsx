@@ -40,6 +40,7 @@ const studentNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academics", icon: "courses" },
   { href: "/learning", label: "Learning tools", icon: "plans" },
+  { href: "/career", label: "Career", icon: "plans" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
   { href: "/resources", label: "Course library", icon: "courses" },
