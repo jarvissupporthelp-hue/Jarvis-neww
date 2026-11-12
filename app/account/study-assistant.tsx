@@ -288,15 +288,15 @@ export function StudyAssistant() {
     </details>
   </div>;
 
-  return <div className="grid gap-4 lg:h-[calc(100dvh-10rem)] lg:min-h-[580px] lg:grid-cols-[17rem_minmax(0,1fr)]">
+  return <div className="jarvis-chat-layout grid gap-4 lg:h-[calc(100dvh-10rem)] lg:min-h-[580px] lg:grid-cols-[17rem_minmax(0,1fr)]">
     <aside aria-label="Conversations and usage" className="hidden min-h-0 rounded-3xl border border-[#d7e2d4] bg-white p-5 shadow-sm lg:block">{navigation}</aside>
     <div className="flex min-w-0 flex-col gap-3 lg:min-h-0">
       <details className="rounded-2xl border border-[#d7e2d4] bg-white p-3 shadow-sm lg:hidden">
         <summary className="cursor-pointer font-semibold">Conversations, usage & memory</summary>
         <div className="mt-4 max-h-[60dvh] overflow-y-auto">{navigation}</div>
       </details>
-      <section aria-label="Study conversation" className="flex h-[min(78dvh,820px)] min-h-[540px] min-w-0 flex-col overflow-hidden rounded-3xl border border-[#d7e2d4] bg-white shadow-[0_18px_45px_rgba(30,51,40,0.08)] lg:h-full lg:min-h-0">
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e8eee6] bg-[#fbfdf9] px-4 py-3 sm:px-6">
+      <section aria-label="Study conversation" className="jarvis-chat-panel flex h-[min(78dvh,820px)] min-h-[540px] min-w-0 flex-col overflow-hidden rounded-3xl border border-[#d7e2d4] bg-white shadow-[0_18px_45px_rgba(30,51,40,0.08)] lg:h-full lg:min-h-0">
+        <header className="jarvis-chat-header flex shrink-0 items-center justify-between gap-3 border-b border-[#e8eee6] bg-[#fbfdf9] px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#58745f]"><span className="size-2 rounded-full bg-[#64aa70]" /> JARVIS · Study coach</p>
             <h2 className="mt-1 truncate text-lg font-semibold sm:text-xl">{selected?.title ?? "Your new conversation"}</h2>
@@ -322,7 +322,7 @@ export function StudyAssistant() {
         </details>}
         {error && <p role="alert" className="mx-4 mt-3 shrink-0 rounded-xl border border-[#ebc5b9] bg-[#fff2ed] px-4 py-3 text-sm text-[#9b3d31] sm:mx-6">{error}</p>}
         <ol ref={history} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" tabIndex={0}
-          className="min-h-0 flex-1 space-y-6 overflow-y-auto bg-[linear-gradient(180deg,#fbfdf9_0%,#ffffff_65%)] px-4 py-6 sm:px-6">
+          className="jarvis-chat-history min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-6">
           {!selected && <li className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
             <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-[#e5f2e3] text-3xl text-[#214b36]">✦</div>
             <h3 className="text-2xl font-semibold">Learn with JARVIS</h3>
