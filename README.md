@@ -72,3 +72,9 @@ The demo uses synthetic records and role-specific navigation. File submission re
 Open **Learning** and choose a class date to start a quiz, flashcards, or focus session for a timetable subject. The six decks cover Mathematics for CS, Computer Networks 1, French, English, Algorithms, and Computer Architecture. Each contains twelve cards grouped by topic. Quiz mistakes can be retried separately.
 
 Use Code Trace to predict JavaScript output and Pomodoro presets for quick review, problem solving, and coding sprints. Exam Plan still uses Academics exam dates and availability. Progress is stored in the current browser.
+
+### Prisma 7 and role tests
+
+- The foundation database uses Prisma 7 with the PostgreSQL driver adapter. The generated client is not committed: run `npm run db:generate` after `npm ci` (lint, typecheck and build do this automatically). `DATABASE_URL` is read from the environment in `prisma.config.ts`, and its `?schema=foundation` parameter is handed to the adapter.
+- `npm run test:roles` starts a mock Supabase and the app, then tries every API route as a student, a lecturer, an admin, a disabled account and a signed-out visitor.
+- `npm run test:db` applies every migration and the seed to a throwaway PostgreSQL database and runs the SQL role tests in `supabase/tests`. Set `PGHOST`, `PGUSER` and `PGPASSWORD` first. It uses a small stand-in for Supabase-managed objects (`supabase/tests/support`) and must never be pointed at a real project.

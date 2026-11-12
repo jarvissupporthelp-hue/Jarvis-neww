@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../lib/generated/prisma/client.ts";
 import { createClient } from "@supabase/supabase-js";
 import { loadEnvFile } from "node:process";
 
@@ -15,7 +16,9 @@ if (!database || !authUrl || !localHosts.has(database.hostname) || !localHosts.h
 }
 
 const auth = createClient(authUrl.href, SUPABASE_SECRET_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-const db = new PrismaClient();
+const databaseUrl = new URL(DATABASE_URL);
+databaseUrl.searchParams.delete("schema");
+const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl.toString() }, { schema: "foundation" }) });
 const roles = ["student", "staff", "admin"];
 const courses = [
   ["NET", "Computer Networks"], ["DB", "Databases"], ["SYS", "Operating Systems"],

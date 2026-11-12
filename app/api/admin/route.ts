@@ -5,10 +5,13 @@ function reply(body: object, status = 200) {
   return Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
 }
 
-async function run(request: Request, action: string, data: object) {
+// Authorization runs before any request parsing so signed-out callers always get 401.
+async function gate(request: Request) {
   const caller = await authorize(request, ["admin"]);
-  if (!caller.ok) return reply({ error: "Active admin access required." }, caller.status);
+  return caller.ok ? null : reply({ error: "Active admin access required." }, caller.status);
+}
 
+async function run(request: Request, action: string, data: object) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const authorization = request.headers.get("authorization");
@@ -31,11 +34,15 @@ async function run(request: Request, action: string, data: object) {
   return reply({ error: "Admin service unavailable." }, 503);
 }
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
+  const denied = await gate(request);
+  if (denied) return denied;
   return run(request, "list", {});
 }
 
 export async function POST(request: Request) {
+  const denied = await gate(request);
+  if (denied) return denied;
   const input = await request.json().catch(() => null);
   const actions = ["user_status", "user_group", "group", "semester", "course", "offering", "assign", "unassign"];
   if (!actions.includes(input?.action) || !input?.data || typeof input.data !== "object" || Array.isArray(input.data)) {

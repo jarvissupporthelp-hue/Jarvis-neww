@@ -1,0 +1,29 @@
+diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 53ac412..ba92761 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -35,3 +35,24 @@ jobs:
+           done
+           curl --silent --fail http://127.0.0.1:3000/ > /dev/null || { cat /tmp/jarvis-integration-server.log; exit 1; }
+           npm run test:e2e
++      - name: Role matrix (student, lecturer, admin, disabled, signed out)
++        run: npm run test:roles
++
++  database:
++    runs-on: ubuntu-latest
++    services:
++      postgres:
++        image: postgres:16
++        env:
++          POSTGRES_PASSWORD: postgres
++        ports: ["5432:5432"]
++        options: >-
++          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
++    env:
++      PGHOST: 127.0.0.1
++      PGUSER: postgres
++      PGPASSWORD: postgres
++    steps:
++      - uses: actions/checkout@v4
++      - name: Migrations, seed and SQL role tests
++        run: bash scripts/test-database.sh
