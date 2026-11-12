@@ -71,7 +71,8 @@ test("provider failure returns a safe, actionable status without inventing an an
   globalThis.fetch = async () => new Response("unavailable", { status: 503 });
   try {
     assert.deepEqual(await askStudyAI("Help", "test-token", [], { courses: [], professorProfiles: [] }), { errorStatus: 503 });
-    assert.match(providerFailureMessage(401), /authentication/);
+    assert.match(providerFailureMessage(401), /credential/);
+    assert.match(providerFailureMessage(403), /deployment/);
     assert.match(providerFailureMessage(402), /credits/);
     assert.match(providerFailureMessage(429), /rate limited/);
   } finally {
