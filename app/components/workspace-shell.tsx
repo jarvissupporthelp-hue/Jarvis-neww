@@ -7,7 +7,7 @@ import { getClient } from "@/lib/browser-supabase";
 
 type Role = "student" | "lecturer" | "admin";
 type Theme = "dark" | "light" | "system";
-type IconName = "dashboard" | "calendar" | "courses" | "tasks" | "chat" | "plans" | "focus" | "users" | "layers" | "shield" | "menu" | "close" | "sun" | "moon" | "monitor" | "arrow";
+type IconName = "dashboard" | "calendar" | "courses" | "tasks" | "chat" | "plans" | "focus" | "users" | "layers" | "shield" | "math" | "menu" | "close" | "sun" | "moon" | "monitor" | "arrow";
 
 const paths: Record<IconName, ReactNode> = {
   dashboard: <><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></>,
@@ -20,6 +20,7 @@ const paths: Record<IconName, ReactNode> = {
   users: <><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M17 14a5 5 0 0 1 4 5v1"/></>,
   layers: <><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></>,
   shield: <><path d="M12 2 4 5v6c0 6 4 10 8 11 4-1 8-5 8-11V5z"/><path d="m9 12 2 2 4-4"/></>,
+  math: <><path d="M4 19h16M4 4h16M8 4l7 15M18 7l-6 10"/></>,
   menu: <path d="M4 6h16M4 12h16M4 18h16"/>,
   close: <path d="M5 5 19 19M19 5 5 19"/>,
   sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></>,
@@ -39,6 +40,7 @@ const studentNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academics", icon: "courses" },
   { href: "/learning", label: "Learning tools", icon: "plans" },
+  { href: "/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
   { href: "/resources", label: "Course library", icon: "courses" },
@@ -50,6 +52,7 @@ const studentNav: NavItem[] = [
 const lecturerNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "dashboard" },
   { href: "/academics", label: "Academics", icon: "layers" },
+  { href: "/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/lecturer", label: "My courses", icon: "courses" },
   { href: "/account/calendar", label: "Timetable", icon: "calendar" },
   { href: "/resources", label: "Course resources", icon: "layers" },
@@ -58,6 +61,7 @@ const adminNav: NavItem[] = [
   { href: "/account", label: "Administration", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academic tools", icon: "courses" },
+  { href: "/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/account/admin/users", label: "Users & access", icon: "users" },
   { href: "/account/admin/group", label: "Student groups", icon: "layers" },
   { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },
@@ -194,7 +198,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
               <div className="jarvis-sidebar-title">{roleName}</div>
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
-                  const current = pathname === item.href;
+                  const current = pathname === item.href || pathname.startsWith(item.href + "/");
                   return <Link key={item.href} href={item.href} aria-current={current ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "")} onClick={() => setDrawerOpen(false)}>
                     <Icon name={item.icon}/><span>{item.label}</span>
                   </Link>;

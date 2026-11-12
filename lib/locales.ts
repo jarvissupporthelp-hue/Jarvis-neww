@@ -17,6 +17,31 @@ export const landing = {
   },
 };
 
+export const mathVisualization = {
+  hy: {
+    eyebrow: "JARVIS · ՈՒՍՈՒՄՆԱԿԱՆ ԳՈՐԾԻՔՆԵՐ",
+    title: "Մաթեմատիկայի պատկերացում",
+    description: "Ընտրիր թեմա, փոխիր պարամետրերը և տես, թե ինչպես են աշխատում բանաձևերը։ Գործիքը բացվում է հենց JARVIS-ում։",
+    topics: "Ընտրիր թեմա",
+    all: "Բոլոր թեմաները",
+    back: "Վերադառնալ ուսումնական գործիքներին",
+    language: "Լեզու",
+    note: "Ինտերակտիվ լաբորատորիայի միջերեսը ներկայումս անգլերեն է։",
+    frame: "Ինտերակտիվ մաթեմատիկական լաբորատորիա",
+  },
+  en: {
+    eyebrow: "JARVIS · LEARNING TOOLS",
+    title: "Math visualizations",
+    description: "Choose a topic, adjust the controls, and see the mathematics change in real time. Explore the lab right inside JARVIS.",
+    topics: "Choose a topic",
+    all: "All topics",
+    back: "Back to learning tools",
+    language: "Language",
+    note: "The interactive lab is currently in English.",
+    frame: "Interactive mathematics laboratory",
+  },
+} as const;
+
 export type Locale = keyof typeof landing;
 
 export function isLocale(value: string | null): value is Locale {

@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/math-lab/node_modules/
+/public/math-lab/
 /.pnp
 .pnp.*
 .yarn/*

@@ -6,7 +6,7 @@ const paths = [
   "/", "/account", "/account/calendar", "/account/tasks",
   "/account/admin/users", "/account/admin/group", "/account/admin/timetable",
   "/dashboard", "/academics", "/learning",
-  "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes",
+  "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/math-visualization",
   "/hy", "/en",
 ];
 
@@ -23,9 +23,25 @@ test("UI and functionality routes respond successfully", async (t) => {
 
 test("merged landing offers both new academic modules and account login", async () => {
   const html = await (await fetch(origin)).text();
-  for (const href of ['/account', '/academics', '/learning', '/dashboard']) {
+  for (const href of ['/account', '/academics', '/learning', '/dashboard', '/math-visualization']) {
     assert.ok(html.includes('href="' + href + '"'), "missing landing link " + href);
   }
+});
+
+test("math lab topics deep-link to bundled same-origin visualizations", async () => {
+  const page = await fetch(origin + "/math-visualization?lang=en&module=integrals");
+  assert.equal(page.status, 200);
+  const html = await page.text();
+  assert.match(html, /Math visualizations/);
+  assert.match(html, /math-lab\/index\.html\?module=integrals/);
+  assert.match(html, /lang=en&amp;module=matrices/);
+  const lab = await fetch(origin + "/math-lab/index.html");
+  assert.equal(lab.status, 200);
+  assert.match(lab.headers.get("content-type"), /text\/html/);
+  assert.equal(lab.headers.get("x-frame-options"), "SAMEORIGIN");
+  const asset = (await lab.text()).match(/src="(\/math-lab\/assets\/[^"]+\.js)"/);
+  assert.ok(asset, "the lab needs a built JavaScript asset");
+  assert.equal((await fetch(origin + asset[1])).status, 200);
 });
 
 test("account pages are server-routable (not hash-only navigation)", async () => {

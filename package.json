@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "predev": "npm run build:math-lab",
+    "build:math-lab": "npm ci --prefix math-lab && npm run build --prefix math-lab",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -15,7 +17,7 @@
     "test:e2e": "node --test tests/e2e/*.test.mjs",
     "test:roles": "node scripts/test-roles.mjs",
     "test:db": "bash scripts/test-database.sh",
-    "prebuild": "npm run db:generate",
+    "prebuild": "npm run build:math-lab && npm run db:generate",
     "pretypecheck": "npm run db:generate"
   },
   "dependencies": {
