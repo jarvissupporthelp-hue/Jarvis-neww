@@ -11,6 +11,11 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
   const [files, setFiles] = useState<Pdf[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
+  const [includeNotes, setIncludeNotes] = useState(false);
+  const [fileId, setFileId] = useState("");
+  const [aiConsent, setAiConsent] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -77,6 +82,23 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 
+  async function ask(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy || !aiConsent || !question.trim()) return;
+    setBusy(true); setMessage(""); setAnswer("");
+    try {
+      const token = await getAccessToken();
+      const response = await fetch("/api/lecturer/assistant", {
+        method: "POST", headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ offeringId, prompt: question.trim(), includeNotes, fileId: fileId || null, consent: aiConsent }),
+      });
+      const result = await response.json();
+      if (response.ok) setAnswer(result.answer);
+      else setMessage(result.error ?? "Could not get a reply.");
+    } catch { setMessage("Could not get a reply. Try again."); }
+    finally { setBusy(false); }
+  }
+
   return <section className="space-y-4 rounded-xl border border-[#afbeb3] bg-white p-4">
     <h2 className="text-xl font-semibold">Private lecturer materials</h2>
     <p>Only you can open these notes and PDFs. They are never included in student chat or student course resources.</p>
@@ -101,6 +123,20 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
       <button className="underline" onClick={() => void download(item.id)}>Download</button>{" · "}
       <button className="underline" onClick={() => void remove(item.id, "file")}>Delete</button>
     </li>)}</ul>
+    <form className="space-y-2 border-t pt-4" onSubmit={ask}>
+      <h3 className="font-semibold">Ask lecturer JARVIS</h3>
+      <p className="text-sm">Select exactly which private material to use for this question. JARVIS does not publish it to students.</p>
+      <label className="flex gap-2 text-sm"><input type="checkbox" checked={includeNotes} onChange={(event) => setIncludeNotes(event.target.checked)} />Include my private notes for this course</label>
+      <label className="block text-sm">Private PDF to consult
+        <select className="block w-full rounded border p-2" value={fileId} onChange={(event) => setFileId(event.target.value)}>
+          <option value="">No PDF</option>{files.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+        </select>
+      </label>
+      <label className="block">Question<textarea className="block w-full rounded border p-2" rows={3} maxLength={2000} required value={question} onChange={(event) => setQuestion(event.target.value)} /></label>
+      <label className="flex gap-2 text-sm"><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} />I agree to send my question and selected private excerpts to the configured external AI provider.</label>
+      <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={busy || !aiConsent || !question.trim()}>{busy ? "Thinking…" : "Ask JARVIS"}</button>
+      {answer && <div className="whitespace-pre-wrap rounded bg-[#eef3ee] p-3" role="status">{answer}</div>}
+    </form>
     {message && <p role="status">{message}</p>}
   </section>;
 }

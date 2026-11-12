@@ -12,6 +12,7 @@ export type StudyContext = {
   taskDueDates: { date: string; count: number }[];
   officialDeadlinesAvailable: boolean;
   officialExamDatesAvailable: boolean;
+  studentMemory?: { learningPreferences: string; currentGoal: string; topicsToPractice: string };
   professorProfiles?: {
     professorName: string;
     course: string;

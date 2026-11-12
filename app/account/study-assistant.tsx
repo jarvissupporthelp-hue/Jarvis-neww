@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { ChatPlanStarter } from "./chat-plan-starter";
 import { StudyContextSummary } from "./study-context-summary";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
 import { MAX_STUDY_PROMPT } from "@/lib/study-chat-limits";
 
 type Thread = { id: string; title: string };
 type Turn = { id: string; prompt: string; answer: string };
+type Usage = { limit: number; used: number; remaining: number; inputTokens: number; outputTokens: number; tokenReportedAttempts: number; resetsAt: string };
+type Memory = { learning_preferences: string; current_goal: string; topics_to_practice: string };
 
 const button = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
 const field = "w-full rounded border border-[#789181] p-2";
@@ -29,9 +31,42 @@ export function StudyAssistant() {
   const history = useRef<HTMLOListElement>(null);
   const [busy, setBusy] = useState(false);
   const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [usage, setUsage] = useState<Usage | null>(null);
+  const [memory, setMemory] = useState<Memory | null>(null);
+  const [memoryStatus, setMemoryStatus] = useState("");
 
   const selectedId = selected?.id;
   const draft = selectedId ? drafts[selectedId] ?? "" : "";
+
+  const refreshUsage = useCallback(async () => {
+    const token = await getAccessToken();
+    if (!token) return;
+    const response = await fetch("/api/chat/usage", { headers: { Authorization: `Bearer ${token}` } });
+    if (response.ok) setUsage(await response.json());
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const token = await getAccessToken();
+      if (!token) return;
+      const response = await fetch("/api/chat/memory", { headers: { Authorization: `Bearer ${token}` } });
+      if (response.ok) setMemory((await response.json()).memory);
+    })().catch(() => {});
+  }, []);
+
+  async function saveMemory(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!memory) return;
+    setMemoryStatus("Saving…");
+    try {
+      const token = await getAccessToken();
+      const response = await fetch("/api/chat/memory", {
+        method: "PUT", headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify(memory),
+      });
+      setMemoryStatus(response.ok ? "Saved for your future JARVIS conversations." : "Could not save preferences.");
+    } catch { setMemoryStatus("Could not save preferences."); }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,12 +88,13 @@ export function StudyAssistant() {
         if (controller.signal.aborted) return;
         if (error) throw error;
         setThreads(data);
+        void refreshUsage().catch(() => {});
       } catch {
         if (!controller.signal.aborted) setError("Could not load conversations.");
       }
     })();
     return () => controller.abort();
-  }, [threadsAttempt]);
+  }, [threadsAttempt, refreshUsage]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -156,6 +192,7 @@ export function StudyAssistant() {
       setError("Could not get a reply. Your draft is still here.");
     } finally {
       setBusy(false);
+      void refreshUsage().catch(() => {});
     }
   }
 
@@ -173,6 +210,34 @@ export function StudyAssistant() {
   return (
     <div className="grid gap-4 md:grid-cols-[15rem_minmax(0,1fr)]">
       <aside aria-label="Conversations" className="space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4">
+        <div className="rounded-lg bg-[#eef3ee] p-3" aria-label="Daily AI usage">
+          <h2 className="font-semibold">Today’s JARVIS usage</h2>
+          {usage ? <>
+            <p><strong>{usage.remaining}</strong> of {usage.limit} AI messages left</p>
+            <p className="text-sm">{usage.used} attempts used · Resets at 00:00 UTC</p>
+            <p className="mt-2 text-sm">Tokens reported today: <strong>{(usage.inputTokens + usage.outputTokens).toLocaleString()}</strong></p>
+            <p className="text-xs">{usage.inputTokens.toLocaleString()} input · {usage.outputTokens.toLocaleString()} output</p>
+            {usage.tokenReportedAttempts < usage.used && <p className="text-xs">Some attempts have no token report from the model provider.</p>}
+            <p className="text-xs">PDF-only search does not use an AI message.</p>
+          </> : <p className="text-sm">Checking your usage…</p>}
+        </div>
+        <details className="rounded-lg border p-3">
+          <summary className="cursor-pointer font-semibold">My study memory</summary>
+          <p className="mt-2 text-xs">Only your account can edit this. JARVIS uses it when you agree to an AI request.</p>
+          {memory ? <form className="mt-2 space-y-2" onSubmit={saveMemory}>
+            <label className="block text-sm">How I learn best<textarea className={field} rows={2} maxLength={1000} value={memory.learning_preferences} onChange={(event) => setMemory({ ...memory, learning_preferences: event.target.value })} /></label>
+            <label className="block text-sm">Current goal<textarea className={field} rows={2} maxLength={1000} value={memory.current_goal} onChange={(event) => setMemory({ ...memory, current_goal: event.target.value })} /></label>
+            <label className="block text-sm">Topics to practice<textarea className={field} rows={2} maxLength={1000} value={memory.topics_to_practice} onChange={(event) => setMemory({ ...memory, topics_to_practice: event.target.value })} /></label>
+            <button className="rounded bg-[#1e3328] px-3 py-2 text-sm text-white">Save memory</button>
+            <button type="button" className="ml-2 text-sm underline" onClick={async () => {
+              const token = await getAccessToken();
+              const response = await fetch("/api/chat/memory", { method: "DELETE", headers: { Authorization: `Bearer ${token ?? ""}` } });
+              if (response.ok) { setMemory((await response.json()).memory); setMemoryStatus("Memory cleared."); }
+              else setMemoryStatus("Could not clear memory.");
+            }}>Clear memory</button>
+          </form> : <p className="text-sm">Memory unavailable.</p>}
+          {memoryStatus && <p role="status" className="text-xs">{memoryStatus}</p>}
+        </details>
         <button type="button" className={button} disabled={busy} aria-label="Create new conversation" onClick={() => void manage("create")}>New conversation</button>
         {threads.length === 0 && <p>No saved conversations yet.</p>}
         <ul className="max-h-48 space-y-1 overflow-y-auto p-1 md:max-h-96">
