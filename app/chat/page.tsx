@@ -3,7 +3,7 @@ import { StudyAssistant } from "../account/study-assistant";
 
 export default function ChatPage() {
   return (
-    <main className="mx-auto max-w-7xl space-y-5 px-3 py-5 sm:px-6 sm:py-7">
+    <main className="jarvis-chat-page mx-auto max-w-7xl space-y-5 px-3 py-5 sm:px-6 sm:py-7">
       <header className="flex flex-wrap items-end justify-between gap-3 px-1">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#6c826d]">UFAR · Academic workspace</p>

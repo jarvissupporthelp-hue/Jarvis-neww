@@ -30,8 +30,8 @@ export async function POST(request: Request) {
   if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(conversationId)) {
     return reply({ error: "Choose a conversation first." }, 400);
   }
-  if (!prompt || prompt.length > MAX_STUDY_PROMPT || (!coursePdfSearch && input?.consent !== true)) {
-    return reply({ error: "Enter a question within the character limit and accept the AI data-use notice." }, 400);
+  if (!prompt || prompt.length > MAX_STUDY_PROMPT) {
+    return reply({ error: "Enter a question within the character limit." }, 400);
   }
 
   const token = request.headers.get("authorization");

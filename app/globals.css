@@ -706,3 +706,50 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
 .jarvis-integrated-tools a {font-size:12px; color:var(--text); background:var(--panel); border:1px solid var(--stroke); border-radius:11px; padding:12px 15px; font-weight:700; text-decoration:none; transition:background-color .16s ease,border-color .16s ease,transform .16s ease;}
 .jarvis-integrated-tools a:hover {background:var(--highlight); border-color:var(--violet); transform:translateY(-1px);}
 @media(prefers-reduced-motion:reduce){.jarvis-integrated-tools a:hover {transform:none;}}
+
+
+/* JARVIS chat: focused composer, source mode, and theme-safe surfaces. */
+.jarvis-chat-page { color: var(--text); }
+.jarvis-chat-page > header h1 { color: var(--text) !important; }
+.jarvis-chat-page > header p { color: var(--muted) !important; }
+.jarvis-chat-layout aside,
+.jarvis-chat-panel,
+.jarvis-chat-header,
+.jarvis-chat-composer { background: var(--panel) !important; border-color: var(--stroke) !important; color: var(--text); }
+.jarvis-chat-panel { box-shadow: 0 24px 70px -45px var(--shadow) !important; }
+.jarvis-chat-header { background: color-mix(in srgb, var(--panel) 92%, var(--violet) 8%) !important; }
+.jarvis-chat-history {
+  background:
+    radial-gradient(circle at 90% 0%, color-mix(in srgb, var(--violet) 8%, transparent), transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, var(--blue) 4%), var(--panel)) !important;
+}
+.jarvis-chat-composer { box-shadow: 0 -12px 32px -30px var(--shadow); }
+.jarvis-chat-input { border-radius: 16px !important; min-height: 86px !important; line-height: 1.55; transition: border-color .16s ease, box-shadow .16s ease; }
+.jarvis-chat-input:focus { border-color: var(--violet) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--violet) 18%, transparent); outline: 0 !important; }
+.jarvis-pdf-mode {
+  display: inline-flex; align-items: center; gap: 10px; min-width: 218px; padding: 7px 9px;
+  border: 1px solid var(--stroke); border-radius: 13px; background: var(--panel-raised);
+  color: var(--muted); cursor: pointer; transition: border-color .16s ease, background .16s ease, transform .16s ease;
+}
+.jarvis-pdf-mode:hover { border-color: color-mix(in srgb, var(--violet) 55%, var(--stroke)); transform: translateY(-1px); }
+.jarvis-pdf-mode.is-active { border-color: color-mix(in srgb, var(--violet) 70%, var(--stroke)); background: var(--highlight); color: var(--text); }
+.jarvis-pdf-mode:has(input:focus-visible) { outline: 2px solid var(--blue); outline-offset: 3px; }
+.jarvis-pdf-icon {
+  display: grid; place-items: center; width: 34px; height: 30px; flex: 0 0 auto;
+  border-radius: 8px; background: color-mix(in srgb, var(--violet) 18%, var(--panel));
+  color: var(--violet); font-size: 9px; font-weight: 850; letter-spacing: .06em;
+}
+.jarvis-pdf-mode > span:nth-child(3) { display: grid; gap: 1px; min-width: 0; }
+.jarvis-pdf-mode strong { color: var(--text); font-size: 12px; line-height: 1.2; }
+.jarvis-pdf-mode small { color: var(--subtle); font-size: 10px; line-height: 1.2; }
+.jarvis-mode-switch { width: 34px; height: 20px; margin-left: auto; padding: 2px; border-radius: 99px; background: var(--stroke); transition: background .16s ease; }
+.jarvis-mode-switch i { display: block; width: 16px; height: 16px; border-radius: 50%; background: white; box-shadow: 0 1px 4px #0003; transition: transform .16s ease; }
+.jarvis-pdf-mode.is-active .jarvis-mode-switch { background: var(--violet); }
+.jarvis-pdf-mode.is-active .jarvis-mode-switch i { transform: translateX(14px); }
+.jarvis-chat-send { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.jarvis-chat-send span { font-size: 16px; transition: transform .16s ease; }
+.jarvis-chat-send:hover span { transform: translate(2px,-2px); }
+@media (max-width: 560px) {
+  .jarvis-pdf-mode { width: 100%; }
+  .jarvis-chat-composer .jarvis-chat-send { width: 100%; }
+}
