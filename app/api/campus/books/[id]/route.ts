@@ -1,6 +1,8 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { books } from "@/modules/campus/books";
 
+export const maxDuration = 120;
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const book = books.find(([key]) => String(key) === id);
@@ -8,7 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const [, title, author] = book;
   try {
     const source = await fetch(`https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`, {
-      next: { revalidate: 86400 }, signal: AbortSignal.timeout(12000),
+      next: { revalidate: 86400 }, signal: AbortSignal.timeout(105000),
     });
     if (!source.ok) throw new Error("Source unavailable");
     const pdf = await PDFDocument.create();
