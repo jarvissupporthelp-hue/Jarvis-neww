@@ -225,9 +225,7 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
   }
   function toggleSkill(name: string, complete: boolean) {
     if (demo) {
-      if (complete) tracked.add(name);
-      else tracked.delete(name);
-      setGuestSkills([...tracked]);
+      setGuestSkills(complete ? [...new Set([...guestSkills, name])] : guestSkills.filter((item) => item !== name));
     } else void save({ action: "skill-completion", skill: name, complete });
   }
   const projects = demo ? [sampleProject] : profile.projects;
