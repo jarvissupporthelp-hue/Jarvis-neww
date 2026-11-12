@@ -8,7 +8,7 @@ const doubles = globalThis.recoveryTestDoubles = {};
 const modules = {
   "@/lib/authorization": "export const authorize = () => ({ ok: true, userId: 'student' });",
   "@/lib/study-ai": "export const askStudyAI = (...args) => globalThis.recoveryTestDoubles.ai(...args);",
-  "@/lib/study-context": "export const createStudyClient = () => globalThis.recoveryTestDoubles.chat; export const examDateClarification = () => null; export const loadStudyContext = () => ({ context: {} });",
+  "@/lib/study-context": "export const createStudyClient = () => globalThis.recoveryTestDoubles.chat; export const examDateClarification = () => null; export const loadStudyContext = () => ({ context: { courses: [] } });",
   "@supabase/supabase-js": "export const createClient = () => globalThis.recoveryTestDoubles.email;",
 };
 const hooks = registerHooks({
@@ -76,7 +76,7 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
   assert.equal(failure.status, 502);
   assert.match((await failure.json()).error, /draft is still here/);
   assert.deepEqual(turns, []);
-  doubles.ai = () => "Routers forward packets.";
+  doubles.ai = () => ({ answer: "Routers forward packets.", inputTokens: null, outputTokens: null });
   assert.equal((await chat(post(body))).status, 200);
   assert.deepEqual(turns, [{ conversation_id: id, prompt: body.prompt, answer: "Routers forward packets." }]);
 });

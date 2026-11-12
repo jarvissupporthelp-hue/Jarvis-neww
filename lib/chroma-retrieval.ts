@@ -1,6 +1,6 @@
 import { CloudClient } from "chromadb";
 import type { createStudyClient } from "./study-context";
-import { extractCoursePages } from "./course-pdf-index";
+import { extractCoursePages } from "@/lib/course-pdf-index";
 
 type Client = NonNullable<ReturnType<typeof createStudyClient>>;
 type Passage = { title: string; page: number; excerpt: string };
