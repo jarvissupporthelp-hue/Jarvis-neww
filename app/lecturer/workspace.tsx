@@ -6,6 +6,7 @@ import { getAccessToken } from "@/lib/browser-supabase";
 import type { CourseAssignment } from "@/lib/course-assignments";
 import { CourseResources } from "../resources/workspace";
 import { Timetable } from "../account/timetable";
+import { LecturerPrivateVault } from "./private-vault";
 
 type Offering = {
   id: string;
@@ -23,8 +24,51 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [profile, setProfile] = useState({ professor_name: "", course_plan: "", teaching_style: "", explanation_preferences: "", assessment_style: "", course_rules: "" });
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [profileMessage, setProfileMessage] = useState("");
+  const [profileError, setProfileError] = useState("");
   const pending = useRef<{ id: string; details: string } | null>(null);
   const today = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Yerevan", dateStyle: "short" }).format(new Date());
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        const token = await getAccessToken();
+        const response = await fetch(`/api/lecturer/profile?course=${encodeURIComponent(offering.id)}`, {
+          headers: { Authorization: `Bearer ${token ?? ""}` },
+        });
+        const result = await response.json();
+        if (active && response.ok) setProfile({
+          professor_name: result.profile.professor_name ?? "",
+          course_plan: result.profile.course_plan ?? "",
+          teaching_style: result.profile.teaching_style ?? "",
+          explanation_preferences: result.profile.explanation_preferences ?? "",
+          assessment_style: result.profile.assessment_style ?? "",
+          course_rules: result.profile.course_rules ?? "",
+        });
+      } catch { if (active) setProfileError("Could not load the teaching profile."); }
+    })();
+    return () => { active = false; };
+  }, [offering.id]);
+
+  async function saveProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (profileBusy) return;
+    setProfileBusy(true); setProfileError(""); setProfileMessage("");
+    try {
+      const token = await getAccessToken();
+      const response = await fetch("/api/lecturer/profile", {
+        method: "PUT", headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ ...profile, offeringId: offering.id }),
+      });
+      const result = await response.json();
+      if (!response.ok) { setProfileError(result.error ?? "Could not save the teaching profile."); return; }
+      setProfileMessage("Teaching profile saved. JARVIS will use it for enrolled students in this course.");
+    } catch { setProfileError("Could not save the teaching profile. Try again."); }
+    finally { setProfileBusy(false); }
+  }
 
   async function publish(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,6 +112,19 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
         <p>{offering.course.code} · {offering.semester.name}</p>
         <div className="jarvis-role-hero-links"><a href="#publish-assignment">Publish assignment ↓</a><a href="#course-pdf-resources">Course PDFs ↓</a></div>
       </header>
+      <form className={card} onSubmit={saveProfile}>
+        <h2 className="text-xl font-semibold">Student-visible teaching profile</h2>
+        <p>Everything here is visible to enrolled students and may be used in their JARVIS answers. Put confidential drafts in Private lecturer materials below.</p>
+        <label className="block">Professor name<input className={field} maxLength={160} value={profile.professor_name} onChange={(event) => setProfile({ ...profile, professor_name: event.target.value })} placeholder="Name as students will ask for it" /></label>
+        <label className="block">Course plan and exam or project requirements<textarea className={field} rows={5} maxLength={5000} value={profile.course_plan} onChange={(event) => setProfile({ ...profile, course_plan: event.target.value })} placeholder="Topics, assessment format, deliverables, evaluation criteria, and preparation strategy from approved course materials." /></label>
+        <label className="block">Teaching approach<textarea className={field} rows={3} maxLength={2000} value={profile.teaching_style} onChange={(event) => setProfile({ ...profile, teaching_style: event.target.value })} placeholder="For example: start with intuition, then define terms and derive the formula." /></label>
+        <label className="block">How to explain and solve exercises<textarea className={field} rows={3} maxLength={2000} value={profile.explanation_preferences} onChange={(event) => setProfile({ ...profile, explanation_preferences: event.target.value })} placeholder="Preferred steps, notation, examples, and common mistakes to point out." /></label>
+        <label className="block">Assessment expectations<textarea className={field} rows={3} maxLength={2000} value={profile.assessment_style} onChange={(event) => setProfile({ ...profile, assessment_style: event.target.value })} placeholder="Question types, expected answer format, and what earns credit." /></label>
+        <label className="block">Course-specific rules<textarea className={field} rows={3} maxLength={2000} value={profile.course_rules} onChange={(event) => setProfile({ ...profile, course_rules: event.target.value })} placeholder="Verified course rules JARVIS should follow. Avoid private student information." /></label>
+        <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={profileBusy}>{profileBusy ? "Saving…" : "Save teaching profile"}</button>
+        {profileError && <p role="alert">{profileError}</p>}{profileMessage && <p role="status">{profileMessage}</p>}
+      </form>
+      <LecturerPrivateVault offeringId={offering.id} />
       <form id="publish-assignment" className={card} onSubmit={publish}>
         <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">PUBLISH TO STUDENTS</span><h2 className="text-xl font-semibold">Create an assignment</h2></div></div>
         <p>Enrolled students in {offering.group.name} can read the brief and see the deadline on their dashboard and calendar.</p>

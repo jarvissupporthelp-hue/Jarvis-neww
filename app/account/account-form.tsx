@@ -15,11 +15,12 @@ type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
 export type AccountView = "dashboard" | "calendar" | "tasks";
 
-async function currentRole(token: string): Promise<Role | null> {
+async function currentIdentity(token: string): Promise<{role: Role; displayName: string} | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
   if (response.status === 401 || response.status === 403) return null;
   if (!response.ok) throw new Error("Membership check unavailable");
-  return (await response.json()).role;
+  const identity = await response.json();
+  return { role: identity.role, displayName: identity.displayName };
 }
 
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
@@ -33,6 +34,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
   const copy = accountCopy[locale];
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
+  const [displayName, setDisplayName] = useState("");
   const [groups, setGroups] = useState<Group[]>([]);
   const [inviteRole, setInviteRole] = useState("student");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
@@ -66,7 +68,9 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
             ? copy.invalidInvite : copy.invalidRecovery);
           window.history.replaceState(null, "", "/account?lang=" + locale);
         } else if (data.session) {
-          setRole(await currentRole(data.session.access_token));
+          const identity = await currentIdentity(data.session.access_token);
+          setRole(identity?.role ?? null);
+          setDisplayName(identity?.displayName ?? "");
         }
       } catch {
         if (mounted) setError(copy.unavailable);
@@ -133,13 +137,14 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         setError(error?.status === 429 ? copy.limited : copy.invalid);
         return;
       }
-      const verified = await currentRole(data.session.access_token);
+      const verified = await currentIdentity(data.session.access_token);
       if (!verified) {
         await supabase.auth.signOut({ scope: "local" });
         setError(copy.inactive);
         return;
       }
-      setRole(verified);
+      setRole(verified.role);
+      setDisplayName(verified.displayName);
     } catch {
       setError(copy.error);
     } finally {
@@ -186,7 +191,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
       {role ? (
         <div className="authenticated-workspace space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4" style={{ borderColor: "var(--stroke)", background: "var(--panel)" }}>
-            <p ref={accountStatus} tabIndex={-1} className="text-sm">Signed in as <strong className="capitalize">{role}</strong></p>
+            <p ref={accountStatus} tabIndex={-1} className="text-sm">Signed in as <strong>{displayName || role}</strong> <span className="capitalize">({role})</span></p>
             <span className="jarvis-admin-status">Connected to JARVIS</span>
           </div>
           {role === "admin" && (
