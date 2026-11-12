@@ -118,25 +118,36 @@ export function Timetable({ getToken, admin, personal }: {
     ...events.map((item) => ({ source: "personal" as const, date: item.event_date, time: item.starts_at, item })),
     ...deadlines.map((item) => ({ source: "assignment" as const, date: item.due_on, time: item.due_at, item })),
   ].sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time));
+  const visibleDays = [...new Set(entries.map((entry) => entry.date))];
   const lesson = lessons?.find((item) => item.id === selected);
   const lecturers = admin?.users.filter((user) => user.role === "lecturer" && user.status === "active"
     && admin.assignments.some((item) => item.user_id === user.id && item.offering_id === offering));
 
   return (
-    <section className="space-y-4 rounded border border-[#789181] p-4">
-      <h2 className="text-2xl font-semibold">{admin ? "Edit timetable" : personal ? "My weekly calendar" : "My timetable"}</h2>
-      <p className="text-sm">All times are in Asia/Yerevan.</p>
-      <nav aria-label="Timetable week" className="flex flex-wrap items-center justify-between gap-2">
-        <button type="button" disabled={busy} className="underline" onClick={() => changeWeek(shiftDate(week, -7))}>Previous</button>
-        <span>{week} to {shiftDate(week, 6)}</span>
-        <button type="button" disabled={busy} className="underline" onClick={() => changeWeek(shiftDate(week, 7))}>Next</button>
+    <section className="jarvis-panel space-y-4" aria-label="Weekly timetable">
+      <div className="jarvis-section-heading">
+        <div><span className="jarvis-eyebrow">ACADEMIC CALENDAR</span>
+          <h2 className="text-2xl font-semibold">{admin ? "Edit timetable" : personal ? "My weekly calendar" : "My timetable"}</h2>
+          <p>All event times shown in Asia/Yerevan.</p>
+        </div>
+        <span className="jarvis-counter">{entries.length} {entries.length === 1 ? "event" : "events"}</span>
+      </div>
+      <nav aria-label="Timetable week" className="jarvis-calendar-nav">
+        <button type="button" disabled={busy} className="jarvis-secondary-button" onClick={() => changeWeek(shiftDate(week, -7))}>← Previous</button>
+        <span className="jarvis-calendar-range">{week} – {shiftDate(week, 6)}</span>
+        <button type="button" disabled={busy} className="jarvis-secondary-button" onClick={() => changeWeek(yerevanWeek())}>This week</button>
+        <button type="button" disabled={busy} className="jarvis-secondary-button" onClick={() => changeWeek(shiftDate(week, 7))}>Next →</button>
       </nav>
-      {!lessons && !message && <p>Loading lessons…</p>}
-      {lessons && entries.length === 0 && <p>No calendar entries this week.</p>}
-      <ul className="space-y-2">
-        {entries.map((entry) => entry.source === "assignment" ? (
-          <li key={entry.source + entry.item.id} className="rounded bg-white p-3">
-            <p className="text-xs font-semibold uppercase">Assignment deadline</p>
+      {!lessons && !message && <p role="status">Loading calendar entries…</p>}
+      {lessons && entries.length === 0 && <div className="jarvis-empty-state"><strong>No events this week</strong><p>Change weeks to explore the timetable, or add a personal event where available.</p></div>}
+      <div className="jarvis-calendar-days">
+        {visibleDays.map((day) => (
+          <div className="jarvis-calendar-day" key={day}>
+            <h3>{new Intl.DateTimeFormat("en-GB", {weekday:"long",day:"numeric",month:"long",timeZone:"UTC"}).format(new Date(day+"T00:00:00Z"))}</h3>
+            <ul className="jarvis-calendar-entries">
+              {entries.filter((entry) => entry.date === day).map((entry) => entry.source === "assignment" ? (
+          <li key={entry.source + entry.item.id} className="jarvis-calendar-entry" data-kind="assignment">
+            <p className="jarvis-calendar-kind">Assignment deadline</p>
             <details>
               <summary className="cursor-pointer break-words font-semibold">{entry.item.title}</summary>
               <p className="whitespace-pre-wrap break-words">{entry.item.brief}</p>
@@ -145,8 +156,8 @@ export function Timetable({ getToken, admin, personal }: {
             <p className="text-sm">{entry.item.offering.course.name}</p>
           </li>
         ) : (
-          <li key={entry.source + entry.item.id} className="rounded bg-white p-3">
-            <p className="text-xs font-semibold uppercase">{entry.source === "official" ? "Official class" : entry.source === "study" ? "Study session" : "Personal event"}</p>
+          <li key={entry.source + entry.item.id} className="jarvis-calendar-entry" data-kind={entry.source}>
+            <p className="jarvis-calendar-kind">{entry.source === "official" ? "Official class" : entry.source === "study" ? "Study session" : "Personal event"}</p>
             <strong className="break-words">{entry.source === "official" ? entry.item.course : entry.item.title}</strong>
             <p>{entry.date} · {entry.item.starts_at.slice(0, 5)}–{entry.item.ends_at.slice(0, 5)}</p>
             {entry.source === "study" && entry.item.completed_at && <p className="text-sm font-semibold">Completed</p>}
@@ -160,7 +171,10 @@ export function Timetable({ getToken, admin, personal }: {
             ) : entry.source === "personal" && <button type="button" className="underline" onClick={() => setEventId(entry.item.id)}>Edit event</button>}
           </li>
         ))}
-      </ul>
+            </ul>
+          </div>
+        ))}
+      </div>
       {personal && (
         <PersonalEventEditor key={week + eventId + revision} client={personal}
           event={events.find((event) => event.id === eventId)} from={week} to={shiftDate(week, 6)}
@@ -169,7 +183,7 @@ export function Timetable({ getToken, admin, personal }: {
           }} />
       )}
       {admin && (
-        <form key={selected + week + revision} onSubmit={save} className="space-y-3">
+        <form key={selected + week + revision} onSubmit={save} className="jarvis-calendar-form space-y-3">
           <fieldset disabled={busy} className="space-y-3">
             <h3 className="font-semibold">{lesson ? "Edit selected lesson" : "Add lesson"}</h3>
             <input type="hidden" name="id" value={selected} />
