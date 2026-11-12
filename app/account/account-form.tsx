@@ -197,8 +197,8 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
           {role === "admin" && (
             <form onSubmit={invite} className="jarvis-invite-form space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
               <div className="jarvis-section-heading">
-                <div><span className="jarvis-eyebrow">ACCESS MANAGEMENT</span><h2 className="text-xl font-semibold">Invite a new member</h2>
-                <p>Only approved students and lecturers can activate an account.</p></div>
+                <div><span className="jarvis-eyebrow">SUPABASE AUTH · EMAIL INVITATIONS</span><h2 className="text-xl font-semibold">Invite a new member</h2>
+                <p>When you approve a student or lecturer, JARVIS automatically emails their secure account activation link.</p></div>
               </div>
               <label className="block">{copy.email}<input className={inputClass} name="email" type="email" required /></label>
               <label className="block">Role
@@ -214,7 +214,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
                   </select>
                 </label>
               )}
-              <button className={buttonClass} disabled={busy}>{busy ? "Sending invitation…" : "Send or resend invitation"}</button>
+              <button className={buttonClass} disabled={busy}>{busy ? "Sending invitation…" : "Approve & email invitation"}</button>
             </form>
           )}
           {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}

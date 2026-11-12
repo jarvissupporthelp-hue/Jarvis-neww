@@ -41,6 +41,15 @@ test("account pages are server-routable (not hash-only navigation)", async () =>
   }
 });
 
+test("automatic invitations never accept anonymous requests", async () => {
+  const response = await fetch(origin + "/api/invitations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "test@example.com", role: "lecturer" }),
+  });
+  assert.ok([401,403].includes(response.status), "Invitations must require an active admin.");
+});
+
 test("sensitive application endpoints reject unauthenticated clients", async () => {
   for (const path of ["/api/foundation", "/api/foundation/notifications", "/api/me", "/api/dashboard", "/api/admin"]) {
     const response = await fetch(origin + path);
