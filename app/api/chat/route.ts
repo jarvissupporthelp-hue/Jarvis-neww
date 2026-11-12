@@ -2,6 +2,7 @@ import { authorize } from "@/lib/authorization";
 import { askStudyAI } from "@/lib/study-ai";
 import { createStudyClient, examDateClarification, loadStudyContext } from "@/lib/study-context";
 import { formatCoursePdfSearch, type CoursePdfSearchResult } from "@/lib/course-pdf-search";
+import { getCourseProfessorGuides } from "@/lib/professor-guides";
 import { MAX_STUDY_PROMPT } from "@/lib/study-chat-limits";
 
 function reply(body: object, status = 200) {
@@ -47,23 +48,32 @@ export async function POST(request: Request) {
   }
 
   const { data: profiles } = await supabase.from("professor_ai_profiles")
-    .select("teaching_style,explanation_preferences,assessment_style,course_rules,offering:course_offerings!inner(course:courses!inner(code,name))");
+    .select("professor_name,course_plan,teaching_style,explanation_preferences,assessment_style,course_rules,offering:course_offerings!inner(course:courses!inner(code,name))");
+  context.professorProfiles = getCourseProfessorGuides(context.courses);
   if (profiles) {
     type ProfileRow = {
+      professor_name: string; course_plan: string;
       teaching_style: string; explanation_preferences: string; assessment_style: string; course_rules: string;
       offering: { course: { code: string; name: string } | { code: string; name: string }[] } | { course: { code: string; name: string } | { code: string; name: string }[] }[];
     };
-    context.professorProfiles = (profiles as unknown as ProfileRow[]).map((row) => {
+    const savedProfiles = (profiles as unknown as ProfileRow[]).map((row) => {
       const offering = Array.isArray(row.offering) ? row.offering[0] : row.offering;
       const course = Array.isArray(offering?.course) ? offering.course[0] : offering?.course;
       return {
+        professorName: row.professor_name,
         course: course ? `${course.code}: ${course.name}` : "Course",
+        coursePlan: row.course_plan,
         teachingStyle: row.teaching_style,
         explanationPreferences: row.explanation_preferences,
         assessmentStyle: row.assessment_style,
         courseRules: row.course_rules,
       };
     });
+    for (const saved of savedProfiles) {
+      const index = context.professorProfiles.findIndex((guide) => guide.course === saved.course);
+      if (index >= 0) context.professorProfiles[index] = saved;
+      else context.professorProfiles.push(saved);
+    }
   }
 
   let answer = examDateClarification(prompt, context);
