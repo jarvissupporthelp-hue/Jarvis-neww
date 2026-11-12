@@ -94,7 +94,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState<Role | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "dark");
+  const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "dark");
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
