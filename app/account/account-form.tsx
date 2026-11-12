@@ -12,11 +12,12 @@ type Flow = "signin" | "forgot" | "invite" | "recovery";
 type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
 
-async function currentRole(token: string): Promise<Role | null> {
+async function currentIdentity(token: string): Promise<{ role: Role; displayName: string } | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
   if (response.status === 401 || response.status === 403) return null;
   if (!response.ok) throw new Error("Membership check unavailable");
-  return (await response.json()).role;
+  const identity = await response.json();
+  return { role: identity.role, displayName: identity.displayName };
 }
 
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
@@ -25,6 +26,7 @@ const buttonClass = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled
 export function AccountForm() {
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
+  const [displayName, setDisplayName] = useState("");
   const [groups, setGroups] = useState<Group[]>([]);
   const [inviteRole, setInviteRole] = useState("student");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
@@ -59,7 +61,9 @@ export function AccountForm() {
             : "This reset link is invalid or expired. Request a new one from the sign-in form.");
           window.history.replaceState(null, "", "/account");
         } else if (data.session) {
-          setRole(await currentRole(data.session.access_token));
+          const identity = await currentIdentity(data.session.access_token);
+          setRole(identity?.role ?? null);
+          setDisplayName(identity?.displayName ?? "");
         }
       } catch {
         if (mounted) setError("Authentication is unavailable. Try again shortly.");
@@ -126,13 +130,14 @@ export function AccountForm() {
         setError("Could not sign in. Check your email and password, or use Forgot password below.");
         return;
       }
-      const verified = await currentRole(data.session.access_token);
+      const verified = await currentIdentity(data.session.access_token);
       if (!verified) {
         await supabase.auth.signOut({ scope: "local" });
         setError("Your sign-in worked, but your JARVIS access is inactive. Contact your administrator.");
         return;
       }
-      setRole(verified);
+      setRole(verified.role);
+      setDisplayName(verified.displayName);
     } catch {
       setError("Could not finish the request. Check your details and try again.");
     } finally {
@@ -175,7 +180,7 @@ export function AccountForm() {
     <div className="space-y-4">
       {role ? (
         <>
-          <p ref={accountStatus} tabIndex={-1}>Signed in as <strong>{role}</strong>.</p>
+          <p ref={accountStatus} tabIndex={-1}>Signed in as <strong>{displayName}</strong> ({role}).</p>
           {role === "admin" && (
             <form onSubmit={invite} className="space-y-3">
               <h2 className="text-xl font-semibold">Approve and invite</h2>
@@ -207,7 +212,7 @@ export function AccountForm() {
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setError("Could not sign out. Try again.");
-            else { setRole(null); setMessage(""); }
+            else { setRole(null); setDisplayName(""); setMessage(""); }
           }}>Sign out</button>
         </>
       ) : (
