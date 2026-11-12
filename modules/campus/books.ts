@@ -1,7 +1,7 @@
 export const books = [
   [1342, "Pride and Prejudice", "Jane Austen", "Romance"],
   [158, "Emma", "Jane Austen", "Romance"],
-  [23077, "Jane Eyre", "Charlotte Brontë", "Romance"],
+  [1260, "Jane Eyre", "Charlotte Brontë", "Romance"],
   [161, "Sense and Sensibility", "Jane Austen", "Romance"],
   [935, "Self Help", "Samuel Smiles", "Motivation"],
   [2274, "How to Live on 24 Hours a Day", "Arnold Bennett", "Motivation"],
