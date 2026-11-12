@@ -118,6 +118,35 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 .jarvis-sidebar-foot span { display: block; color: var(--subtle); font-size: 10px; }
 .jarvis-main-area { min-width: 0; width: 100%; padding: 28px clamp(16px, 3.3vw, 48px) 64px; }
 .jarvis-main-area.has-sidebar { width: calc(100% - 238px); }
+
+.math-page { width: 100%; max-width: 1550px; margin: 0 auto; }
+.math-page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 26px; }
+.math-page-kicker { color: var(--violet); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.math-page h1 { font-size: clamp(30px, 4vw, 48px); margin: 9px 0 8px; line-height: 1.12; }
+.math-page h1 span { color: var(--violet); }
+.math-page-description { color: var(--muted); max-width: 650px; margin: 0; font-size: 15px; }
+.math-page-language { display: flex; gap: 3px; padding: 4px; border-radius: 12px; border: 1px solid var(--stroke); background: var(--panel); flex-shrink: 0; }
+.math-page-language a { padding: 8px 11px; color: var(--muted); border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 650; }
+.math-page-language a[aria-current] { color: var(--text); background: var(--panel-raised); }
+.math-page-topics { margin-bottom: 18px; }
+.math-page-topics-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.math-page-topics-heading h2 { font-size: 15px; margin: 0; }
+.math-page-topics-heading a { color: var(--violet); font-size: 13px; text-decoration: none; }
+.math-topic-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.math-topic-list a { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 8px 13px; border: 1px solid var(--stroke); border-radius: 11px; background: var(--panel); color: var(--muted); font-size: 13px; font-weight: 600; text-decoration: none; transition: border-color .18s, background .18s, transform .18s; }
+.math-topic-list a:hover { border-color: var(--violet); transform: translateY(-2px); }
+.math-topic-list a.is-selected { border-color: var(--violet); background: var(--highlight); color: var(--text); }
+.math-topic-list a span { color: var(--blue); font-weight: 700; }
+.math-lab-frame-wrap { overflow: hidden; border: 1px solid var(--stroke); border-radius: 18px; background: #0b0e14; box-shadow: 0 16px 50px -28px var(--shadow); }
+.math-lab-frame { display: block; border: 0; width: 100%; height: min(78dvh, 870px); min-height: 560px; }
+.math-page-note { color: var(--subtle); font-size: 12px; margin-top: 12px; }
+@media (max-width: 700px) {
+  .math-page-header { flex-direction: column; gap: 14px; }
+  .math-page-topics-heading { align-items: flex-start; flex-direction: column; }
+  .math-topic-list { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 6px; }
+  .math-topic-list a { flex: 0 0 auto; }
+  .math-lab-frame { height: 72dvh; min-height: 520px; }
+}
 .jarvis-main-area > main { max-width: 1150px; padding: 0; margin-left: auto; margin-right: auto; min-height: 0; }
 .jarvis-main-area > main > h1 { font-size: clamp(1.7rem, 3vw, 2.45rem); font-weight: 760; letter-spacing: -.06em; margin-bottom: 16px; }
 .jarvis-main-area > main > p { color: var(--muted); }
