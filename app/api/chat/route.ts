@@ -19,6 +19,8 @@ async function findPassages(client: NonNullable<ReturnType<typeof createStudyCli
   return error || !data ? null : data as CoursePdfSearchResult;
 }
 
+export const maxDuration = 60; // allow the AI provider chain time to fail over
+
 export async function POST(request: Request) {
   const caller = await authorize(request, ["student"]);
   if (!caller.ok) return reply({ error: "Active student access required." }, caller.status);

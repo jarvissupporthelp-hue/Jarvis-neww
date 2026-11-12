@@ -753,3 +753,8 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
   .jarvis-pdf-mode { width: 100%; }
   .jarvis-chat-composer .jarvis-chat-send { width: 100%; }
 }
+
+.math-lab-gate { margin: 1rem 0; padding: 2rem 1.5rem; border: 1px solid var(--stroke); border-radius: 1rem; background: var(--panel); text-align: center; }
+.math-lab-gate h2 { margin: 0 0 .5rem; font-size: 1.25rem; font-weight: 600; }
+.math-lab-gate p { margin: 0 0 1rem; color: var(--muted); }
+.math-page-note a { text-decoration: underline; }

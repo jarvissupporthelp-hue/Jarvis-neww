@@ -28,6 +28,11 @@ export const mathVisualization = {
     language: "Լեզու",
     note: "Ինտերակտիվ լաբորատորիայի միջերեսը ներկայումս անգլերեն է։",
     frame: "Ինտերակտիվ մաթեմատիկական լաբորատորիա",
+    backHome: "Վերադառնալ վահանակ",
+    checking: "Ստուգվում է մուտքը…",
+    signInTitle: "Մուտք գործեք",
+    signInBody: "Մաթեմատիկայի լաբորատորիան հասանելի է JARVIS-ում մուտք գործած օգտատերերին։",
+    signIn: "Մուտք գործել",
   },
   en: {
     eyebrow: "JARVIS · AI AGENT",
@@ -39,6 +44,11 @@ export const mathVisualization = {
     language: "Language",
     note: "The interactive lab is currently in English.",
     frame: "Interactive mathematics laboratory",
+    backHome: "Back to dashboard",
+    checking: "Checking your sign-in…",
+    signInTitle: "Sign in to continue",
+    signInBody: "The math lab is available to signed-in JARVIS users.",
+    signIn: "Sign in",
   },
 } as const;
 

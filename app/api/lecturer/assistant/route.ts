@@ -6,6 +6,8 @@ import { extractCoursePages } from "@/lib/course-pdf-index";
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
 const reply = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
 
+export const maxDuration = 60; // allow the AI provider chain time to fail over
+
 export async function POST(request: Request) {
   const caller = await authorize(request, ["lecturer"]);
   if (!caller.ok) return reply({ error: "Active lecturer access required." }, caller.status);

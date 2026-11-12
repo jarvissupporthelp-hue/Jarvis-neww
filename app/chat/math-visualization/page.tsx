@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { mathVisualization } from "@/lib/locales";
 import { mathTopics } from "@/lib/math-visualizations";
+import { MathLabFrame } from "./math-lab-frame";
 
 export const metadata: Metadata = {
   title: "Math visualizations | JARVIS",
@@ -39,9 +40,7 @@ export default async function MathVisualizationPage({ searchParams }: PageProps<
         </Link>)}
       </nav>
     </div>
-    <div className="math-lab-frame-wrap">
-      <iframe key={labUrl} className="math-lab-frame" title={copy.frame} src={labUrl} loading="eager" />
-    </div>
+    <MathLabFrame labUrl={labUrl} locale={locale} copy={copy} />
     <p className="math-page-note">{copy.note}</p>
   </main>;
 }

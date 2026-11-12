@@ -55,11 +55,13 @@ const lecturerNav: NavItem[] = [
   { href: "/lecturer", label: "My courses", icon: "courses" },
   { href: "/account/calendar", label: "Timetable", icon: "calendar" },
   { href: "/resources", label: "Course resources", icon: "layers" },
+  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
 ];
 const adminNav: NavItem[] = [
   { href: "/account", label: "Administration", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academic tools", icon: "courses" },
+  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/account/admin/users", label: "Users & access", icon: "users" },
   { href: "/account/admin/group", label: "Student groups", icon: "layers" },
   { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },

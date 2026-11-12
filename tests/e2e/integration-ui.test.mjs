@@ -91,3 +91,10 @@ test("account subpages honour the selected language", async () => {
     assert.ok(html.includes('lang="hy"'), path + " ignored ?lang=hy");
   }
 });
+
+test("the math lab is not served to signed-out visitors", async () => {
+  for (const path of ["/chat/math-visualization", "/chat/math-visualization?module=limits&lang=en"]) {
+    const html = await (await fetch(origin + path)).text();
+    assert.ok(!/<iframe[^>]*math-lab/.test(html), path + " embeds the lab before sign-in");
+  }
+});

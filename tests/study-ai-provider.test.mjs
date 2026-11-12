@@ -29,7 +29,8 @@ test("partial direct provider setup never sends its key to the gateway", () => {
     assert.match(resolveProviderAccess(new Request("https://example.test")).error, /setup is incomplete/);
     process.env.FREE_LLM_BASE_URL = "https://provider.example/v1/chat/completions";
     process.env.FREE_LLM_MODEL = "example-model";
-    assert.deepEqual(resolveProviderAccess(new Request("https://example.test")), { credential: "direct-provider-secret" });
+    // The returned credential is only ever used for the gateway; direct provider keys stay with their own provider.
+    assert.deepEqual(resolveProviderAccess(new Request("https://example.test")), { credential: "gateway-token" });
   } finally {
     for (const key of keys) {
       if (saved[key] === undefined) delete process.env[key];
