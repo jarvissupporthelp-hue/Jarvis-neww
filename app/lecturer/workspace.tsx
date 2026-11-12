@@ -134,7 +134,7 @@ export function LecturerWorkspace({ offeringId }: { offeringId?: string }) {
   }, [offeringId, retry]);
 
   if (needsSignIn) return <p>Sign in with an active lecturer account. <Link href="/account" className="underline">Sign in</Link></p>;
-  if (error) return <div className="jarvis-empty-state" role="alert"><strong>Couldn't load your courses</strong><p>{error}</p><button className="jarvis-secondary-button" type="button" onClick={() => {setError(""); setRetry(n => n+1);}}>Try again</button></div>;
+  if (error) return <div className="jarvis-empty-state" role="alert"><strong>Couldn&apos;t load your courses</strong><p>{error}</p><button className="jarvis-secondary-button" type="button" onClick={() => {setError(""); setRetry(n => n+1);}}>Try again</button></div>;
   if (!data) return <p role="status">Loading lecturer workspace…</p>;
   if ("course" in data) return <CoursePage offering={data.course} initialAssignments={data.assignments} />;
 

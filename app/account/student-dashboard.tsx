@@ -81,7 +81,7 @@ export function StudentDashboard({getToken}:{getToken:()=>Promise<string|undefin
           <div className="jarvis-deadline-date"><strong>{item.due_on.slice(8,10)}</strong><small>{new Intl.DateTimeFormat("en-GB",{month:"short",timeZone:"UTC"}).format(new Date(item.due_on+"T00:00:00Z"))}</small></div>
           <div><details><summary>{item.title}</summary><p className="jarvis-muted whitespace-pre-wrap break-words">{item.brief}</p></details>
           <p className="jarvis-muted">{item.offering.course.name} · {item.due_at.slice(0,5)} Yerevan</p></div>
-        </li>)}</ul>:<div className="jarvis-empty-state"><strong>You're up to date</strong><p>No upcoming published deadlines.</p></div>}
+        </li>)}</ul>:<div className="jarvis-empty-state"><strong>You&apos;re up to date</strong><p>No upcoming published deadlines.</p></div>}
       </section>
       <section className="jarvis-panel">
         <div className="jarvis-panel-heading"><div><span className="jarvis-eyebrow">STUDY PROGRESS</span><h3>Your study plans</h3></div><Link href="/study-plans">Open plans →</Link></div>
