@@ -11,8 +11,9 @@ export async function POST(request: Request) {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const secret = process.env.SUPABASE_SECRET_KEY;
-  const origin = process.env.JARVIS_AUTH_ORIGIN;
-  if (!url || !secret || !origin) return reply("Invitation delivery is not configured.", 503);
+  const publishable = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const origin = process.env.JARVIS_AUTH_ORIGIN ?? new URL(request.url).origin;
+  if (!url || (!secret && !publishable)) return reply("Invitation delivery is not configured.", 503);
 
   const input = await request.json().catch(() => null);
   const email = typeof input?.email === "string" ? input.email.trim().toLowerCase() : "";
@@ -22,6 +23,29 @@ export async function POST(request: Request) {
     || (role !== "student" && role !== "lecturer")
     || (role === "student" && (typeof group !== "string" || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(group)))) {
     return reply("Enter a valid email, role and student group.", 400);
+  }
+
+  // Edge fallback keeps the service-role key in Supabase, not Vercel.
+  if (!secret) {
+    try {
+      const response = await fetch(new URL("/functions/v1/jarvis-invite", url), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": request.headers.get("Authorization") ?? "",
+          "apikey": publishable!,
+        },
+        body: JSON.stringify({ email, role, groupId: group, redirectTo: new URL("/account?flow=invite", origin).toString() }),
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      });
+      const body = await response.json().catch(() => null);
+      const message = typeof body?.message === "string" ? body.message :
+        response.ok ? "Invitation sent." : "Supabase invitation service is unavailable.";
+      return reply(message, response.status);
+    } catch {
+      return reply("Could not contact Supabase Auth. Please try again.", 503);
+    }
   }
 
   const supabase = createClient(url, secret, {
