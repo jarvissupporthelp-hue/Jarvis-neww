@@ -88,3 +88,10 @@ The limits for active bookings and minutes per booking can be set in the environ
 For unattended library reminders, schedule `SELECT foundation.campus_send_loan_reminders(now());`
 every five minutes using a database scheduler. The Campus page also checks for due reminders on load.
 The same loan can only be marked once. Users with a foundation account also receive an in-app notification.
+
+The Rooms & Map tab shows a simulated teaching timetable. The Digital Library
+generates PDFs on demand from 20 allowlisted Project Gutenberg books and links
+to their source editions. Under Team booking, students can request a 30-minute
+academic meeting and invite classmates. Lecturers review and answer requests in
+the same tab. Meetings require the Campus Meetings migration and a database
+connection to the same Supabase project used by JARVIS Auth.

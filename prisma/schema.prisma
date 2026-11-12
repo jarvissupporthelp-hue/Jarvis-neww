@@ -197,3 +197,18 @@ model CampusInvite {
   @@id([reservationId, recipientId])
   @@index([recipientId])
 }
+
+model CampusMeeting {
+  id           String @id @default(uuid()) @db.Uuid
+  studentId    String @db.Uuid
+  lecturerId   String @db.Uuid
+  topic        String
+  agenda       String
+  startAt      DateTime @db.Timestamptz(3)
+  status       String @default("pending")
+  response     String @default("")
+  participants String[] @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  @@index([studentId, createdAt])
+  @@index([lecturerId, createdAt])
+}
