@@ -7,7 +7,7 @@ const id = "12345678-1234-4234-8234-123456789012";
 const doubles = globalThis.recoveryTestDoubles = {};
 const modules = {
   "@/lib/authorization": "export const authorize = () => ({ ok: true, userId: 'student' });",
-  "@/lib/study-ai": "export const askStudyAI = (...args) => globalThis.recoveryTestDoubles.ai(...args); export const resolveProviderAccess = () => ({ credential: 'test' });",
+  "@/lib/study-ai": "export const askStudyAI = (...args) => globalThis.recoveryTestDoubles.ai(...args); export const resolveProviderAccess = () => ({ credential: 'test' }); export const providerFailureMessage = (status) => 'Provider error ' + status;",
   "@/lib/study-context": "export const createStudyClient = () => globalThis.recoveryTestDoubles.chat; export const examDateClarification = () => null; export const loadStudyContext = () => ({ context: { courses: [] } });",
   "@supabase/supabase-js": "export const createClient = () => globalThis.recoveryTestDoubles.email;",
 };

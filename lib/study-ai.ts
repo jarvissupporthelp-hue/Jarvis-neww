@@ -42,8 +42,17 @@ function providerConfig() {
 }
 
 export type AIReply = { answer: string; inputTokens: number | null; outputTokens: number | null };
+export type AIProviderFailure = { errorStatus: number };
 
-export async function askLecturerAI(prompt: string, credential: string, course: string, material: string): Promise<string | null> {
+export function providerFailureMessage(status: number): string {
+  if (status === 401 || status === 403) return "The AI provider rejected JARVIS authentication. The server model connection needs attention.";
+  if (status === 402) return "The AI provider requires account credits or billing access before it can answer.";
+  if (status === 404) return "The selected AI model is unavailable. The server model setting needs attention.";
+  if (status === 429) return "The AI provider is rate limited. Please try again shortly.";
+  return `The AI provider returned HTTP ${status}. Please try again shortly.`;
+}
+
+export async function askLecturerAI(prompt: string, credential: string, course: string, material: string): Promise<string | AIProviderFailure | null> {
   try {
     const provider = providerConfig();
     const response = await fetch(provider.endpoint, {
@@ -59,7 +68,7 @@ export async function askLecturerAI(prompt: string, credential: string, course: 
         ],
       }),
     });
-    if (!response.ok) { console.error("JARVIS lecturer AI provider HTTP status:", response.status); return null; }
+    if (!response.ok) { console.error("JARVIS lecturer AI provider HTTP status:", response.status); return { errorStatus: response.status }; }
     const body = await response.json();
     const answer = body?.choices?.[0]?.message?.content;
     return typeof answer === "string" ? answer.trim() || null : null;
@@ -72,7 +81,7 @@ export async function askStudyAI(
   history: { prompt: string; answer: string }[],
   context: StudyContext,
   passages: { title: string; page: number; excerpt: string }[] = [],
-): Promise<AIReply | null> {
+): Promise<AIReply | AIProviderFailure | null> {
   try {
     const provider = providerConfig();
     const response = await fetch(provider.endpoint, {
@@ -96,7 +105,7 @@ export async function askStudyAI(
         ],
       }),
     });
-    if (!response.ok) { console.error("JARVIS student AI provider HTTP status:", response.status); return null; }
+    if (!response.ok) { console.error("JARVIS student AI provider HTTP status:", response.status); return { errorStatus: response.status }; }
     const body = await response.json();
     const answer = body?.choices?.[0]?.message?.content;
     if (typeof answer !== "string" || !answer.trim()) return null;

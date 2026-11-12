@@ -1,6 +1,6 @@
 import { authorize } from "@/lib/authorization";
 import { createStudyClient } from "@/lib/study-context";
-import { askLecturerAI, resolveProviderAccess } from "@/lib/study-ai";
+import { askLecturerAI, providerFailureMessage, resolveProviderAccess } from "@/lib/study-ai";
 import { extractCoursePages } from "@/lib/course-pdf-index";
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
@@ -50,5 +50,6 @@ export async function POST(request: Request) {
   const provider = resolveProviderAccess(request);
   if ("error" in provider) return reply({ error: provider.error }, 503);
   const answer = await askLecturerAI(prompt, provider.credential, course, material.join("\n\n").slice(0, 14000));
+  if (answer && typeof answer !== "string") return reply({ error: providerFailureMessage(answer.errorStatus) }, 502);
   return answer ? reply({ answer }) : reply({ error: "The AI provider did not respond. Try again." }, 502);
 }

@@ -38,6 +38,7 @@ export function StudyAssistant() {
   const [memoryStatus, setMemoryStatus] = useState("");
   const [usageError, setUsageError] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState("");
+  const [failedPrompt, setFailedPrompt] = useState("");
   const [newTurnId, setNewTurnId] = useState<string | null>(null);
 
   const selectedId = selected?.id;
@@ -132,7 +133,7 @@ export function StudyAssistant() {
   useEffect(() => {
     const messages = history.current;
     if (messages) messages.scrollTop = messages.scrollHeight;
-  }, [turns, pendingPrompt]);
+  }, [turns, pendingPrompt, failedPrompt]);
 
   useEffect(() => {
     if (newTurnId) newAnswer.current?.focus({ preventScroll: true });
@@ -145,6 +146,7 @@ export function StudyAssistant() {
     setError("");
     setSendStatus("");
     setNewTurnId(null);
+    setFailedPrompt("");
   }
 
   async function manage(action: "create" | "rename" | "delete") {
@@ -186,6 +188,7 @@ export function StudyAssistant() {
     const question = draft.trim();
     setSendStatus(coursePdfSearch ? "Searching course PDFs…" : "Waiting for JARVIS…");
     setPendingPrompt(question);
+    setFailedPrompt("");
     setNewTurnId(null);
     setBusy(true);
     setError("");
@@ -200,6 +203,7 @@ export function StudyAssistant() {
       if (!response.ok) {
         setSendStatus("");
         setError(result.error || "Could not get a reply. Your draft is still here.");
+        setFailedPrompt(question);
         return;
       }
       if (typeof result?.turn?.id !== "string" || typeof result.turn.prompt !== "string" || typeof result.turn.answer !== "string") {
@@ -212,6 +216,7 @@ export function StudyAssistant() {
     } catch {
       setSendStatus("");
       setError("Could not get a reply. Your draft is still here.");
+      setFailedPrompt(question);
     } finally {
       setPendingPrompt("");
       setBusy(false);
@@ -353,6 +358,17 @@ export function StudyAssistant() {
             </div>
             <div role="status" className="mr-auto w-fit rounded-2xl border border-[#dbe7da] bg-white px-5 py-4 text-sm text-[#52715a] shadow-sm">
               <span className="mr-2 inline-block size-2 animate-pulse rounded-full bg-[#6cab76]" />{coursePdfSearch ? "Searching your course PDFs…" : "JARVIS is preparing your answer…"}
+            </div>
+          </li>}
+          {failedPrompt && !pendingPrompt && <li className="space-y-4">
+            <div className="ml-auto w-fit max-w-[92%] rounded-2xl rounded-br-md bg-[#214b36] px-4 py-3 text-[15px] text-white sm:max-w-[78%]">
+              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]">You</p>
+              <p className="whitespace-pre-wrap break-words">{failedPrompt}</p>
+            </div>
+            <div role="alert" className="mr-auto max-w-full rounded-2xl border border-[#ebc5b9] bg-[#fff2ed] px-5 py-4 text-sm text-[#803c32] shadow-sm">
+              <p className="font-semibold">JARVIS could not answer yet</p>
+              <p className="mt-1">{error || "The model connection failed. Your question is still in the box below."}</p>
+              <p className="mt-2 text-xs">Your question was not saved as a reply. You can retry it after the connection is fixed.</p>
             </div>
           </li>}
         </ol>

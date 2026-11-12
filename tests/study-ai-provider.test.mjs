@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { askStudyAI, resolveProviderAccess } from "../lib/study-ai.ts";
+import { askStudyAI, providerFailureMessage, resolveProviderAccess } from "../lib/study-ai.ts";
 
 test("Vercel OIDC works without a personal model API key", () => {
   const keys = ["FREE_LLM_BASE_URL", "FREE_LLM_API_KEY", "FREE_LLM_MODEL", "AI_GATEWAY_API_KEY", "VERCEL", "VERCEL_OIDC_TOKEN"];
@@ -66,11 +66,14 @@ test("free gateway model returns a concise answer and reported token usage", asy
   }
 });
 
-test("provider failure returns no answer or invented usage", async () => {
+test("provider failure returns a safe, actionable status without inventing an answer", async () => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => new Response("unavailable", { status: 503 });
   try {
-    assert.equal(await askStudyAI("Help", "test-token", [], { courses: [], professorProfiles: [] }), null);
+    assert.deepEqual(await askStudyAI("Help", "test-token", [], { courses: [], professorProfiles: [] }), { errorStatus: 503 });
+    assert.match(providerFailureMessage(401), /authentication/);
+    assert.match(providerFailureMessage(402), /credits/);
+    assert.match(providerFailureMessage(429), /rate limited/);
   } finally {
     globalThis.fetch = originalFetch;
   }

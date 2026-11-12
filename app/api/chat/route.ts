@@ -1,5 +1,5 @@
 import { authorize } from "@/lib/authorization";
-import { askStudyAI, resolveProviderAccess } from "@/lib/study-ai";
+import { askStudyAI, providerFailureMessage, resolveProviderAccess } from "@/lib/study-ai";
 import { createStudyClient, examDateClarification, loadStudyContext } from "@/lib/study-context";
 import { formatCoursePdfSearch, type CoursePdfSearchResult } from "@/lib/course-pdf-search";
 import { getCourseProfessorGuides } from "@/lib/professor-guides";
@@ -112,6 +112,7 @@ export async function POST(request: Request) {
 
     const passages = await findPassages(supabase, prompt).catch(() => null);
     const generated = await askStudyAI(prompt, provider.credential, history.data.reverse(), context, passages?.matches ?? []);
+    if (generated && "errorStatus" in generated) return reply({ error: `${providerFailureMessage(generated.errorStatus)} Your draft is still here.` }, 502);
     if (!generated) return reply({ error: "The AI provider did not respond. Your draft is still here. Try again shortly." }, 502);
     answer = generated.answer;
     if (generated.inputTokens !== null && generated.outputTokens !== null) {
