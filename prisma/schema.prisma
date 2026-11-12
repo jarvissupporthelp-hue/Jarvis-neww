@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  staff
+  admin
+}
+
+enum Locale {
+  hy
+  en
+}
+
+model User {
+  id            String         @id @db.Uuid
+  role          Role
+  locale        Locale         @default(hy)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
+  deletedAt     DateTime?      @db.Timestamptz(3)
+  student       Student?
+  notifications Notification[]
+}
+
+model Student {
+  id          String       @id @default(uuid()) @db.Uuid
+  userId      String       @unique @db.Uuid
+  faculty     String
+  year        Int
+  targetGpa   Decimal?     @db.Decimal(5, 2)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+  deletedAt   DateTime?    @db.Timestamptz(3)
+  user        User         @relation(fields: [userId], references: [id])
+  enrollments Enrollment[]
+  deadlines   Deadline[]
+  bookings    Booking[]
+  requests    Request[]
+  savedItems  SavedItem[]
+}
+
+model Course {
+  id          String       @id @default(uuid()) @db.Uuid
+  code        String       @unique
+  title       String
+  credits     Decimal      @db.Decimal(5, 2)
+  ects        Decimal      @db.Decimal(5, 2)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+  deletedAt   DateTime?    @db.Timestamptz(3)
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id        String    @id @default(uuid()) @db.Uuid
+  studentId String    @db.Uuid
+  courseId  String    @db.Uuid
+  status    String
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+  student   Student   @relation(fields: [studentId], references: [id])
+  course    Course    @relation(fields: [courseId], references: [id])
+
+  @@unique([studentId, courseId])
+  @@index([courseId])
+}
+
+model Deadline {
+  id        String    @id @default(uuid()) @db.Uuid
+  studentId String    @db.Uuid
+  title     String
+  dueAt     DateTime  @db.Timestamptz(3)
+  source    String
+  sourceId  String
+  status    String
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+  student   Student   @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, source, sourceId])
+  @@index([studentId, dueAt])
+}
+
+model Booking {
+  id           String    @id @default(uuid()) @db.Uuid
+  studentId    String    @db.Uuid
+  resourceType String
+  resourceId   String
+  startAt      DateTime  @db.Timestamptz(3)
+  endAt        DateTime  @db.Timestamptz(3)
+  status       String
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt    DateTime? @db.Timestamptz(3)
+  student      Student   @relation(fields: [studentId], references: [id])
+
+  @@index([studentId, startAt])
+}
+
+model Request {
+  id        String    @id @default(uuid()) @db.Uuid
+  studentId String    @db.Uuid
+  type      String
+  status    String
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+  student   Student   @relation(fields: [studentId], references: [id])
+
+  @@index([studentId, status])
+}
+
+model Notification {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  type      String
+  payload   Json
+  readAt    DateTime? @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model SavedItem {
+  id        String    @id @default(uuid()) @db.Uuid
+  studentId String    @db.Uuid
+  itemType  String
+  itemId    String
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  deletedAt DateTime? @db.Timestamptz(3)
+  student   Student   @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, itemType, itemId])
+}

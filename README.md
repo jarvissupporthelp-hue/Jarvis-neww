@@ -48,3 +48,15 @@ See [Day 1 scope and deployment](docs/day-one.md).
 | Day | Work completed | Testing |
 | --- | --- | --- |
 | 1 | Armenian-default landing page with English switching. Removed hosted AI chat from the hackathon branch. Course PDF search and study planning remain available. | Open `/hy` and `/en` locally and follow the sign-in link. |
+| Foundation | Added the shared Prisma model, role-aware dashboard, per-user language preferences, module registry, and in-app notifications. | Run `npm run test:e2e` against a running app. |
+
+### Run the hackathon foundation locally
+
+With Node 24, Docker, and the Supabase CLI installed:
+
+1. Run `npm ci` and `supabase start`. On the first run Docker may need to download the local service images.
+2. Copy `.env.example` to `.env`. Set the local Supabase API URL, publishable key and secret key from `supabase status`. Set `DATABASE_URL` to the local direct PostgreSQL URL with `?schema=foundation` and choose a private `JARVIS_DEMO_PASSWORD` of at least 12 characters.
+3. Run `npm run db:migrate`, `npm run db:seed`, and `npm run dev`. Open `http://localhost:3000` and sign in as `jarvis-student@example.com`, `jarvis-staff@example.com`, or `jarvis-admin@example.com` using the configured demo password.
+4. Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. With the app running, use `npm run test:e2e` for the HTTP smoke checks. The authenticated cases require the local demo seed and environment values.
+
+The seed is restricted to local Supabase. Prisma migrations apply to the database selected in `DATABASE_URL`. Hosted previews need their own server-side connection with the foundation migration applied for saved preferences and notifications. See the [architecture note](docs/hackathon-foundation.md) for the module registry.

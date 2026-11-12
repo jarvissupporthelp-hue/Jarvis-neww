@@ -15,10 +15,10 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
         <a href="/en" hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</a>
       </nav>
       <p className="mb-5 text-sm font-semibold tracking-widest uppercase">{copy.pilot}</p>
-      <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">JARVIS</h1>
+      <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">{copy.brand}</h1>
       <p className="mt-5 max-w-xl text-xl sm:text-2xl">{copy.description}</p>
       <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4">{copy.invitation}</p>
-      <a href="/account" className="mt-5 w-fit font-semibold underline">{copy.signIn}</a>
+      <a href={`/account?lang=${locale}`} className="mt-5 w-fit font-semibold underline">{copy.signIn}</a>
     </main>
   );
 }
