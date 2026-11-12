@@ -8,7 +8,7 @@ import { maxPdfBytes, type CourseResource } from "@/lib/course-resources";
 type Offering = { id: string; course: { name: string }; group: { name: string }; semester: { name: string } };
 
 const field = "block w-full rounded border border-[#789181] bg-white p-2";
-const indexLabels = { pending: "Awaiting indexing", indexed: "Searchable in Ask JARVIS", unsearchable: "Text could not be indexed" };
+const indexLabels = { pending: "Awaiting indexing", indexed: "Available in course PDF search", unsearchable: "Text could not be indexed" };
 const button = "rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
 
 async function resourceRequest(query: string, options: RequestInit = {}) {

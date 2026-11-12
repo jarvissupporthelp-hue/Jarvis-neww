@@ -33,12 +33,3 @@ export async function loadStudyContext(client: NonNullable<ReturnType<typeof cre
   if (error || !data) return { context: null, forbidden: error?.code === "42501" } as const;
   return { context: data as unknown as StudyContext, forbidden: false } as const;
 }
-
-export function examDateClarification(prompt: string, context: StudyContext) {
-  if (context.officialExamDatesAvailable) return null;
-
-  if (/^(?:when (?:is|are)|what (?:date|day) (?:is|are)|what is the date of)\b[^?\n]*\bexams?\b/i.test(prompt)) {
-    return "I don’t have a verified exam date. Which course and exam date should I use? If you don’t know the date yet, check the official course announcement or confirm with your lecturer.";
-  }
-  return null;
-}

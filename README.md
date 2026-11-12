@@ -42,3 +42,9 @@ See [Day 1 scope and deployment](docs/day-one.md).
 | 28 | Verified the public landing-to-sign-in flow in a signed-out browser at 390 px. Physical mobile-data and first-time invitation acceptance are pending. | [Public landing page](https://jarvis-three-olive.vercel.app/) · [Day 28 launch checks](docs/day-twenty-eight.md) |
 | 29 | Verified production liveness, checked runtime errors, reran recovery tests, and prepared the judge rehearsal. The authenticated production rehearsal is blocked. | [Judge rehearsal](docs/day-twenty-nine.md) · [Public JARVIS URL](https://jarvis-three-olive.vercel.app/) |
 | 30 | Rechecked the live public URL and local recovery suite. Prepared the competition pitch, judge access instructions, and operator checklist. Authenticated production acceptance remains on hold. | [Competition handoff](docs/day-thirty.md) · [Public JARVIS URL](https://jarvis-three-olive.vercel.app/) |
+
+## Hackathon development
+
+| Day | Work completed | Testing |
+| --- | --- | --- |
+| 1 | Armenian-default landing page with English switching. Removed hosted AI chat from the hackathon branch. Course PDF search and study planning remain available. | Open `/hy` and `/en` locally and follow the sign-in link. |
