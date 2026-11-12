@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "predev": "npm run build:math-lab",
-    "build:math-lab": "npm ci --prefix math-lab && npm run build --prefix math-lab",
+    "build:math-lab": "npm ci --prefix math-lab --include=dev && npm run build --prefix math-lab",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
