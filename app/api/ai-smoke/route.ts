@@ -11,7 +11,7 @@ function configuredProviders(): Provider[] {
     { name: "OpenAI", endpoint: "https://api.openai.com/v1/chat/completions", key: process.env.OPENAI_API_KEY, model: "gpt-6-luna" },
     { name: "Hugging Face", endpoint: "https://router.huggingface.co/v1/chat/completions", key: process.env.HUGGINGFACE_API_KEY, model: "openai/gpt-oss-120b:fastest" },
     { name: "Cloudflare", endpoint: cloudflareAccount ? `https://api.cloudflare.com/client/v4/accounts/${cloudflareAccount}/ai/v1/chat/completions` : "", key: process.env.CLOUDFLARE_API_TOKEN, model: "@cf/meta/llama-3.1-8b-instruct" },
-    { name: "NVIDIA", endpoint: "https://integrate.api.nvidia.com/v1/chat/completions", key: process.env.NVIDIA_API_KEY, model: "openai/gpt-oss-20b" },
+    { name: "NVIDIA", endpoint: "https://integrate.api.nvidia.com/v1/chat/completions", key: process.env.NVIDIA_API_KEY, model: "meta/llama-3.2-90b-vision-instruct" },
   ];
 }
 
@@ -22,22 +22,6 @@ async function check(provider: Provider) {
   }
   const started = Date.now();
   try {
-    if (provider.name === "NVIDIA") {
-      const catalog = await fetch("https://integrate.api.nvidia.com/v1/models", {
-        headers: { Authorization: `Bearer ${key}` },
-        cache: "no-store",
-        signal: AbortSignal.timeout(10_000),
-      });
-      const catalogBody = await catalog.json().catch(() => null);
-      const available = Array.isArray(catalogBody?.data)
-        ? catalogBody.data.map((item: { id?: unknown }) => item.id).filter((id: unknown): id is string => typeof id === "string")
-        : [];
-      const preferred = available.find((id: string) => /gpt-oss-20b|instruct|chat/i.test(id));
-      if (!catalog.ok || !preferred) {
-        return { name: provider.name, model: provider.model, ok: false, status: catalog.status, latencyMs: Date.now() - started, error: "No compatible chat model found", available: available.slice(0, 8) };
-      }
-      provider = { ...provider, model: preferred };
-    }
     const response = await fetch(provider.endpoint, {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
@@ -45,11 +29,10 @@ async function check(provider: Provider) {
       signal: AbortSignal.timeout(20_000),
       body: JSON.stringify({
         model: provider.model,
-        temperature: 0.2,
         messages: [{ role: "user", content: "In one short sentence, explain what an absolute Unix path is." }],
         ...(provider.name === "OpenAI" ? { max_completion_tokens: 80 }
-          : provider.name === "xAI" ? { reasoning_effort: "none" }
-          : { max_tokens: 80 }),
+          : provider.name === "xAI" ? { reasoning_effort: "none", temperature: 0.2 }
+          : { max_tokens: 80, temperature: 0.2 }),
       }),
     });
     const body = await response.json().catch(() => null);
