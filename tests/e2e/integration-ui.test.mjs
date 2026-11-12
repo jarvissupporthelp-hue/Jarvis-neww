@@ -56,3 +56,17 @@ test("sensitive application endpoints reject unauthenticated clients", async () 
     assert.ok([401, 403].includes(response.status), path + ": unexpected status " + response.status);
   }
 });
+
+test("responses carry baseline security headers", async () => {
+  const response = await fetch(origin + "/", { redirect: "manual" });
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("x-frame-options"), "DENY");
+  assert.ok(response.headers.get("referrer-policy"));
+});
+
+test("account subpages honour the selected language", async () => {
+  for (const path of ["/account/calendar", "/account/tasks", "/account/admin/users"]) {
+    const html = await (await fetch(origin + path + "?lang=hy")).text();
+    assert.ok(html.includes('lang="hy"'), path + " ignored ?lang=hy");
+  }
+});

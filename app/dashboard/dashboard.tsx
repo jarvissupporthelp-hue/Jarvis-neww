@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Component, useEffect, useState, type ReactNode } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
 import { dashboardCopy } from "@/lib/foundation/copy";
@@ -97,6 +98,7 @@ function SlotContent({ render }: { render: () => ReactNode }) {
 }
 
 export function Dashboard({ moduleKey }: { moduleKey?: string }) {
+  const router = useRouter();
   const [locale, setLocale] = useState<Locale>("hy");
   const [role, setRole] = useState<FoundationRole | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "denied" | "error">("loading");
@@ -148,7 +150,7 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
     try {
       const { error } = await getClient().auth.signOut({ scope: "local" });
       if (error) throw error;
-      window.location.assign(`/account?lang=${locale}`);
+      router.push(`/account?lang=${locale}`);
     } catch {
       setStatus("error");
     }
