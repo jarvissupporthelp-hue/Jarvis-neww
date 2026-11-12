@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { getClient } from "@/lib/browser-supabase";
 
 type Role = "student" | "lecturer" | "admin";
@@ -72,18 +72,29 @@ function ThemeSelector({ theme, onChange }: { theme: Theme; onChange: (theme: Th
   </div>;
 }
 
+function readTheme(): Theme {
+  try {
+    const value = window.localStorage.getItem("jarvis-theme");
+    return value === "dark" || value === "light" || value === "system" ? value : "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+function subscribeTheme(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener("jarvis-theme-changed", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("jarvis-theme-changed", callback);
+  };
+}
+
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState<Role | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [theme, setTheme] = useState<Theme>("dark");
-
-  useEffect(() => {
-    try {
-      const value = window.localStorage.getItem("jarvis-theme");
-      if (value === "dark" || value === "light" || value === "system") setTheme(value);
-    } catch { /* Respect disabled browser storage. */ }
-  }, []);
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "dark");
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -124,11 +135,9 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     } catch { return () => { active = false; }; }
   }, []);
 
-  useEffect(() => { setDrawerOpen(false); }, [pathname]);
-
   function changeTheme(next: Theme) {
-    setTheme(next);
-    try { window.localStorage.setItem("jarvis-theme", next); } catch { /* Storage is optional. */ }
+    try { window.localStorage.setItem("jarvis-theme", next); } catch { /* Storage may be disabled. */ }
+    window.dispatchEvent(new Event("jarvis-theme-changed"));
   }
 
   const isLanding = pathname === "/";
