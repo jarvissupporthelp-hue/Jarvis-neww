@@ -6,7 +6,7 @@ const paths = [
   "/", "/account", "/account/calendar", "/account/tasks",
   "/account/admin/users", "/account/admin/group", "/account/admin/timetable",
   "/dashboard", "/academics", "/learning",
-  "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/chat", "/chat/math-visualization",
+  "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/campus", "/career", "/chat", "/chat/math-visualization",
   "/hy", "/en",
 ];
 

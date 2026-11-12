@@ -26,6 +26,10 @@ const routes = [
   ["GET", "/api/timetable?week=2026-11-09", all], ["POST", "/api/timetable", ["admin"]],
   ["GET", "/api/admin", ["admin"]], ["POST", "/api/admin", ["admin"]],
   ["POST", "/api/invitations", ["admin"]],
+  ["GET", "/api/campus", all], ["POST", "/api/campus", all],
+  ["GET", "/api/campus/meetings", ["student", "lecturer"]], ["POST", "/api/campus/meetings", ["student", "lecturer"]],
+  ["GET", "/api/career", all], ["POST", "/api/career", all],
+  ["GET", "/api/career/pdf", all, { open: true }], ["POST", "/api/career/pdf", ["student"]],
 ];
 
 function call(method, path, token) {
@@ -39,8 +43,15 @@ test("the app is wired to the mock identity provider", async () => {
   assert.notEqual((await call("GET", "/api/me", tokens.student)).status, 503, "app cannot reach the mock Supabase");
 });
 
-for (const [method, path, allowed] of routes) {
-  test(`${method} ${path.split("?")[0].replace(id, "[id]")}`, async (t) => {
+for (const [method, path, allowed, options = {}] of routes) {
+  test(`${method} ${path.split("?")[0].replace(id, "[id]")}${options.open ? " (public sample)" : ""}`, async (t) => {
+    if (options.open) {
+      // Deliberately public: a static sample document with no personal data.
+      for (const token of [undefined, "forged-token", "disabled-token", ...Object.values(tokens)]) {
+        assert.equal((await call(method, path, token)).status, 200);
+      }
+      return;
+    }
     await t.test("signed-out visitor gets 401", async () => {
       assert.equal((await call(method, path)).status, 401);
     });

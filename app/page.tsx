@@ -35,6 +35,8 @@ export default function Home() {
       <nav className="jarvis-integrated-tools" aria-label="Explore JARVIS modules">
         <Link href="/academics">Academic records <span aria-hidden="true">↗</span></Link>
         <Link href="/learning">Learning tools <span aria-hidden="true">↗</span></Link>
+        <Link href="/campus">Campus resources <span aria-hidden="true">→</span></Link>
+        <Link href="/career">Career <span aria-hidden="true">→</span></Link>
         <Link href="/chat">AI Agent <span aria-hidden="true">↗</span></Link>
         <Link href="/dashboard">University hub <span aria-hidden="true">↗</span></Link>
         <Link href="/hy" lang="hy">Հայերեն</Link>

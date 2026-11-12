@@ -145,3 +145,77 @@ model SavedItem {
 
   @@unique([studentId, itemType, itemId])
 }
+
+model CampusResource {
+  id          String @id
+  kind        String
+  title       String
+  building    String @default("")
+  floor       Int @default(1)
+  position    Int @default(0)
+  capacity    Int @default(1)
+  features    String[]
+  accessible  Boolean @default(false)
+  opens       Int @default(480)
+  closes      Int @default(1200)
+  reservations CampusReservation[]
+  loans        CampusLoan[]
+  @@index([kind])
+}
+
+model CampusReservation {
+  id         String @id @default(uuid()) @db.Uuid
+  ownerId    String @db.Uuid
+  resourceId String
+  unit       Int
+  startAt    DateTime @db.Timestamptz(3)
+  endAt      DateTime @db.Timestamptz(3)
+  purpose    String
+  status     String
+  lateCancelAt DateTime? @db.Timestamptz(3)
+  resource   CampusResource @relation(fields: [resourceId], references: [id])
+  @@index([ownerId, endAt])
+  @@index([resourceId, startAt])
+}
+
+model CampusLoan {
+  id          String @id @default(uuid()) @db.Uuid
+  ownerId     String @db.Uuid
+  resourceId  String
+  dueAt       DateTime @db.Timestamptz(3)
+  renewals    Int @default(0)
+  returnedAt  DateTime? @db.Timestamptz(3)
+  remindedAt  DateTime? @db.Timestamptz(3)
+  resource    CampusResource @relation(fields: [resourceId], references: [id])
+  @@index([ownerId, returnedAt])
+  @@index([dueAt])
+}
+
+model CampusInvite {
+  reservationId String @db.Uuid
+  recipientId   String @db.Uuid
+  @@id([reservationId, recipientId])
+  @@index([recipientId])
+}
+
+model CampusMeeting {
+  id           String @id @default(uuid()) @db.Uuid
+  studentId    String @db.Uuid
+  lecturerId   String @db.Uuid
+  topic        String
+  agenda       String
+  startAt      DateTime @db.Timestamptz(3)
+  status       String @default("pending")
+  response     String @default("")
+  participants String[] @db.Uuid
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  @@index([studentId, createdAt])
+  @@index([lecturerId, createdAt])
+}
+
+model CareerProfile {
+  userId String @id @db.Uuid
+  data Json
+  version Int @default(0)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}

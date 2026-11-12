@@ -78,3 +78,49 @@ Use Code Trace to predict JavaScript output and Pomodoro presets for quick revie
 - The foundation database uses Prisma 7 with the PostgreSQL driver adapter. The generated client is not committed: run `npm run db:generate` after `npm ci` (lint, typecheck and build do this automatically). `DATABASE_URL` is read from the environment in `prisma.config.ts`, and its `?schema=foundation` parameter is handed to the adapter.
 - `npm run test:roles` starts a mock Supabase and the app, then tries every API route as a student, a lecturer, an admin, a disabled account and a signed-out visitor.
 - `npm run test:db` applies every migration and the seed to a throwaway PostgreSQL database and runs the SQL role tests in `supabase/tests`. Set `PGHOST`, `PGUSER` and `PGPASSWORD` first. It uses a small stand-in for Supabase-managed objects (`supabase/tests/support`) and must never be pointed at a real project.
+
+### Campus Resources
+
+The home page links to `/campus`. Apply the foundation migrations using `npm run db:migrate`
+with a PostgreSQL connection ending in `schema=foundation`. The campus migration seeds 12 rooms,
+30 books and 10 equipment types. It requires permission to enable PostgreSQL's `btree_gist`
+extension. The section uses existing JARVIS sign-in and maps the existing lecturer role to staff,
+as the foundation already does. Team invitations appear in the recipient's Campus Bookings tab.
+
+Set `CAMPUS_DEMO_STUDENT_USER_ID` to the Auth UUID that owns the Academics demo timetable.
+Other members have no schedule in the current Academics service and are shown as available with a warning.
+The limits for active bookings and minutes per booking can be set in the environment.
+
+For unattended library reminders, schedule `SELECT foundation.campus_send_loan_reminders(now());`
+every five minutes using a database scheduler. The Campus page also checks for due reminders on load.
+The same loan can only be marked once. Users with a foundation account also receive an in-app notification.
+
+The Rooms & Map tab shows a simulated teaching timetable. The Digital Library
+generates PDFs on demand from 20 allowlisted Project Gutenberg books and links
+to their source editions. Under Team booking, students can request a 30-minute
+academic meeting and invite classmates. Lecturers review and answer requests in
+the same tab. Meetings require the Campus Meetings migration and a database
+connection to the same Supabase project used by JARVIS Auth.
+
+### Career
+
+Open Career from the JARVIS home page. The public catalog contains sample
+postings. Apply the foundation migrations using `npm run db:migrate` before
+testing private CVs, internship reports, applications, projects and mentor
+requests with real accounts.
+
+Set `CAREER_DEMO_STUDENT_USER_ID` to the Auth UUID that owns the Academics demo
+transcript. Other students can add project evidence. The current Academics
+service serves one demo transcript. Set `CAREER_MENTOR_ACCOUNTS` to a comma-separated
+list of `catalogKey=lecturerAuthUuid` pairs to enable mentor access (keys:
+`frontend`, `data`, `systems`, `interviews`, `internships`). The app's existing lecturer
+and admin roles can act as staff reviewers. Mapped mentors can review work samples
+after accepting the student's mentoring request.
+
+The two-account privacy check runs when `CAREER_TEST_URL`,
+`CAREER_TEST_STUDENT_A_TOKEN` and `CAREER_TEST_STUDENT_B_TOKEN` are set for a migrated
+test deployment. Use dedicated test accounts.
+
+Career students can upload a private PDF CV up to 1 MB in CV Builder. It is
+stored with their Career profile and can be replaced, downloaded or removed.
+The Mentors tab has been retired. Existing requests remain available to reviewers.
