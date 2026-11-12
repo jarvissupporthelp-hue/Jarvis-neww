@@ -105,15 +105,18 @@ export async function POST(request: Request) {
       .order("id", { ascending: false }).limit(4);
     if (history.error) return reply({ error: "Could not load chat history. Your draft is still here." }, 503);
 
-    const { data: reserved, error } = await supabase.rpc("reserve_chat_attempt");
-    if (error?.code === "42501") return reply({ error: "Active student access required." }, 403);
-    if (error || reserved === null) return reply({ error: "The study assistant is unavailable. Your draft is still here." }, 503);
-    if (reserved === false) return reply({ error: "You reached 20 attempts today. Try again after midnight UTC." }, 429);
-
     const passages = await findPassages(supabase, prompt).catch(() => null);
     const generated = await askStudyAI(prompt, provider.credential, history.data.reverse(), context, passages?.matches ?? []);
     if (generated && "errorStatus" in generated) return reply({ error: `${providerFailureMessage(generated.errorStatus)} Your draft is still here.` }, 502);
     if (!generated) return reply({ error: "The AI provider did not respond. Your draft is still here. Try again shortly." }, 502);
+
+    // Only consume a student's daily message after the model produced a usable reply.
+    // A provider outage must not reduce the student’s allowance.
+    const { data: reserved, error } = await supabase.rpc("reserve_chat_attempt");
+    if (error?.code === "42501") return reply({ error: "Active student access required." }, 403);
+    if (error || reserved === null) return reply({ error: "The study assistant is unavailable. Your draft is still here." }, 503);
+    if (reserved === false) return reply({ error: "You reached 20 messages today. Try again after midnight UTC." }, 429);
+
     answer = generated.answer;
     if (generated.inputTokens !== null && generated.outputTokens !== null) {
       await supabase.rpc("record_chat_tokens", {
