@@ -9,6 +9,7 @@ export default function Home() {
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/academics" className="w-fit rounded-lg bg-[#1e3328] px-6 py-3 font-semibold text-white">Academics</Link>
         <Link href="/learning" className="w-fit rounded-lg bg-[#1e3328] px-6 py-3 font-semibold text-white">Learning</Link>
+        <Link href="/campus" className="w-fit rounded-lg bg-[#1e3328] px-6 py-3 font-semibold text-white">Campus Resources</Link>
       </div>
     </main>
   );

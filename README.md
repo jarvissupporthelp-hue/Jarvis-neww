@@ -72,3 +72,19 @@ The demo uses synthetic records and role-specific navigation. File submission re
 Open **Learning** and choose a class date to start a quiz, flashcards, or focus session for a timetable subject. The six decks cover Mathematics for CS, Computer Networks 1, French, English, Algorithms, and Computer Architecture. Each contains twelve cards grouped by topic. Quiz mistakes can be retried separately.
 
 Use Code Trace to predict JavaScript output and Pomodoro presets for quick review, problem solving, and coding sprints. Exam Plan still uses Academics exam dates and availability. Progress is stored in the current browser.
+
+### Campus Resources
+
+The home page links to `/campus`. Apply the foundation migrations using `npm run db:migrate`
+with a PostgreSQL connection ending in `schema=foundation`. The campus migration seeds 12 rooms,
+30 books and 10 equipment types. It requires permission to enable PostgreSQL's `btree_gist`
+extension. The section uses existing JARVIS sign-in and maps the existing lecturer role to staff,
+as the foundation already does. Team invitations appear in the recipient's Campus Bookings tab.
+
+Set `CAMPUS_DEMO_STUDENT_USER_ID` to the Auth UUID that owns the Academics demo timetable.
+Other members have no schedule in the current Academics service and are shown as available with a warning.
+The limits for active bookings and minutes per booking can be set in the environment.
+
+For unattended library reminders, schedule `SELECT foundation.campus_send_loan_reminders(now());`
+every five minutes using a database scheduler. The Campus page also checks for due reminders on load.
+The same loan can only be marked once. Users with a foundation account also receive an in-app notification.
