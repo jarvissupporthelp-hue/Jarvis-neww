@@ -21,6 +21,22 @@ async function check(provider: Provider) {
   }
   const started = Date.now();
   try {
+    if (provider.name === "NVIDIA") {
+      const catalog = await fetch("https://integrate.api.nvidia.com/v1/models", {
+        headers: { Authorization: `Bearer ${provider.key.trim()}` },
+        cache: "no-store",
+        signal: AbortSignal.timeout(10_000),
+      });
+      const catalogBody = await catalog.json().catch(() => null);
+      const available = Array.isArray(catalogBody?.data)
+        ? catalogBody.data.map((item: { id?: unknown }) => item.id).filter((id: unknown): id is string => typeof id === "string")
+        : [];
+      const preferred = available.find((id: string) => /gpt-oss-20b|instruct|chat/i.test(id));
+      if (!catalog.ok || !preferred) {
+        return { name: provider.name, model: provider.model, ok: false, status: catalog.status, latencyMs: Date.now() - started, error: "No compatible chat model found", available: available.slice(0, 8) };
+      }
+      provider = { ...provider, model: preferred };
+    }
     const response = await fetch(provider.endpoint, {
       method: "POST",
       headers: { Authorization: `Bearer ${provider.key.trim()}`, "Content-Type": "application/json" },
@@ -28,9 +44,11 @@ async function check(provider: Provider) {
       signal: AbortSignal.timeout(20_000),
       body: JSON.stringify({
         model: provider.model,
-        max_tokens: 80,
         temperature: 0.2,
         messages: [{ role: "user", content: "In one short sentence, explain what an absolute Unix path is." }],
+        ...(provider.name === "OpenAI" ? { max_completion_tokens: 80 }
+          : provider.name === "xAI" ? { reasoning_effort: "none" }
+          : { max_tokens: 80 }),
       }),
     });
     const body = await response.json().catch(() => null);
@@ -42,7 +60,7 @@ async function check(provider: Provider) {
       status: response.status,
       latencyMs: Date.now() - started,
       answer: typeof answer === "string" ? answer.trim().slice(0, 240) : undefined,
-      error: response.ok ? undefined : String(body?.error?.message || body?.errors?.[0]?.message || "Provider rejected the request").slice(0, 240),
+      error: response.ok ? undefined : String(body?.error?.message || body?.error || body?.errors?.[0]?.message || body?.message || "Provider rejected the request").slice(0, 320),
     };
   } catch (error) {
     return { name: provider.name, model: provider.model, ok: false, status: 0, latencyMs: Date.now() - started, error: error instanceof Error ? error.name : "Request failed" };
