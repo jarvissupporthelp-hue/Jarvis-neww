@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   if (!answer) {
     // Vercel Functions receive a fresh platform token on the request.
     const runtimeToken = process.env.VERCEL === "1" ? request.headers.get("x-vercel-oidc-token") : null;
-    const credential = process.env.AI_GATEWAY_API_KEY || runtimeToken || process.env.VERCEL_OIDC_TOKEN;
+    const credential = process.env.FREE_LLM_API_KEY || process.env.AI_GATEWAY_API_KEY || runtimeToken || process.env.VERCEL_OIDC_TOKEN;
     if (!credential) return reply({ error: "The study assistant is unavailable. Your draft is still here." }, 503);
 
     const history = await supabase.from("study_turns").select("prompt,answer")
