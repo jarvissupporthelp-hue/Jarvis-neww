@@ -1,0 +1,57 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { exampleModules, demoSchedule } from "../modules/academics/demo.ts";
+import { annualGrade, displayCourseGrade, gradeModule, requiredScore, semesterGrade } from "../modules/academics/grading.ts";
+import { demoStudentId, getCompletedCourses, getCurrentGpa, getExamSchedule, getFreeTimeSlots, getRemainingCourses, getTimetable, getUpcomingDeadlines } from "../modules/academics/services.ts";
+
+test("the requested semester and annual GPA example passes exactly", () => {
+  const result = semesterGrade(exampleModules);
+  assert.deepEqual(result.results.map(({ grade }) => grade), ["11.2", "11.85", "17.475", "16.12", "10.48", "14.2"]);
+  assert.deepEqual(result.results[0].courses.map(({ points }) => displayCourseGrade(points)), ["16.4", "6"]);
+  assert.ok(result.results.every(({ validated }) => validated));
+  assert.equal(result.gpa, "13.673");
+  assert.equal(result.earned, "30");
+  assert.equal(annualGrade(semesterGrade([], "zero"), result), "6.8365");
+});
+
+function one(score, weight = "1", attempts) {
+  return { name: "Module", courses: [{ code: "A", title: "A", ects: "30", components: [{ name: "Exam", weight, score, attempts }] }] };
+}
+
+test("thresholds, malformed grading data, retakes, and missing grades", () => {
+  assert.equal(gradeModule(one("10")).validated, true);
+  assert.equal(gradeModule(one("9.99")).validated, false);
+  assert.throws(() => gradeModule(one("10", "0.9")), /Weights/);
+  assert.throws(() => gradeModule(one("20.01")), /between 0 and 20/);
+  assert.throws(() => gradeModule(one("-1")));
+  assert.equal(semesterGrade([one("18", "1", ["10"])]).gpa, "10");
+  assert.equal(semesterGrade([one("18", "1", ["10"])], "official", "best").gpa, "18");
+  assert.equal(semesterGrade([one("18", "1", ["10"])]).earned, "30");
+  assert.equal(semesterGrade([one(null)]).gpa, null);
+  assert.equal(semesterGrade([one(null)], "zero").gpa, "0");
+  assert.equal(semesterGrade([one(null)], "ignore").gpa, null);
+  assert.equal(requiredScore(one(null), 0, 0), "10");
+  const impossible = one(null);
+  impossible.courses[0].components = [{ name: "Fixed", weight: "0.6", score: "0" }, { name: "Missing", weight: "0.4", score: null }];
+  assert.equal(requiredScore(impossible, 0, 1), null);
+});
+
+test("demo services merge overlapping events, ignore cancellations and keep exact gaps", () => {
+  const { timetable, exams } = demoSchedule();
+  const day = timetable[0].start.slice(0, 10);
+  const at = (time) => new Date(`${day}T${time}:00+04:00`);
+  const gaps = getFreeTimeSlots(demoStudentId, at("09:00"), at("13:00"), 60);
+  assert.deepEqual(gaps.map(({ start, end }) => [start.toISOString(), end.toISOString()]), [
+    [at("09:00").toISOString(), at("10:00").toISOString()],
+    [at("12:00").toISOString(), at("13:00").toISOString()],
+  ]);
+  const cancelled = timetable.find((event) => event.status === "Cancelled");
+  assert.equal(getFreeTimeSlots(demoStudentId, new Date(cancelled.start), new Date(cancelled.end), 90).length, 1);
+  assert.equal(getExamSchedule(demoStudentId, new Date(exams[0].start), new Date(exams[0].end)).length, 1);
+  assert.equal(getTimetable(demoStudentId, at("10:00"), at("12:00")).length, 2);
+  assert.ok(getUpcomingDeadlines(demoStudentId, 2).length > 0);
+  assert.equal(getCurrentGpa(demoStudentId).gpa, null);
+  assert.ok(getCompletedCourses(demoStudentId).length > 0);
+  assert.ok(getRemainingCourses(demoStudentId).some(({ code }) => code === "PRO301"));
+  assert.throws(() => getCurrentGpa("unknown"));
+});

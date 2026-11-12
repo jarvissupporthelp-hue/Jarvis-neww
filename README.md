@@ -60,3 +60,9 @@ With Node 24, Docker, and the Supabase CLI installed:
 4. Run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`. With the app running, use `npm run test:e2e` for the HTTP smoke checks. The authenticated cases require the local demo seed and environment values.
 
 The seed is restricted to local Supabase. Prisma migrations apply to the database selected in `DATABASE_URL`. Hosted previews need their own server-side connection with the foundation migration applied for saved preferences and notifications. See the [architecture note](docs/hackathon-foundation.md) for the module registry.
+
+### Academics hackathon demo
+
+Open the homepage and choose **Academics**. Use `student@example.com`, `lecturer@example.com`, `staff@example.com`, or `admin@example.com` with the public demo password `JarvisDemo2026`. Switch roles in the same browser tab to demonstrate draft publishing and assignment feedback. Demo changes live in that tab's session storage. The GPA calculator keeps hypothetical values only in memory.
+
+The demo uses synthetic records and role-specific navigation. File submission records the selected filename. Management edits change demo lists. Production authentication, database persistence, file storage, and cross-device sharing for these new screens are separate integration work. Run `npm test` for the exact grading example and scheduling checks.

@@ -7,8 +7,8 @@ export const academics = {
     hy: { "academics.title": "Ուսում" },
     en: { "academics.title": "Academics" },
   },
-  routes: ["/account"],
-  navItem: "/account",
-  dashboardWidgets: [{ slot: "myDay", href: "/account#student-timetable" }],
+  routes: ["/academics"],
+  navItem: "/academics",
+  dashboardWidgets: [{ slot: "myDay", href: "/academics" }],
   permissions: ["student"],
 } satisfies ModuleRegistration;

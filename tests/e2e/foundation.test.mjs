@@ -9,9 +9,10 @@ const origin = process.env.JARVIS_TEST_ORIGIN ?? "http://127.0.0.1:3000";
 const { NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, JARVIS_DEMO_PASSWORD } = process.env;
 const demoReady = Boolean(NEXT_PUBLIC_SUPABASE_URL && NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY && JARVIS_DEMO_PASSWORD);
 
-test("landing defaults to Armenian and both locale pages reach sign-in", async () => {
-  const root = await fetch(origin, { redirect: "manual" });
-  assert.equal(root.headers.get("location"), "/hy");
+test("homepage opens Academics and both legacy locale pages reach sign-in", async () => {
+  const root = await fetch(origin);
+  assert.equal(root.status, 200);
+  assert.ok((await root.text()).includes('href="/academics"'));
   for (const [locale, title] of [["hy", "Մուտք գործել JARVIS"], ["en", "Sign in to JARVIS"]]) {
     const page = await fetch(`${origin}/${locale}`);
     assert.equal(page.status, 200);
