@@ -183,8 +183,8 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
   );
 }
 
-export function PersonalEventEditor({ client, event, from, to, onSaved, onCancel }: {
-  client: SupabaseClient; event?: PersonalEvent; from: string; to: string;
+export function PersonalEventEditor({ client, event, from, to, initialDate, onSaved, onCancel }: {
+  client: SupabaseClient; event?: PersonalEvent; from: string; to: string; initialDate?: string;
   onSaved: () => void; onCancel: () => void;
 }) {
   const [busy, setBusy] = useState(false);
@@ -224,7 +224,7 @@ export function PersonalEventEditor({ client, event, from, to, onSaved, onCancel
       <fieldset disabled={busy} className="space-y-2">
         <h3 className="font-semibold">{event ? "Edit personal event" : "Add personal event"}</h3>
         <label className="block">Event title<input className={field} name="title" maxLength={120} defaultValue={event?.title} required /></label>
-        <label className="block">Date<input className={field} name="date" type="date" min={from} max={to} defaultValue={event?.event_date ?? from} required /></label>
+        <label className="block">Date<input className={field} name="date" type="date" min={from} max={to} defaultValue={event?.event_date ?? initialDate ?? from} required /></label>
         <label className="block">Starts<input className={field} name="start" type="time" defaultValue={event?.starts_at.slice(0, 5)} required /></label>
         <label className="block">Ends<input className={field} name="end" type="time" defaultValue={event?.ends_at.slice(0, 5)} required /></label>
         <div className="flex flex-wrap gap-3">
