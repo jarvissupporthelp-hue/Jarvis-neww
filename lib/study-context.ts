@@ -13,7 +13,9 @@ export type StudyContext = {
   officialDeadlinesAvailable: boolean;
   officialExamDatesAvailable: boolean;
   professorProfiles?: {
+    professorName: string;
     course: string;
+    coursePlan: string;
     teachingStyle: string;
     explanationPreferences: string;
     assessmentStyle: string;
