@@ -23,7 +23,7 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [profile, setProfile] = useState({ teaching_style: "", explanation_preferences: "", assessment_style: "", course_rules: "" });
+  const [profile, setProfile] = useState({ professor_name: "", course_plan: "", teaching_style: "", explanation_preferences: "", assessment_style: "", course_rules: "" });
   const [profileBusy, setProfileBusy] = useState(false);
   const [profileMessage, setProfileMessage] = useState("");
   const [profileError, setProfileError] = useState("");
@@ -40,6 +40,8 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
         });
         const result = await response.json();
         if (active && response.ok) setProfile({
+          professor_name: result.profile.professor_name ?? "",
+          course_plan: result.profile.course_plan ?? "",
           teaching_style: result.profile.teaching_style ?? "",
           explanation_preferences: result.profile.explanation_preferences ?? "",
           assessment_style: result.profile.assessment_style ?? "",
@@ -107,7 +109,9 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
       <p>{offering.course.code} · {offering.group.name} · {offering.semester.name}</p>
       <form className={card} onSubmit={saveProfile}>
         <h2 className="text-xl font-semibold">JARVIS teaching profile</h2>
-        <p>Tell JARVIS how you teach this course. Students will get explanations that follow these preferences alongside course materials.</p>
+        <p>Set the professor identity and course expectations JARVIS should use when a student asks for exam or project preparation.</p>
+        <label className="block">Professor name<input className={field} maxLength={160} value={profile.professor_name} onChange={(event) => setProfile({ ...profile, professor_name: event.target.value })} placeholder="Name as students will ask for it" /></label>
+        <label className="block">Course plan and exam or project requirements<textarea className={field} rows={5} maxLength={5000} value={profile.course_plan} onChange={(event) => setProfile({ ...profile, course_plan: event.target.value })} placeholder="Topics, assessment format, deliverables, evaluation criteria, and preparation strategy from approved course materials." /></label>
         <label className="block">Teaching approach<textarea className={field} rows={3} maxLength={2000} value={profile.teaching_style} onChange={(event) => setProfile({ ...profile, teaching_style: event.target.value })} placeholder="For example: start with intuition, then define terms and derive the formula." /></label>
         <label className="block">How to explain and solve exercises<textarea className={field} rows={3} maxLength={2000} value={profile.explanation_preferences} onChange={(event) => setProfile({ ...profile, explanation_preferences: event.target.value })} placeholder="Preferred steps, notation, examples, and common mistakes to point out." /></label>
         <label className="block">Assessment expectations<textarea className={field} rows={3} maxLength={2000} value={profile.assessment_style} onChange={(event) => setProfile({ ...profile, assessment_style: event.target.value })} placeholder="Question types, expected answer format, and what earns credit." /></label>
