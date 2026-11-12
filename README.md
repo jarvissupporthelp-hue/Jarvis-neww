@@ -69,6 +69,6 @@ The demo uses synthetic records and role-specific navigation. File submission re
 
 ### Learning hackathon demo
 
-Open **Learning** from the home page. Algorithms and Computer Architecture have sample materials, questions, and multilingual terms. Exam Plan uses the Academics demo exams and availability. Materials, flashcard progress, completed focus sessions, mind-map versions, and language edits are saved in the current browser. The Learning demo does not use an AI provider.
+Open **Learning** and choose a class date to start a quiz, flashcards, or focus session for a timetable subject. The six decks cover Mathematics for CS, Computer Networks 1, French, English, Algorithms, and Computer Architecture. Each contains twelve cards grouped by topic. Quiz mistakes can be retried separately.
 
-Run `npm test` for exam-plan, flashcard, and mind-map tests.
+Use Code Trace to predict JavaScript output and Pomodoro presets for quick review, problem solving, and coding sprints. Exam Plan still uses Academics exam dates and availability. Progress is stored in the current browser.

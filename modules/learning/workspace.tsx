@@ -1,19 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { CodeTrace } from "./code-trace";
 import { useState, type FormEvent } from "react";
 import { buildExamPlan, type Slot } from "./planner";
 import { reviewFlashcard } from "./practice";
 import { learningCourses } from "./seed";
 import { button, field, useLearningData } from "./storage";
-import { CoursePicker, Pomodoro, VisualMind } from "./study-tools";
+import { CoursePicker, Pomodoro } from "./study-tools";
 
 const pages = [
   ["materials", "Materials"], ["quizzes", "Quizzes"], ["flashcards", "Flashcards"],
-  ["pomodoro", "Pomodoro"], ["visual-mind", "Visual Mind"], ["self-test", "Self-test"],
-  ["exam-plan", "Exam Plan"], ["language-bridge", "Language Bridge"],
+  ["pomodoro", "Pomodoro"], ["code-trace", "Code Trace"], ["exam-plan", "Exam Plan"],
 ];
-const languages = ["English", "French", "Armenian", "Russian"];
 type Course = (typeof learningCourses)[number];
 type Exam = { id: string; title: string; course: string; start: number };
 type Material = { id: string; title: string; type: string; content: string; tags: string[]; fileName?: string };
@@ -98,29 +97,32 @@ function Materials({ course }: { course: Course }) {
   </div>;
 }
 
-function Quiz({ course, weighted }: { course: Course; weighted: boolean }) {
+function Quiz({ course }: { course: Course }) {
   const [misses, setMisses] = useLearningData<Record<string, number>>(`weak:${course.code}`, {});
+  const [topic, setTopic] = useState("");
+  const [mistakes, setMistakes] = useLearningData<string[]>(`mistakes:${course.code}`, []);
   const [order, setOrder] = useState<number[] | null>(null);
   const [answers, setAnswers] = useState<number[]>([]);
   const [choice, setChoice] = useState<number | null>(null);
   const current = order?.[answers.length];
   const question = current === undefined ? undefined : course.questions[current];
 
-  function start() {
-    const queue = course.questions.map((_, index) => index);
-    const picked = [];
-    while (queue.length) {
-      if (!weighted) { picked.push(...queue); break; }
-      const weights = queue.map((index) => 1 + (misses[course.questions[index].topic] ?? 0));
-      let draw = Math.random() * weights.reduce((sum, weight) => sum + weight, 0);
-      const index = weights.findIndex((weight) => (draw -= weight) < 0);
-      picked.push(queue.splice(index, 1)[0]);
-    }
-    setOrder(weighted ? picked.slice(0, 2) : picked);
+  function start(mistakesOnly = false) {
+    const picked = course.questions.map((question, index) => ({ question, index }))
+      .filter(({ question }) => mistakesOnly ? mistakes.includes(question.id) : !topic || question.topic === topic)
+      .sort((a, b) => (misses[b.question.topic] ?? 0) - (misses[a.question.topic] ?? 0) || a.index - b.index);
+    setOrder(picked.map(({ index }) => index));
     setAnswers([]);
     setChoice(null);
   }
-  if (!order) return <button className={button} onClick={start}>{weighted ? "Start self-test" : "Start quiz"}</button>;
+  if (!order) return <div className="flex flex-wrap items-center gap-3">
+    <label>Quiz topic <select className={field} value={topic} onChange={(event) => setTopic(event.target.value)}>
+      <option value="">All topics · weak topics first</option>
+      {[...new Set(course.questions.map(({ topic }) => topic))].map((name) => <option key={name}>{name}</option>)}
+    </select></label>
+    <button className={button} onClick={() => start()}>Start quiz</button>
+    <button className={field} disabled={!mistakes.length} onClick={() => start(true)}>Retry mistakes ({mistakes.length})</button>
+  </div>;
   if (question && current !== undefined) return <div className="space-y-3">
     <p>Question {answers.length + 1} of {order.length} · {question.topic}</p>
     <fieldset className="space-y-2"><legend className="font-semibold">{question.text}</legend>{question.choices.map((option, index) => (
@@ -128,7 +130,10 @@ function Quiz({ course, weighted }: { course: Course; weighted: boolean }) {
     ))}</fieldset>
     <button className={button} disabled={choice === null} onClick={() => {
       if (choice === null) return;
-      if (choice !== question.answer) setMisses({ ...misses, [question.topic]: (misses[question.topic] ?? 0) + 1 });
+      if (choice !== question.answer) {
+        setMisses({ ...misses, [question.topic]: (misses[question.topic] ?? 0) + 1 });
+        if (!mistakes.includes(question.id)) setMistakes([...mistakes, question.id]);
+      } else if (mistakes.includes(question.id)) setMistakes(mistakes.filter((id) => id !== question.id));
       setAnswers([...answers, choice]); setChoice(null);
     }}>{answers.length + 1 === order.length ? "See results" : "Next question"}</button>
   </div>;
@@ -138,69 +143,43 @@ function Quiz({ course, weighted }: { course: Course; weighted: boolean }) {
       const entry = course.questions[index];
       return <article className="rounded border p-3" key={index}><h3 className="font-semibold">{entry.text}</h3>
         <p>Your answer: {entry.choices[answers[position]]} · {answers[position] === entry.answer ? "Correct" : "Incorrect"}</p>
-        <p>Correct answer: {entry.choices[entry.answer]}. {entry.why}</p><p className="text-sm">Source: {entry.source}</p>
+        <p>Correct answer: {entry.choices[entry.answer]}</p><p className="text-sm">Source: {entry.source}</p>
       </article>;
-    })}<button className={button} onClick={start}>Try again</button>
+    })}<button className={button} onClick={() => start()}>Try again</button> <button className={field} onClick={() => setOrder(null)}>Choose another topic</button>
   </div>;
 }
 
 function Flashcards({ course }: { course: Course }) {
-  const [reviews, setReviews] = useLearningData<Record<number, { box: number; due: number }>>(`cards:${course.code}`, {});
+  const [reviews, setReviews] = useLearningData<Record<string, { box: number; due: number }>>(`deck-v2:${course.code}`, {});
+  const [topic, setTopic] = useState("");
+  const [mode, setMode] = useState<"due" | "browse">("due");
+  const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [now] = useState(Date.now);
-  const next = course.questions.findIndex((_, index) => (reviews[index]?.due ?? 0) <= now);
-  const card = course.questions[next];
-  return <div className="space-y-3">
-    <p>{course.questions.filter((_, index) => (reviews[index]?.due ?? 0) <= now).length} cards due</p>
-    {card ? <><p className="font-semibold">{card.text}</p><p>Box {reviews[next]?.box ?? 1} of 5</p>
-      {revealed ? <><p>{card.choices[card.answer]} · {card.why}</p><div className="flex gap-3">{[false, true].map((correct) => (
-        <button className={correct ? button : field} key={String(correct)} onClick={() => {
-          setReviews({ ...reviews, [next]: reviewFlashcard(reviews[next]?.box ?? 1, correct, Date.now()) }); setRevealed(false);
-        }}>{correct ? "Correct" : "Wrong"}</button>
-      ))}</div></> : <button className={button} onClick={() => setRevealed(true)}>Reveal answer</button>}</>
-      : <p>You’re caught up. Come back when more cards are due.</p>}
-  </div>;
-}
-
-function LanguageBridge({ course }: { course: Course }) {
-  const [terms, setTerms] = useLearningData(`terms:${course.code}`, course.terms);
-  const [explanations, setExplanations] = useLearningData<string[]>(`explanations:${course.code}`, ["", "", "", ""]);
-  const [prompts, setPrompts] = useLearningData(`oral:${course.code}`, `Explain how ${course.terms[0][0].toLowerCase()} is used in ${course.title}. Give an example.`);
-  const [language, setLanguage] = useState(1);
-  const [term, setTerm] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState("");
-  const usableTerms = terms.filter((row) => row[0]?.trim() && row[language]?.trim());
-  const active = usableTerms[term % (usableTerms.length || 1)];
-  function normalize(value: string) { return value.normalize("NFC").trim().toLowerCase().replace(/\s+/g, " "); }
-  return <div className="space-y-5">
-    <div className="overflow-x-auto"><table className="min-w-[620px] w-full text-left">
-      <thead><tr>{languages.map((name) => <th className="p-2" key={name}>{name}</th>)}</tr></thead>
-      <tbody>{terms.map((row, index) => <tr key={index}>{languages.map((name, column) => (
-        <td key={name} className="p-1"><input className={`w-full ${field}`} aria-label={`${name} term ${index + 1}`} value={row[column] ?? ""} maxLength={150}
-          onChange={(event) => setTerms(terms.map((entry, i) => i === index ? languages.map((_, j) => j === column ? event.target.value : entry[j] ?? "") : entry))} /></td>
-      ))}</tr>)}</tbody>
-    </table></div>
-    <button className={field} onClick={() => setTerms([...terms, ["", "", "", ""]])}>Add term</button>
-    <div className="grid gap-3 sm:grid-cols-2">{languages.map((name, index) => <label key={name}>{name} explanation
-      <textarea className={`block w-full ${field}`} value={explanations[index]} maxLength={5000}
-        onChange={(event) => setExplanations(explanations.map((value, i) => i === index ? event.target.value : value))} />
-    </label>)}</div>
-    <label>Oral practice prompts <textarea className={`block w-full ${field}`} value={prompts} maxLength={5000}
-      onChange={(event) => setPrompts(event.target.value)} /></label>
-    <form className="space-y-3 border-t pt-3" onSubmit={(event) => {
-      event.preventDefault();
-      if (active) setFeedback(normalize(answer) === normalize(active[language]) ? "Correct." : `Expected: ${active[language]}`);
-    }}>
-      <h3 className="font-semibold">Translation practice</h3>
-      <label>Translate into <select className={field} value={language} onChange={(event) => { setLanguage(Number(event.target.value)); setTerm(0); setAnswer(""); setFeedback(""); }}>
-        {languages.slice(1).map((name, index) => <option value={index + 1} key={name}>{name}</option>)}
+  const deck = course.questions.filter((card) => !topic || card.topic === topic);
+  const due = deck.filter((card) => (reviews[card.id]?.due ?? 0) <= now);
+  const card = mode === "due" ? due[0] : deck[index % deck.length];
+  return <div className="space-y-4">
+    <div className="flex flex-wrap items-center gap-3">
+      <label>Topic <select className={field} value={topic} onChange={(event) => { setTopic(event.target.value); setIndex(0); setRevealed(false); }}>
+        <option value="">All topics</option>{[...new Set(course.questions.map(({ topic }) => topic))].map((name) => <option key={name}>{name}</option>)}
       </select></label>
-      {active ? <><p className="font-semibold">{active[0]}</p><label>Translation <input className={field} value={answer} required onChange={(event) => setAnswer(event.target.value)} /></label>
-        <div className="flex gap-2"><button className={button}>Check translation</button><button type="button" className={field} onClick={() => { setTerm(term + 1); setAnswer(""); setFeedback(""); }}>Next term</button></div></>
-        : <p>Add a term with a translation in this language.</p>}
-      <p role="status">{feedback}</p>
-    </form>
+      <button className={mode === "due" ? button : field} onClick={() => { setMode("due"); setRevealed(false); }}>Due review</button>
+      <button className={mode === "browse" ? button : field} onClick={() => { setMode("browse"); setRevealed(false); }}>Browse deck</button>
+    </div>
+    <p>{deck.length} cards · {due.length} due</p>
+    {card ? <div className="space-y-3 rounded-xl border bg-[#f6f9f5] p-5">
+      <p className="text-sm">{card.topic} · Box {reviews[card.id]?.box ?? 1} of 5{mode === "browse" ? ` · ${index % deck.length + 1}/${deck.length}` : ""}</p>
+      <p className="text-lg font-semibold">{card.text}</p>
+      {revealed ? <><p>{card.choices[card.answer]}</p>
+        {mode === "due" && <div className="flex gap-3">{[false, true].map((correct) => (
+          <button className={correct ? button : field} key={String(correct)} onClick={() => {
+            setReviews({ ...reviews, [card.id]: reviewFlashcard(reviews[card.id]?.box ?? 1, correct, Date.now()) }); setRevealed(false);
+          }}>{correct ? "Got it" : "Review again"}</button>
+        ))}</div>}
+      </> : <button className={button} onClick={() => setRevealed(true)}>Flip card</button>}
+      {mode === "browse" && <button className={field} onClick={() => { setIndex(index + 1); setRevealed(false); }}>Next card</button>}
+    </div> : <p>No cards are due for this topic. Browse the deck to keep practicing.</p>}
   </div>;
 }
 
@@ -248,20 +227,43 @@ function ExamPlan({ exams, slots }: { exams: Exam[]; slots: Slot[] }) {
   </div>;
 }
 
-export function Learning({ page, exams, slots }: { page: string; exams: Exam[]; slots: Slot[] }) {
-  const [code, setCode] = useLearningData("course", learningCourses[0].code);
+type TimetableLesson = { course: string; title: string; start: string; status: string };
+
+function DailyStudy({ lessons, date }: { lessons: TimetableLesson[]; date: string }) {
+  const [day, setDay] = useState(date);
+  const scheduled = [...new Set(lessons.filter((lesson) => lesson.start.startsWith(day) && lesson.status !== "Cancelled").map(({ course }) => course))];
+  const available = learningCourses.filter(({ code }) => scheduled.includes(code));
+  return <section className="space-y-3 rounded-xl border bg-white p-5">
+    <h2 className="text-xl font-semibold">Study from your timetable</h2>
+    <label>Class date <input className={field} type="date" value={day} onChange={(event) => setDay(event.target.value)} /></label>
+    {available.length ? <ul className="space-y-2">{available.map(({ code, title }) => (
+      <li key={code} className="flex flex-wrap items-center gap-3">
+        <strong>{title}</strong>
+        <Link className="underline" href={`/learning/quizzes?course=${code}`}>Topic quizzes</Link>
+        <Link className="underline" href={`/learning/flashcards?course=${code}`}>Flashcards</Link>
+        <Link className="underline" href={`/learning/pomodoro?course=${code}`}>Focus session</Link>
+      </li>
+    ))}</ul> : <p>No subjects with practice decks on this date. Choose a course below to practice anytime.</p>}
+  </section>;
+}
+
+export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
+  page: string; exams: Exam[]; slots: Slot[]; lessons: TimetableLesson[]; date: string; initialCourse?: string;
+}) {
+  const [preferred, setPreferred] = useLearningData("course", learningCourses[0].code);
+  const [selection, setSelection] = useState(initialCourse);
+  const code = selection ?? preferred;
+  const setCode = (value: string) => { setSelection(value); setPreferred(value); };
   const course = learningCourses.find((entry) => entry.code === code) ?? learningCourses[0];
   const title = pages.find(([key]) => key === page)?.[1];
-  const smart = page === "exam-plan" || page === "language-bridge";
+  const smart = page === "exam-plan";
   const content = {
     materials: <Materials course={course} />,
-    quizzes: <Quiz course={course} weighted={false} />,
+    quizzes: <Quiz course={course} />,
     flashcards: <Flashcards course={course} />,
     pomodoro: <Pomodoro course={course.code} />,
-    "visual-mind": <VisualMind course={course.code} />,
-    "self-test": <Quiz course={course} weighted />,
+    "code-trace": <CodeTrace />,
     "exam-plan": <ExamPlan exams={exams} slots={slots} />,
-    "language-bridge": <LanguageBridge course={course} />,
   }[page];
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-8">
     <header><Link href="/" className="text-sm font-semibold underline">JARVIS home</Link>
@@ -273,13 +275,13 @@ export function Learning({ page, exams, slots }: { page: string; exams: Exam[]; 
     </nav>
     {title ? <section className="space-y-4 rounded-xl border border-[#c5d0c6] bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-2xl font-semibold">{title}{smart && <Smart />}</h2>
-        {page !== "exam-plan" && <CoursePicker course={course.code} onChange={setCode} />}
+        {page !== "exam-plan" && page !== "code-trace" && <CoursePicker course={course.code} onChange={setCode} />}
       </div>
       <div key={`${page}:${course.code}`}>{content}</div>
-    </section> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{pages.map(([key, label]) => (
+    </section> : <><DailyStudy lessons={lessons} date={date} /><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{pages.map(([key, label]) => (
       <Link key={key} href={`/learning/${key}`} className="flex items-center justify-between gap-2 rounded-xl border border-[#c5d0c6] bg-white p-5 font-semibold">
-        {label}{(key === "exam-plan" || key === "language-bridge") && <Smart />}
+        {label}{key === "exam-plan" && <Smart />}
       </Link>
-    ))}</div>}
+    ))}</div></>}
   </main>;
 }

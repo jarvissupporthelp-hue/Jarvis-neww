@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, type PointerEvent } from "react";
-import { exportMindMap, importMindMap, type MindMap, type MindNode } from "./practice";
+import { useEffect, useState } from "react";
 import { button, field, useLearningData } from "./storage";
 import { learningCourses } from "./seed";
 
@@ -45,6 +44,13 @@ export function Pomodoro({ course }: { course: string }) {
   });
   const max = Math.max(1, ...week.map(({ minutes }) => minutes));
   return <div className="space-y-5">
+    <div className="flex flex-wrap gap-2">
+      {([["Quick review", 10, 3], ["Problem solving", 25, 5], ["Coding sprint", 50, 10]] as const).map(([label, work, rest]) => (
+        <button key={label} className={field} disabled={!!running} onClick={() => {
+          setSettings({ ...settings, work, rest }); setPhase("work"); setSeconds(null);
+        }}>{label} · {work} min</button>
+      ))}
+    </div>
     <div className="flex flex-wrap gap-3">{([["work", "Work"], ["rest", "Break"], ["long", "Long break"]] as const).map(([key, label]) => (
       <label key={key}>{label} (min) <input className={`w-20 ${field}`} type="number" min="1" max="120" value={settings[key]} disabled={!!running}
         onChange={(event) => { const value = Number(event.target.value); if (Number.isInteger(value) && value >= 1 && value <= 120) { setSettings({ ...settings, [key]: value }); setSeconds(null); } }} /></label>
@@ -65,93 +71,6 @@ export function Pomodoro({ course }: { course: string }) {
     <div className="space-y-2">{week.map(({ day, minutes }) => <div key={day} className="grid grid-cols-[7rem_1fr_4rem] items-center gap-2 text-sm">
       <time dateTime={day}>{day}</time><meter min={0} max={max} value={minutes} className="w-full" aria-label={`Focus minutes on ${day}`} /><span>{minutes} min</span>
     </div>)}</div>
-  </div>;
-}
-
-const emptyMap: MindMap = { nodes: [{ id: "root", label: "Main idea", color: "#d4e5dc", x: 120, y: 80 }], links: [] };
-const width = 720;
-const height = 360;
-
-export function VisualMind({ course }: { course: string }) {
-  const [versions, setVersions] = useLearningData<MindMap[]>(`mind:${course}`, [emptyMap]);
-  const [selected, setSelected] = useState("");
-  const [target, setTarget] = useState("");
-  const [label, setLabel] = useState("");
-  const [error, setError] = useState("");
-  const [drag, setDrag] = useState<MindNode | null>(null);
-  const map = versions.at(-1) ?? emptyMap;
-  const nodes = map.nodes.map((node) => node.id === drag?.id ? drag : node);
-  const active = map.nodes.find((node) => node.id === selected);
-  function save(next: MindMap) { setVersions([...versions, next].slice(-10)); }
-  function editNode(node: MindNode) {
-    save({ ...map, nodes: map.nodes.map((item) => item.id === node.id ? node : item) });
-  }
-  function position(event: PointerEvent<SVGGElement>, node: MindNode) {
-    const bounds = event.currentTarget.ownerSVGElement?.getBoundingClientRect();
-    if (!bounds) return node;
-    return { ...node, x: Math.max(65, Math.min(width - 65, (event.clientX - bounds.left) * width / bounds.width)),
-      y: Math.max(22, Math.min(height - 22, (event.clientY - bounds.top) * height / bounds.height)) };
-  }
-
-  return <div className="space-y-4">
-    <div className="flex flex-wrap gap-2">
-      <button className={button} onClick={() => {
-        const id = crypto.randomUUID();
-        save({ ...map, nodes: [...map.nodes, { id, label: "New idea", color: "#d4e5dc", x: 210, y: 150 }] });
-        setSelected(id); setLabel("New idea");
-      }} disabled={map.nodes.length >= 200}>Add node</button>
-      <button className={field} disabled={versions.length < 2} onClick={() => setVersions(versions.slice(0, -1))}>Undo</button>
-      <button className={field} onClick={() => {
-        const url = URL.createObjectURL(new Blob([exportMindMap(map)], { type: "application/json" }));
-        const link = document.createElement("a"); link.href = url; link.download = `${course}-mind-map.json`; link.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-      }}>Export JSON</button>
-      <label className="block">Import JSON <input type="file" accept=".json,application/json" onChange={async (event) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        try {
-          if (file.size > 256_000) throw new Error();
-          save(importMindMap(await file.text())); setSelected(""); setError("");
-        } catch { setError("The file is not a valid JARVIS mind map."); }
-        event.target.value = "";
-      }} /></label>
-    </div>
-    {error && <p role="alert">{error}</p>}
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full touch-none rounded-lg border bg-[#f6f9f5]" aria-label="Mind-map canvas">
-      {map.links.map(([a, b]) => {
-        const left = nodes.find(({ id }) => id === a);
-        const right = nodes.find(({ id }) => id === b);
-        return left && right && <line key={`${a}:${b}`} x1={left.x} y1={left.y} x2={right.x} y2={right.y} stroke="#527761" strokeWidth="2" />;
-      })}
-      {nodes.map((node) => <g key={node.id} className="cursor-grab" transform={`translate(${node.x}, ${node.y})`}
-        onPointerDown={(event) => { event.currentTarget.setPointerCapture(event.pointerId); setSelected(node.id); setLabel(node.label); }}
-        onPointerMove={(event) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) setDrag(position(event, node)); }}
-        onPointerUp={() => { if (drag?.id === node.id) editNode(drag); setDrag(null); }}
-        onPointerCancel={() => setDrag(null)}>
-        <rect x="-62" y="-19" width="124" height="38" rx="8" fill={node.color} stroke={selected === node.id ? "#24533d" : "#a6b8aa"} strokeWidth="2" />
-        <text textAnchor="middle" dominantBaseline="middle" fontSize="13">{node.label.length > 17 ? `${node.label.slice(0, 16)}…` : node.label}</text>
-      </g>)}
-    </svg>
-    <div className="flex flex-wrap gap-3">
-      <label>Node <select className={field} value={selected} onChange={(event) => { setSelected(event.target.value); setLabel(map.nodes.find(({ id }) => id === event.target.value)?.label ?? ""); }}>
-        <option value="">Select a node</option>{map.nodes.map((node) => <option key={node.id} value={node.id}>{node.label}</option>)}
-      </select></label>
-      {active && <>
-        <label>Name <input className={field} value={label} maxLength={80} onChange={(event) => setLabel(event.target.value)} /></label>
-        <button className={field} disabled={!label.trim()} onClick={() => editNode({ ...active, label: label.trim() })}>Rename</button>
-        <label>Color <input type="color" value={active.color} onChange={(event) => editNode({ ...active, color: event.target.value })} /></label>
-        <label>Connect to <select className={field} value={target} onChange={(event) => setTarget(event.target.value)}>
-          <option value="">Select a node</option>{map.nodes.filter(({ id }) => id !== active.id).map((node) => <option key={node.id} value={node.id}>{node.label}</option>)}
-        </select></label>
-        <button className={field} disabled={!target || target === active.id} onClick={() => {
-          if (map.nodes.some(({ id }) => id === target) && !map.links.some(([a, b]) => (a === active.id && b === target) || (b === active.id && a === target))) {
-            save({ ...map, links: [...map.links, [active.id, target]] });
-          }
-          setTarget("");
-        }}>Connect</button>
-      </>}
-    </div>
-    <p className="text-sm">Autosaved in this browser · {versions.length} of 10 versions</p>
   </div>;
 }
 

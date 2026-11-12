@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildExamPlan } from "../modules/learning/planner.ts";
-import { exportMindMap, importMindMap, reviewFlashcard } from "../modules/learning/practice.ts";
+import { reviewFlashcard } from "../modules/learning/practice.ts";
 
 const minute = 60_000;
 const at = (date, time) => Date.parse(`2026-11-${String(date).padStart(2, "0")}T${time}:00+04:00`);
@@ -76,11 +76,12 @@ test("flashcards advance, reset, and stop at box five", () => {
   }
 });
 
-test("mind maps round-trip Unicode labels, colors, coordinates and links", () => {
-  const map = { nodes: [
-    { id: "a", label: "Գրաֆ · Graphe", color: "#ff00aa", x: 10, y: 15 },
-    { id: "b", label: "Очередь", color: "#008800", x: 22, y: 90 },
-  ], links: [["a", "b"]] };
-  assert.deepEqual(importMindMap(exportMindMap(map)), map);
-  assert.throws(() => importMindMap(JSON.stringify({ ...map, links: [["a", "c"]] })));
+test("timetable subjects have distinct twelve-card topic decks", async () => {
+  const { learningCourses } = await import("../modules/learning/seed.ts");
+  for (const code of ["MATH-CS", "NET1", "FRE301", "ENG301", "ALG301", "ARC301"]) {
+    const deck = learningCourses.find((course) => course.code === code);
+    assert.equal(deck.questions.length, 12);
+    assert.equal(new Set(deck.questions.map(({ id }) => id)).size, 12);
+    assert.ok(deck.questions.every(({ choices, answer }) => new Set(choices).size === 3 && choices[answer]));
+  }
 });
