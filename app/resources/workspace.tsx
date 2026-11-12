@@ -146,7 +146,7 @@ export function CourseResources({ offeringId, canPublish = false }: { offeringId
           {visible?.length ? (
             <ul className="space-y-2">
               {visible.map((item) => (
-                <li key={item.id} className="space-y-1 rounded bg-[#eef3ee] p-3">
+                <li key={item.id} className="space-y-1 rounded jarvis-muted-panel p-3">
                   <strong className="break-words">{item.title}</strong>
                   <p className="break-words text-sm">{item.filename} · {Math.ceil(item.size_bytes / 1024)} KB</p>
                   <p className="text-sm">{indexLabels[item.index_status]}</p>

@@ -277,7 +277,7 @@ export function StudyPlanWorkspace() {
         <h2 className="text-xl font-semibold">Saved study plans</h2>
         {plans.length === 0 && <p>No study plans saved yet.</p>}
         {plans.map((plan) => (
-          <details key={plan.id} className="rounded bg-[#eef3ee] p-3">
+          <details key={plan.id} className="rounded jarvis-muted-panel p-3">
             <summary className="cursor-pointer break-words py-2 font-semibold">{plan.course_name} · {plan.exam_date}</summary>
             <div className="mt-2"><PlanDetails plan={{
               course: plan.course_name, examDate: plan.exam_date, target: plan.target_outcome,

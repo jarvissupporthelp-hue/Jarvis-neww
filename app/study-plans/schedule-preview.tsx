@@ -81,7 +81,7 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
   return (
     <section className="mt-3 space-y-2 border-t border-[#afbeb3] pt-3" aria-label="Schedule preview">
       <button type="button" disabled={busy} onClick={() => void generate()}
-        className="min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">
+        className="min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">
         {busy ? "Loading schedule…" : hasSessions || confirmed ? "View study sessions" : "Generate schedule preview"}
       </button>
       {error && <p role="alert">{error}</p>}
@@ -125,7 +125,7 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
               <p className="text-sm">Preview only. Sessions haven’t been saved to your calendar.</p>
               {schedule.sessions.length > 0 && (
                 <button type="button" disabled={busy} onClick={() => void confirm()}
-                  className="min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50">{busy ? "Confirming…" : "Confirm schedule"}</button>
+                  className="min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">{busy ? "Confirming…" : "Confirm schedule"}</button>
               )}
             </>
           )}

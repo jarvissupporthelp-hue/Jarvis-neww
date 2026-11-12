@@ -38,7 +38,7 @@ export function SessionCompletion({ sessionId, topic, onCompleted }: {
           </select>
         </label>
       )}
-      <button type="submit" disabled={busy} aria-label={topic ? `Mark complete: ${topic}` : "Mark complete: Mixed review"} className="min-h-11 rounded bg-[#1e3328] px-3 py-1.5 text-sm text-white disabled:opacity-50">
+      <button type="submit" disabled={busy} aria-label={topic ? `Mark complete: ${topic}` : "Mark complete: Mixed review"} className="min-h-11 rounded jarvis-primary-button px-3 py-1.5 text-sm text-white disabled:opacity-50">
         {busy ? "Saving…" : "Mark complete"}
       </button>
       {error && <p role="alert" className="w-full text-sm">{error}</p>}

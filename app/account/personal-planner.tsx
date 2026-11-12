@@ -63,17 +63,18 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
   }
 
   return (
-    <section id="student-tasks" className="space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4">
-      <h2 className="text-xl font-semibold">My tasks</h2>
-      {!tasks && !message && <p>Loading tasks…</p>}
-      {tasks?.length === 0 && <p>No tasks yet.</p>}
+    <section id="student-tasks" className="jarvis-panel space-y-3" aria-label="Personal tasks">
+      <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">PERSONAL PLANNER</span><h2 className="text-xl font-semibold">My tasks</h2></div>
+        {tasks && <span className="jarvis-counter">{tasks.filter(task => !task.completed).length} remaining</span>}</div>
+      {!tasks && !message && <p role="status">Loading tasks…</p>}
+      {tasks?.length === 0 && <div className="jarvis-empty-state"><strong>All clear</strong><p>Add your first personal task below.</p></div>
       <ul className="space-y-2">
         {tasks?.map((task) => (
-          <li key={task.id} className="flex flex-wrap items-center justify-between gap-2 rounded bg-[#eef3ee] p-2">
+          <li key={task.id} className="jarvis-task-row flex flex-wrap items-center justify-between gap-2 rounded jarvis-muted-panel p-3">
             <label className="flex min-w-0 items-center gap-2">
               <input type="checkbox" checked={task.completed} disabled={busy}
                 onChange={(event) => void save({ completed: event.target.checked }, task.id)} />
-              <span className="break-all">{task.title}{task.due_on && <small className="block">Due {task.due_on}</small>}</span>
+              <span className={"break-words"+(task.completed?" jarvis-task-done":"")}>{task.title}{task.due_on && <small className="block jarvis-muted">Due {task.due_on}</small>}</span>
             </label>
             <div className="flex gap-3">
               <button type="button" disabled={busy} className="underline" onClick={() => setSelected(task)}>Edit task</button>
@@ -90,7 +91,7 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
           <label className="block">Task title<input className={field} name="title" defaultValue={selected?.title} maxLength={120} required /></label>
           <label className="block">Due date (optional)<input className={field} name="due" type="date" defaultValue={selected?.due_on ?? ""} /></label>
           <div className="flex gap-3">
-            <button className={button}>Save task</button>
+            <button className={button} disabled={busy}>{busy ? "Saving…" : selected ? "Update task" : "Add task"}</button>
             {selected && <button type="button" className="underline" onClick={() => setSelected(null)}>Cancel</button>}
           </div>
         </fieldset>

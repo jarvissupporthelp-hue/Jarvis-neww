@@ -16,7 +16,7 @@ type Offering = {
 type WorkspaceData = { courses: Offering[] } | { course: Offering; assignments: CourseAssignment[] };
 
 const field = "block w-full rounded border border-[#789181] bg-white p-2";
-const card = "space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4";
+const card = "jarvis-panel space-y-3";
 
 function CoursePage({ offering, initialAssignments }: { offering: Offering; initialAssignments: CourseAssignment[] }) {
   const [assignments, setAssignments] = useState(initialAssignments);
@@ -61,11 +61,15 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
   }
 
   return (
-    <>
-      <h1 className="text-3xl font-semibold">{offering.course.name}</h1>
-      <p>{offering.course.code} · {offering.group.name} · {offering.semester.name}</p>
-      <form className={card} onSubmit={publish}>
-        <h2 className="text-xl font-semibold">Publish an assignment</h2>
+    <div className="jarvis-lecturer-workspace">
+      <header className="jarvis-role-hero">
+        <span className="jarvis-eyebrow">COURSE WORKSPACE · {offering.group.name}</span>
+        <h1>{offering.course.name}</h1>
+        <p>{offering.course.code} · {offering.semester.name}</p>
+        <div className="jarvis-role-hero-links"><a href="#publish-assignment">Publish assignment ↓</a><a href="#course-pdf-resources">Course PDFs ↓</a></div>
+      </header>
+      <form id="publish-assignment" className={card} onSubmit={publish}>
+        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">PUBLISH TO STUDENTS</span><h2 className="text-xl font-semibold">Create an assignment</h2></div></div>
         <p>Enrolled students in {offering.group.name} can read the brief and see the deadline on their dashboard and calendar.</p>
         <fieldset className="space-y-3" disabled={busy}>
           <label className="block">Title<input className={field} name="title" maxLength={120} required /></label>
@@ -82,11 +86,11 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
         {message && <p role="status">{message}</p>}
       </form>
       <section className={card}>
-        <h2 className="text-xl font-semibold">Published assignments</h2>
+        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">COURSEWORK</span><h2 className="text-xl font-semibold">Published assignments</h2></div><span className="jarvis-counter">{assignments.length}</span></div>
         {assignments.length ? (
           <ul className="space-y-2">
             {assignments.map((item) => (
-              <li key={item.id} className="rounded bg-[#eef3ee] p-3">
+              <li key={item.id} className="jarvis-muted-panel p-3">
                 <strong className="break-words">{item.title}</strong>
                 <p className="text-sm">Due {item.due_on} · {item.due_at.slice(0, 5)} Yerevan</p>
                 <p className="whitespace-pre-wrap break-words">{item.brief}</p>
@@ -95,8 +99,8 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
           </ul>
         ) : <p>No assignments published for this group yet.</p>}
       </section>
-      <CourseResources offeringId={offering.id} canPublish />
-    </>
+      <div id="course-pdf-resources"><CourseResources offeringId={offering.id} canPublish /></div>
+    </div>
   );
 }
 
@@ -104,6 +108,7 @@ export function LecturerWorkspace({ offeringId }: { offeringId?: string }) {
   const [data, setData] = useState<WorkspaceData | null>(null);
   const [error, setError] = useState("");
   const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -126,29 +131,41 @@ export function LecturerWorkspace({ offeringId }: { offeringId?: string }) {
       }
     })();
     return () => controller.abort();
-  }, [offeringId]);
+  }, [offeringId, retry]);
 
   if (needsSignIn) return <p>Sign in with an active lecturer account. <Link href="/account" className="underline">Sign in</Link></p>;
-  if (error) return <p role="alert">{error}</p>;
+  if (error) return <div className="jarvis-empty-state" role="alert"><strong>Couldn't load your courses</strong><p>{error}</p><button className="jarvis-secondary-button" type="button" onClick={() => {setError(""); setRetry(n => n+1);}}>Try again</button></div>;
   if (!data) return <p role="status">Loading lecturer workspace…</p>;
   if ("course" in data) return <CoursePage offering={data.course} initialAssignments={data.assignments} />;
 
   return (
-    <>
+    <div className="jarvis-lecturer-workspace">
+      <header className="jarvis-role-hero">
+        <span className="jarvis-eyebrow">LECTURER WORKSPACE</span>
+        <h1>Teach with clarity.</h1>
+        <p>Your courses, student groups, and teaching schedule in one place.</p>
+      </header>
+      <div className="jarvis-stats" aria-label="Teaching summary">
+        <div className="jarvis-stat"><span>Assigned courses</span><strong>{data.courses.length}</strong><small>Your teaching responsibilities</small></div>
+        <div className="jarvis-stat"><span>Student groups</span><strong>{new Set(data.courses.map(item => item.group.name)).size}</strong><small>Across course offerings</small></div>
+      </div>
       <section className={card}>
-        <h2 className="text-xl font-semibold">Assigned courses</h2>
+        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">YOUR COURSES</span><h2 className="text-xl font-semibold">Assigned course groups</h2></div></div>
         {data.courses.length ? (
-          <ul className="space-y-2">
+          <ul className="jarvis-course-grid">
             {data.courses.map((item) => (
               <li key={item.id}>
-                <Link className="font-semibold underline" href={`/lecturer/${item.id}`}>{item.course.name}</Link>
-                <p className="text-sm">{item.course.code} · {item.group.name} · {item.semester.name}</p>
+                <Link className="jarvis-course-card jarvis-course-link" href={"/lecturer/"+item.id}>
+                  <span className="jarvis-course-symbol" aria-hidden="true">{item.course.code.slice(0,2).toUpperCase()}</span>
+                  <span className="min-w-0"><strong>{item.course.name}</strong><small>{item.course.code} · {item.group.name} · {item.semester.name}</small></span>
+                  <span className="jarvis-course-chevron" aria-hidden="true">↗</span>
+                </Link>
               </li>
             ))}
           </ul>
         ) : <p>No courses assigned yet.</p>}
       </section>
       <Timetable getToken={getAccessToken} />
-    </>
+    </div>
   );
 }
