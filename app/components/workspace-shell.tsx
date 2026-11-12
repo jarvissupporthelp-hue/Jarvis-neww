@@ -35,7 +35,10 @@ function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
 type NavItem = { href: string; label: string; icon: IconName };
 
 const studentNav: NavItem[] = [
-  { href: "/account", label: "Dashboard", icon: "dashboard" },
+  { href: "/account", label: "My day", icon: "dashboard" },
+  { href: "/dashboard", label: "University hub", icon: "layers" },
+  { href: "/academics", label: "Academics", icon: "courses" },
+  { href: "/learning", label: "Learning tools", icon: "plans" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
   { href: "/resources", label: "Course library", icon: "courses" },
@@ -45,12 +48,16 @@ const studentNav: NavItem[] = [
   { href: "/focus", label: "Focus timer", icon: "focus" },
 ];
 const lecturerNav: NavItem[] = [
+  { href: "/dashboard", label: "University hub", icon: "dashboard" },
+  { href: "/academics", label: "Academics", icon: "layers" },
   { href: "/lecturer", label: "My courses", icon: "courses" },
   { href: "/account/calendar", label: "Timetable", icon: "calendar" },
   { href: "/resources", label: "Course resources", icon: "layers" },
 ];
 const adminNav: NavItem[] = [
-  { href: "/account", label: "Overview", icon: "dashboard" },
+  { href: "/account", label: "Administration", icon: "dashboard" },
+  { href: "/dashboard", label: "University hub", icon: "layers" },
+  { href: "/academics", label: "Academic tools", icon: "courses" },
   { href: "/account/admin/users", label: "Users & access", icon: "users" },
   { href: "/account/admin/group", label: "Student groups", icon: "layers" },
   { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },

@@ -7,12 +7,13 @@ import { getClient, getAccessToken } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
-import { AdminWorkspace } from "./admin-workspace";
+import { AdminWorkspace, type AdminSection } from "./admin-workspace";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 type Flow = "signin" | "forgot" | "invite" | "recovery";
 type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
+export type AccountView = "dashboard" | "calendar" | "tasks";
 
 async function currentRole(token: string): Promise<Role | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
@@ -22,9 +23,13 @@ async function currentRole(token: string): Promise<Role | null> {
 }
 
 const inputClass = "w-full rounded border border-[#789181] bg-white p-2";
-const buttonClass = "min-h-11 rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50";
+const buttonClass = "min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50";
 
-export function AccountForm({ locale }: { locale: Locale }) {
+export function AccountForm({ view = "dashboard", adminSection, locale = "en" }: {
+  view?: AccountView;
+  adminSection?: AdminSection;
+  locale?: Locale;
+}) {
   const copy = accountCopy[locale];
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
@@ -58,9 +63,8 @@ export function AccountForm({ locale }: { locale: Locale }) {
           setFlow(expected);
           setLinkReady(Boolean(validFragment && data.session));
           if (!validFragment || !data.session) setError(expected === "invite"
-            ? copy.invalidInvite
-            : copy.invalidRecovery);
-          window.history.replaceState(null, "", `/account?lang=${locale}`);
+            ? copy.invalidInvite : copy.invalidRecovery);
+          window.history.replaceState(null, "", "/account?lang=" + locale);
         } else if (data.session) {
           setRole(await currentRole(data.session.access_token));
         }
@@ -126,9 +130,7 @@ export function AccountForm({ locale }: { locale: Locale }) {
 
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.session) {
-        setError(error?.status === 429
-          ? copy.limited
-          : copy.invalid);
+        setError(error?.status === 429 ? copy.limited : copy.invalid);
         return;
       }
       const verified = await currentRole(data.session.access_token);
@@ -137,7 +139,7 @@ export function AccountForm({ locale }: { locale: Locale }) {
         setError(copy.inactive);
         return;
       }
-      window.location.assign(`/dashboard?lang=${locale}`);
+      setRole(verified);
     } catch {
       setError(copy.error);
     } finally {
@@ -173,18 +175,27 @@ export function AccountForm({ locale }: { locale: Locale }) {
     if (role) accountStatus.current?.focus();
   }, [role]);
 
-  if (!ready) return <p role="status">{copy.checking}</p>;
+  if (!ready) return <div className="jarvis-view-loading" role="status">
+    <span className="jarvis-view-loading-spinner" aria-hidden="true"/>
+    <span>{copy.checking}</span>
+  </div>;
 
   const callback = flow === "invite" || flow === "recovery";
   return (
-    <div className="space-y-4">
+    <div className="jarvis-account-flow space-y-4">
       {role ? (
-        <>
-          <p ref={accountStatus} tabIndex={-1}>Signed in as <strong>{role}</strong>.</p>
+        <div className="authenticated-workspace space-y-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-4" style={{ borderColor: "var(--stroke)", background: "var(--panel)" }}>
+            <p ref={accountStatus} tabIndex={-1} className="text-sm">Signed in as <strong className="capitalize">{role}</strong></p>
+            <span className="jarvis-admin-status">Connected to JARVIS</span>
+          </div>
           {role === "admin" && (
-            <form onSubmit={invite} className="space-y-3">
-              <h2 className="text-xl font-semibold">Approve and invite</h2>
-              <label className="block">Email<input className={inputClass} name="email" type="email" required /></label>
+            <form onSubmit={invite} className="jarvis-invite-form space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
+              <div className="jarvis-section-heading">
+                <div><span className="jarvis-eyebrow">ACCESS MANAGEMENT</span><h2 className="text-xl font-semibold">Invite a new member</h2>
+                <p>Only approved students and lecturers can activate an account.</p></div>
+              </div>
+              <label className="block">{copy.email}<input className={inputClass} name="email" type="email" required /></label>
               <label className="block">Role
                 <select className={inputClass} value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
                   <option value="student">Student</option><option value="lecturer">Lecturer</option>
@@ -198,29 +209,45 @@ export function AccountForm({ locale }: { locale: Locale }) {
                   </select>
                 </label>
               )}
-              <button className={buttonClass} disabled={busy}>Send or resend invitation</button>
+              <button className={buttonClass} disabled={busy}>{busy ? "Sending invitation…" : "Send or resend invitation"}</button>
             </form>
           )}
           {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}
-          {role === "admin" ? <AdminWorkspace getToken={getAccessToken} /> : (
-            <>
-              {role === "student" && <StudentDashboard getToken={getAccessToken} />}
-              <div id="student-timetable"><Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} /></div>
-              {role === "student" && <PersonalTasks client={getClient()} />}
-            </>
+          {role === "admin" ? <div className="jarvis-view-enter" key={adminSection ?? "admin-overview"}>
+            <AdminWorkspace getToken={getAccessToken} section={adminSection ?? "users"} />
+          </div> : (
+            <div key={view} className="jarvis-view-enter">
+              {role === "student" && view === "dashboard" && <StudentDashboard getToken={getAccessToken} />}
+              {view === "calendar" && <Timetable getToken={getAccessToken} personal={role === "student" ? getClient() : undefined} />}
+              {role === "student" && view === "tasks" && <PersonalTasks client={getClient()} />}
+              {role === "lecturer" && view === "dashboard" && (
+                <div className="jarvis-empty-state">
+                  <strong>Your teaching workspace</strong>
+                  <p>Open your timetable or manage courses and assignments.</p>
+                  <div className="flex flex-wrap gap-3">
+                    <Link href="/account/calendar" className="jarvis-secondary-button">View timetable</Link>
+                    <Link href="/lecturer" className="jarvis-secondary-button">Manage courses</Link>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setError("Could not sign out. Try again.");
             else { setRole(null); setMessage(""); }
           }}>Sign out</button>
-        </>
+        </div>
       ) : (
         <>
           {(!callback || linkReady) && (
-            <form key={flow} onSubmit={submit} className="space-y-3" aria-busy={busy}>
+            <form key={flow} onSubmit={submit} className="space-y-4" aria-busy={busy}>
+              <div className="jarvis-signin-heading"><div className="jarvis-signin-mark">✦</div>
+                <h2>{flow === "signin" ? (locale === "hy" ? "Բարի վերադարձ" : "Welcome back") : flow === "forgot" ? copy.recovery : flow === "invite" ? copy.invite : copy.recovery}</h2>
+                <p>{flow === "signin" ? (locale === "hy" ? "Մուտք գործիր հրավերով ակտիվացված համալսարանական հաշվով։" : "Use your invited university account to continue.") : flow === "forgot" ? copy.resetSent : copy.length}</p>
+              </div>
               {callback && <h2 className="text-xl font-semibold">{flow === "invite" ? copy.invite : copy.recovery}</h2>}
-              {!callback && <label className="block">{copy.email}<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
+              {!callback && <label className="block">Email<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
               {flow === "invite" && <label className="block">{copy.name}<input className={inputClass} name="displayName" maxLength={100} required /></label>}
               {flow !== "forgot" && (
                 <div>
