@@ -67,7 +67,7 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
       <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">PERSONAL PLANNER</span><h2 className="text-xl font-semibold">My tasks</h2></div>
         {tasks && <span className="jarvis-counter">{tasks.filter(task => !task.completed).length} remaining</span>}</div>
       {!tasks && !message && <p role="status">Loading tasks…</p>}
-      {tasks?.length === 0 && <div className="jarvis-empty-state"><strong>All clear</strong><p>Add your first personal task below.</p></div>
+      {tasks?.length === 0 && <div className="jarvis-empty-state"><strong>All clear</strong><p>Add your first personal task below.</p></div>}
       <ul className="space-y-2">
         {tasks?.map((task) => (
           <li key={task.id} className="jarvis-task-row flex flex-wrap items-center justify-between gap-2 rounded jarvis-muted-panel p-3">
