@@ -221,7 +221,7 @@ export const arenaRanked = {
 export const academicPortal = {
   hy: {
     title: "Ուսումնական պորտալ", description: "Դասընթացներ, առաջադրանքներ, ուսումնական նյութեր և AI օգնական՝ մեկ տեղում։",
-    home: "JARVIS-ի գլխավոր էջ", language: "Լեզու", openMath: "Բացել մաթեմատիկայի լաբորատորիան", courses: "Դասընթացներ", allCourses: "Բոլոր դասընթացները", open: "Բացել դասընթացը",
+    overview: "Ընդհանուր տեսք", home: "JARVIS-ի գլխավոր էջ", language: "Լեզու", openMath: "Բացել մաթեմատիկայի լաբորատորիան", courses: "Դասընթացներ", allCourses: "Բոլոր դասընթացները", open: "Բացել դասընթացը",
     calendar: "Դասացուցակ", dashboard: "Իմ ուսումնական օրը", chat: "AI օգնական", plans: "Ուսումնական պլաններ",
     ask: "Հարցնել այս դասընթացի մասին", search: "Որոնել դասընթացի PDF-երում",
     assignments: "Առաջադրանքներ", resources: "Դասընթացի PDF-եր", lecturer: "Դասախոսի գործիքներ", admin: "Կառավարում",
@@ -234,7 +234,7 @@ export const academicPortal = {
   },
   en: {
     title: "Academic portal", description: "Your courses, assignments, course materials, and AI study tools in one place.",
-    home: "JARVIS home", language: "Language", openMath: "Open math lab", courses: "Courses", allCourses: "All courses", open: "Open course",
+    overview: "Overview", home: "JARVIS home", language: "Language", openMath: "Open math lab", courses: "Courses", allCourses: "All courses", open: "Open course",
     calendar: "Timetable", dashboard: "My academic day", chat: "AI study assistant", plans: "Study plans",
     ask: "Ask about this course", search: "Search this course’s PDFs",
     assignments: "Assignments", resources: "Course PDFs", lecturer: "Teaching workspace", admin: "Administration",

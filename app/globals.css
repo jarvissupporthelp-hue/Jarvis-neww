@@ -172,7 +172,6 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 .jarvis-admin-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 7px; border-radius: 14px; background: var(--panel); border: 1px solid var(--stroke); margin-top: 22px; scrollbar-width: thin; }
 .jarvis-admin-tab { white-space: nowrap; border: 1px solid transparent; border-radius: 10px; padding: 10px 13px; color: var(--muted); font-size: 12px; font-weight: 650; background: transparent; }
 .jarvis-admin-tab:hover { background: var(--panel-raised); color: var(--text); }
-.jarvis-admin-tab[aria-selected="true"] { color: #fff; background: linear-gradient(105deg,#7650ef,#427af0); box-shadow: 0 5px 14px -10px #704cef; }
 .jarvis-admin-body { margin-top: 17px; border: 1px solid var(--stroke); background: var(--panel); border-radius: 18px; padding: clamp(18px,3vw,28px); }
 .jarvis-admin-body > fieldset { max-width: 740px; }
 .jarvis-admin-body form { border: 1px solid var(--stroke); padding: 15px; border-radius: 13px; background: var(--panel-raised); margin-top: 12px; }
@@ -235,9 +234,11 @@ html[data-theme="light"] .jarvis-app [role="alert"] { color: #9a1c35; background
   .jarvis-main-area, .jarvis-main-area.has-sidebar { width: 100%; padding: 23px 16px 55px; }
   .jarvis-mobile-menu { display: grid; place-items: center; border: 1px solid var(--stroke); width: 37px; height: 37px; border-radius: 9px; background: var(--panel); color: var(--text); }
   .jarvis-topbar-start { gap: 10px; }
-  .jarvis-sidebar { position: fixed; left: 0; top: 64px; bottom: 0; z-index: 45; height: calc(100dvh - 64px); width: min(275px,85vw); transform: translateX(-105%); transition: transform .2s ease; box-shadow: 20px 0 70px #00000033; }
-  .jarvis-sidebar.is-open { transform: translateX(0); }
+  .jarvis-sidebar { position: fixed; left: 0; top: 64px; bottom: 0; z-index: 45; height: calc(100dvh - 64px); width: min(275px,85vw); visibility: hidden; pointer-events: none; overscroll-behavior: contain; box-shadow: 20px 0 70px #00000033; }
+  .jarvis-sidebar.is-open { visibility: visible; pointer-events: auto; }
+  .jarvis-side-link, .jarvis-admin-tab { touch-action: manipulation; }
   .jarvis-drawer-overlay { display: block; position: fixed; inset: 64px 0 0 0; z-index: 40; background: #080a13a8; border: 0; width: 100%; }
+  .jarvis-admin-tabs { flex-wrap: wrap; }
   .jarvis-admin-hero { padding: 21px 18px; }
   .jarvis-admin-hero-badge { display: none; }
   .jarvis-landing-hero { grid-template-columns: 1fr; }

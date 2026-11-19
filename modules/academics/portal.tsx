@@ -7,16 +7,20 @@ import { getAccessToken } from "@/lib/browser-supabase";
 import { academicPortal, type Locale } from "@/lib/locales";
 import type { PortalSnapshot } from "./portal-types";
 
-export function AcademicPortal({ locale, offeringId }: { locale: Locale; offeringId?: string }) {
+type Page = "overview" | "courses" | "assignments";
+
+export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; page: Page; offeringId?: string }) {
   const copy = academicPortal[locale];
   const [response, setResponse] = useState<{ data?: PortalSnapshot; status: number }>();
   const [attempt, setAttempt] = useState(0);
   const lang = `lang=${locale}`;
-  const path = offeringId ? `/academics/courses/${offeringId}` : "/academics";
+  const path = offeringId ? `/academics/courses/${offeringId}` : page === "overview" ? "/academics" : `/academics/${page}`;
+  const title = page === "overview" ? copy.title : page === "courses" ? copy.courses : copy.assignments;
   const data = response?.data;
   const offering = offeringId ? data?.courses[0] : undefined;
   const tile = "rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 sm:p-5";
   const link = "inline-block font-semibold underline underline-offset-4";
+  const tab = "inline-flex min-h-11 items-center rounded-lg px-3 font-semibold aria-[current=page]:bg-[var(--panel-raised)]";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -27,7 +31,7 @@ export function AcademicPortal({ locale, offeringId }: { locale: Locale; offerin
           if (!controller.signal.aborted) setResponse({ status: 401 });
           return;
         }
-        const query = offeringId ? `?offering=${encodeURIComponent(offeringId)}` : "";
+        const query = offeringId ? `?offering=${encodeURIComponent(offeringId)}` : page === "assignments" ? "?view=assignments" : "";
         const result = await fetch(`/api/academic-portal${query}`, {
           cache: "no-store", signal: controller.signal, headers: { Authorization: `Bearer ${token}` },
         });
@@ -38,20 +42,20 @@ export function AcademicPortal({ locale, offeringId }: { locale: Locale; offerin
       }
     })();
     return () => controller.abort();
-  }, [attempt, offeringId]);
+  }, [attempt, offeringId, page]);
 
   return <main className="space-y-6" lang={locale}>
     <header className={tile}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href={offeringId ? `/academics?${lang}` : "/"} className={link}>{offeringId ? copy.allCourses : copy.home}</Link>
+        <Link href={offeringId ? `/academics/courses?${lang}` : "/"} className={link}>{offeringId ? copy.allCourses : copy.home}</Link>
         <nav aria-label={copy.language} className="flex gap-4">
           <Link href={`${path}?lang=hy`} lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
           <Link href={`${path}?lang=en`} lang="en" aria-current={locale === "en" ? "page" : undefined}>English</Link>
         </nav>
       </div>
-      <h1 className="mt-4 break-words text-3xl font-semibold sm:text-5xl">{offering?.course.name ?? copy.title}</h1>
-      <p className="mt-2 text-[var(--muted)]">{offering
-        ? [offering.course.code, offering.group?.name, offering.semester.name].filter(Boolean).join(" · ") : copy.description}</p>
+      <h1 className="mt-4 break-words text-3xl font-semibold sm:text-5xl">{offering?.course.name ?? title}</h1>
+      {(offering || page === "overview") && <p className="mt-2 text-[var(--muted)]">{offering
+        ? [offering.course.code, offering.group?.name, offering.semester.name].filter(Boolean).join(" · ") : copy.description}</p>}
     </header>
     {!response && <p role="status">{copy.loading}</p>}
     {response?.status === 401 && <div className={tile}><p>{copy.signedOut}</p><Link href={`/account?${lang}`} className={link}>{copy.signIn}</Link></div>}
@@ -62,6 +66,9 @@ export function AcademicPortal({ locale, offeringId }: { locale: Locale; offerin
     </div>}
     {data && !offering && <>
       <nav className={tile + " flex flex-wrap gap-x-6 gap-y-3"} aria-label={copy.title}>
+        <Link className={tab} href={`/academics?${lang}`} aria-current={page === "overview" ? "page" : undefined}>{copy.overview}</Link>
+        <Link className={tab} href={`/academics/courses?${lang}`} aria-current={page === "courses" ? "page" : undefined}>{copy.courses}</Link>
+        {data.role !== "admin" && <Link className={tab} href={`/academics/assignments?${lang}`} aria-current={page === "assignments" ? "page" : undefined}>{copy.assignments}</Link>}
         <Link className={link} href={`/account/calendar?${lang}`}>{copy.calendar}</Link>
         {data.role === "student" && <>
           <Link className={link} href={`/account?${lang}`}>{copy.dashboard}</Link>
@@ -69,9 +76,9 @@ export function AcademicPortal({ locale, offeringId }: { locale: Locale; offerin
           <Link className={link} href="/study-plans">{copy.plans}</Link>
         </>}
         {data.role === "lecturer" && <Link className={link} href="/lecturer">{copy.lecturer}</Link>}
-        {data.role === "admin" && <Link className={link} href={`/account?${lang}`}>{copy.admin}</Link>}
+        {data.role === "admin" && <Link className={link} href={`/account/admin/group?${lang}`}>{copy.admin}</Link>}
       </nav>
-      <section aria-labelledby="portal-courses">
+      {page !== "assignments" && <section aria-labelledby="portal-courses">
         <h2 id="portal-courses" className="mb-3 text-xl font-semibold">{copy.courses}</h2>
         {!data.courses.length ? <p>{copy.empty}</p> : <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[...data.courses].sort((a, b) => a.course.name.localeCompare(b.course.name, locale)).map((item) => (
@@ -82,23 +89,24 @@ export function AcademicPortal({ locale, offeringId }: { locale: Locale; offerin
             </li>
           ))}
         </ul>}
-      </section>
+      </section>}
     </>}
+    {data && (page === "assignments" || (offering && data.role !== "admin")) && <section className={tile} aria-labelledby="portal-assignments">
+        <h2 id="portal-assignments" className="mb-2 text-xl font-semibold">{copy.assignments}</h2>
+        {data.assignments === null ? <p>{copy.failed}</p> : !data.assignments.length ? <p>{copy.noAssignments}</p> :
+          <ul className="space-y-3">{data.assignments.map((item) => <li key={item.id}>
+            <h3 className="font-semibold">{item.title}</h3>
+            {!offering && <p>{data.courses.find(({ id }) => id === item.offering_id)?.course.name}</p>}
+            <time dateTime={`${item.due_on}T${item.due_at}+04:00`}>{item.due_on} · {item.due_at.slice(0, 5)} · Asia/Yerevan</time>
+            <p className="whitespace-pre-wrap break-words">{item.brief}</p>
+          </li>)}</ul>}
+    </section>}
     {offering && data && data.role !== "admin" && <>
       {data.role === "student" && <div className={tile + " flex flex-wrap gap-x-6 gap-y-3"}>
         <Link className={link} href={`/chat?${lang}&offering=${offering.id}`}>{copy.ask} →</Link>
         <Link className={link} href={`/chat?${lang}&offering=${offering.id}&mode=course-pdfs`}>{copy.search} →</Link>
       </div>}
       {data.role === "lecturer" && <Link className={link} href={`/lecturer/${offering.id}`}>{copy.lecturer} →</Link>}
-      <section className={tile} aria-labelledby="portal-assignments">
-        <h2 id="portal-assignments" className="mb-2 text-xl font-semibold">{copy.assignments}</h2>
-        {data.assignments === null ? <p>{copy.failed}</p> : !data.assignments.length ? <p>{copy.noAssignments}</p> :
-          <ul className="space-y-3">{data.assignments.map((item) => <li key={item.id}>
-            <h3 className="font-semibold">{item.title}</h3>
-            <time dateTime={`${item.due_on}T${item.due_at}+04:00`}>{item.due_on} · {item.due_at.slice(0, 5)} · Asia/Yerevan</time>
-            <p className="whitespace-pre-wrap break-words">{item.brief}</p>
-          </li>)}</ul>}
-      </section>
       <section className={tile} aria-labelledby="portal-resources">
         <h2 id="portal-resources" className="mb-2 text-xl font-semibold">{copy.resources}</h2>
         <div lang="en"><CourseResources offeringId={offering.id} /></div>

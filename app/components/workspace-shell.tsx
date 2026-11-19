@@ -114,7 +114,8 @@ function subscribeTheme(callback: () => void) {
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [role, setRole] = useState<Role | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerPath, setDrawerPath] = useState<string | null>(null);
+  const drawerOpen = drawerPath === pathname;
   const menuButton = useRef<HTMLButtonElement>(null);
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "dark");
 
@@ -161,7 +162,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
     if (!drawerOpen) return;
     const onEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setDrawerOpen(false);
+        setDrawerPath(null);
         menuButton.current?.focus();
       }
     };
@@ -176,6 +177,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
 
   const isLanding = pathname === "/";
   const items = role === "admin" ? adminNav : role === "lecturer" ? lecturerNav : studentNav;
+  const currentLink = items.findLast(({ href }) => pathname === href || pathname.startsWith(href + "/"));
   const workspace = !isLanding && role !== null;
   const roleName = role === "admin" ? "Administration" : role === "lecturer" ? "Lecturer workspace" : "Student workspace";
   return (
@@ -184,7 +186,8 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       <header className="jarvis-topbar">
         <div className="jarvis-topbar-start">
           {workspace && <button ref={menuButton} className="jarvis-mobile-menu" aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
-            aria-expanded={drawerOpen} type="button" onClick={() => setDrawerOpen((value) => !value)}><Icon name={drawerOpen ? "close" : "menu"}/></button>}
+            aria-controls="jarvis-workspace-navigation" aria-expanded={drawerOpen} type="button"
+            onClick={() => setDrawerPath(drawerOpen ? null : pathname)}><Icon name={drawerOpen ? "close" : "menu"}/></button>}
           <Link href="/" className="jarvis-brand" aria-label="JARVIS home">
             <span className="jarvis-brand-symbol"><span>J</span></span>
             <span className="jarvis-brand-text">JARVIS<small>ACADEMIC WORKSPACE</small></span>
@@ -201,15 +204,15 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       </header>
       <div className="jarvis-shell-body">
         {workspace && <>
-          {drawerOpen && <button className="jarvis-drawer-overlay" type="button" aria-label="Close navigation" onClick={() => setDrawerOpen(false)}/>}
-          <aside className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
+          {drawerOpen && <button className="jarvis-drawer-overlay" type="button" aria-label="Close navigation" onClick={() => setDrawerPath(null)}/>}
+          <aside id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
             <div className="jarvis-sidebar-content">
               <div className="jarvis-sidebar-eyebrow">WORKSPACE</div>
               <div className="jarvis-sidebar-title">{roleName}</div>
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
-                  const current = pathname === item.href || pathname.startsWith(item.href + "/");
-                  return <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onClick={() => setDrawerOpen(false)}>
+                  const current = currentLink?.href === item.href;
+                  return <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onNavigate={() => setDrawerPath(null)}>
                     <Icon name={item.icon}/><span>{item.label}</span>
                   </Link>;
                 })}

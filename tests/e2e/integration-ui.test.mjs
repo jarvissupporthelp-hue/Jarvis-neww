@@ -98,3 +98,18 @@ test("the math lab is not served to signed-out visitors", async () => {
     assert.ok(!/<iframe[^>]*math-lab/.test(html), path + " embeds the lab before sign-in");
   }
 });
+
+test("academic navigation opens the selected page and keeps its language", async () => {
+  for (const [path, title] of [
+    ["/academics/courses?lang=en", "Courses"],
+    ["/academics/assignments?lang=en", "Assignments"],
+    ["/academics/assignments?lang=hy", "Առաջադրանքներ"],
+  ]) {
+    const response = await fetch(origin + path, { redirect: "manual" });
+    assert.equal(response.status, 200, path);
+    assert.match(await response.text(), new RegExp(`<h1[^>]*>${title}</h1>`), path);
+  }
+  const manage = await fetch(origin + "/academics/manage?lang=en", { redirect: "manual" });
+  assert.equal(manage.status, 307);
+  assert.equal(manage.headers.get("location"), "/account/admin/group?lang=en");
+});

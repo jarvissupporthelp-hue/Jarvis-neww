@@ -13,7 +13,10 @@ export async function GET(request: Request) {
   const client = authorization && createStudyClient(authorization);
   if (!client) return reply({}, 503);
 
-  const offeringId = new URL(request.url).searchParams.get("offering");
+  const params = new URL(request.url).searchParams;
+  const offeringId = params.get("offering");
+  const assignmentView = params.get("view") === "assignments";
+  if (assignmentView && caller.role === "admin") return reply({}, 403);
   if (offeringId !== null && !offeringIdPattern.test(offeringId)) return reply({}, 404);
   const query = client.from("course_offerings")
     .select("id,course:courses!inner(code,name),semester:semesters!inner(name),group:student_groups(name)")
@@ -22,9 +25,10 @@ export async function GET(request: Request) {
   if (error || !courses) return reply({}, 503);
   if (offeringId && !courses.length) return reply({}, 404);
 
-  const assignments = offeringId && caller.role !== "admin"
-    ? await client.from("course_assignments").select("id,offering_id,title,brief,due_on,due_at")
-      .eq("offering_id", offeringId).order("due_on").order("due_at").order("id")
+  const assignmentQuery = (offeringId || assignmentView) && caller.role !== "admin"
+    ? client.from("course_assignments").select("id,offering_id,title,brief,due_on,due_at")
+      .order("due_on").order("due_at").order("id")
     : null;
+  const assignments = assignmentQuery && await (offeringId ? assignmentQuery.eq("offering_id", offeringId) : assignmentQuery);
   return reply({ role: caller.role, courses, assignments: assignments?.data ?? null });
 }
