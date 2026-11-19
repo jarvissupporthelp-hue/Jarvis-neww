@@ -79,6 +79,7 @@ export function ArenaWorkspace({ initialGameId }:{initialGameId?:string}) {
         <p className="text-xs font-bold uppercase tracking-[.2em] text-violet-200">JARVIS · INTERACTIVE LEARNING</p>
         <h1 className="mt-2 text-4xl font-black text-white sm:text-5xl">The Arena<span className="text-violet-400">.</span></h1>
         <p className="mt-3 max-w-2xl text-slate-300">Ten university learning challenges across five disciplines. Learn through short interactive practice rounds.</p>
+        <div className="mt-5"><Link href="/arena/simulations" className="inline-flex rounded-xl bg-violet-600 px-5 py-3 font-semibold text-white hover:bg-violet-500">Open interactive simulations →</Link></div>
         <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded-full border border-violet-400/40 px-3 py-2">10 games</span><span className="rounded-full border border-violet-400/40 px-3 py-2">5 subjects</span><span className="rounded-full border border-amber-400/40 px-3 py-2 text-amber-200">Unranked practice</span></div>
       </header>
       {selected?<Challenge key={selected.id} game={selected} onExit={exit}/>:<>

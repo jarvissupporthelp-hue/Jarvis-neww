@@ -99,8 +99,8 @@ test("the math lab is not served to signed-out visitors", async () => {
   }
 });
 
-test("Arena presents ten original-catalogue activities as practice-only", async () => {
-  const response = await fetch(origin + "/arena");
+test("interactive Arena simulations present all ten activities in practice mode", async () => {
+  const response = await fetch(origin + "/arena/simulations");
   assert.equal(response.status, 200);
   const html = await response.text();
   for (const name of [
@@ -111,6 +111,12 @@ test("Arena presents ten original-catalogue activities as practice-only", async 
   ]) {
     assert.ok(html.includes(name), "Missing Arena activity " + name);
   }
-  assert.match(html, /practice.only/i);
+  assert.match(html, /practice[- ](?:only|mode|version)/i);
   assert.ok(!html.includes('Awarded XP'), "Practice must not advertise verified XP");
+});
+
+test("Arena quiz library links to interactive simulations", async () => {
+  const html = await (await fetch(origin + "/arena")).text();
+  assert.ok(html.includes('href="/arena/simulations"'));
+  assert.match(html, /10 games/i);
 });
