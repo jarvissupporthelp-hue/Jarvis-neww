@@ -28,7 +28,7 @@ export function useLibrary(initial: Language, includeShelf = true) {
    const [profile,shelf]=await Promise.all([db.from("library_profiles").select("language,avatar").eq("user_id",id).maybeSingle(),includeShelf ? db.from("library_shelf").select("book_id,status,liked").eq("user_id",id) : Promise.resolve({data:[],error:null})]);
    if(!alive)return;
    if(profile.error||shelf.error){setNotice("Could not load your library profile.");return;}
-   setLanguage(profile.data?.language??initial);setAvatar(profile.data?.avatar??avatars[parseInt(id.slice(0,8),16)%avatars.length]);
+   setLanguage(profile.data?.language??"en");setAvatar(profile.data?.avatar??avatars[parseInt(id.slice(0,8),16)%avatars.length]);
    setEntries(shelf.data??[]);setUser(id);
   }
   load().catch(()=>alive&&setNotice("Library profile unavailable."));

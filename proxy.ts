@@ -7,7 +7,7 @@ export function proxy(request: NextRequest) {
   const explicit = url.pathname === "/en" || url.pathname === "/hy" ? url.pathname.slice(1) : undefined;
   const headers = new Headers(request.headers);
   headers.set("x-jarvis-locale", explicit ?? preferred ?? url.searchParams.get("lang") ?? "en");
-  if (preferred && !explicit && !url.searchParams.has("lang")) {
+  if (preferred && !explicit && url.searchParams.get("lang") !== (preferred === "hy" ? "hy" : "en")) {
     url.searchParams.set("lang", preferred === "hy" ? "hy" : "en");
     return NextResponse.rewrite(url, {request:{headers}});
   }

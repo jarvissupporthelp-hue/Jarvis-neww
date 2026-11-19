@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
 import { Avatar, avatars } from "@/modules/campus/library-personal";
 import { workspaceText, type WorkspaceLanguage } from "@/lib/workspace-language";
@@ -115,6 +115,7 @@ function subscribeTheme(callback: () => void) {
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [preferences, setPreferences] = useState<{ language: WorkspaceLanguage; avatar: string }>({language:"en",avatar:""});
   const tr = (label: string) => workspaceText(preferences.language,label);
   const [role, setRole] = useState<Role | null>(null);
@@ -157,11 +158,15 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       if (next && id) {
         const result = await getClient().from("library_profiles").select("language,avatar").eq("user_id",id).maybeSingle();
         if (!active || current !== revision) return;
-        const language = result.data?.language ?? "hy";
+        if (result.error) return;
+        const language = result.data?.language ?? "en";
         const avatar = result.data?.avatar ?? avatars[parseInt(id.slice(0,8),16)%avatars.length];
         setPreferences({language,avatar});
         document.documentElement.lang = language;
-        document.cookie = "jarvis-language="+language+"; Path=/; Max-Age=31536000; SameSite=Lax";
+        if (!document.cookie.split("; ").includes("jarvis-language="+language)) {
+          document.cookie = "jarvis-language="+language+"; Path=/; Max-Age=31536000; SameSite=Lax";
+          router.refresh();
+        }
       }
     }
     try {
@@ -172,7 +177,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
       window.addEventListener("jarvis-profile-saved",refresh);
       return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener("jarvis-profile-saved",refresh); };
     } catch { return () => { active = false; }; }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     if (!drawerOpen) return;
