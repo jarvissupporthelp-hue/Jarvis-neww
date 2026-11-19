@@ -169,17 +169,19 @@ export const books: Book[] = [
 
 const searchable = (text: string) => text.normalize("NFKD").toLowerCase().replace(/\p{M}/gu, "").replaceAll("œ", "oe");
 
-export function filterBooks({ query = "", faculty = "", language = "", category = "" }: {
+export function filterBooks({ query = "", faculty = "", language = "", category = "", format = "" }: {
   query?: string;
   faculty?: string;
   language?: string;
   category?: string;
+  format?: string;
 } = {}) {
   const terms = searchable(query).trim().split(/\s+/).filter(Boolean);
   return books.filter((book) => {
     if (faculty && !book.faculties.some((value) => value === faculty)) return false;
     if (language && book.language !== language) return false;
     if (category && book.category !== category) return false;
+    if (format && (book.download?.format ?? "online") !== format) return false;
     const text = searchable(`${book.title} ${book.author}`);
     return terms.every((term) => text.includes(term));
   });

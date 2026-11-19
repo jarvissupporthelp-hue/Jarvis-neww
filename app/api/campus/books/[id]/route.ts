@@ -1,7 +1,23 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import { gutenbergBooks } from "@/modules/campus/books";
 
-export const maxDuration = 120;
+export const maxDuration = 60;
+
+async function loadBookText(id: string) {
+  const mirrorPath = id.length === 1 ? "0" : [...id.slice(0, -1)].join("/");
+  const urls = [
+    `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`,
+    `https://mirror.fi.ossplanet.net/gutenberg/${mirrorPath}/${id}/${id}-0.txt`,
+    `https://www.gutenberg.org/ebooks/${id}.txt.utf-8`,
+  ];
+  return Promise.any(urls.map(async (url) => {
+    const source = await fetch(url, {
+      next: { revalidate: 86400 }, signal: AbortSignal.timeout(12000),
+    });
+    if (!source.ok || !source.headers.get("content-type")?.includes("text/plain")) throw new Error("Book text unavailable");
+    return source.text();
+  }));
+}
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -9,17 +25,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   if (!book) return new Response("Book not found", { status: 404 });
   const { title, author } = book;
   try {
-    const source = await fetch(`https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`, {
-      next: { revalidate: 86400 }, signal: AbortSignal.timeout(105000),
-    });
-    if (!source.ok) throw new Error("Source unavailable");
+    const rawText = await loadBookText(id);
     const pdf = await PDFDocument.create();
     pdf.setTitle(title);
     pdf.setAuthor(author);
     const font = await pdf.embedFont(StandardFonts.TimesRoman);
     const supported = new Set(font.getCharacterSet());
     const safe = (value: string) => [...value].map((letter) => supported.has(letter.codePointAt(0)!) ? letter : "?").join("");
-    const text = (await source.text()).replaceAll("\r", "").replaceAll("\uFEFF", "").replaceAll("\t", "    ");
+    const text = rawText.replaceAll("\r", "").replaceAll("\uFEFF", "").replaceAll("\t", "    ");
     const cover = pdf.addPage([595, 842]);
     cover.drawText(safe(title), { x: 48, y: 690, size: 26, font, maxWidth: 499 });
     cover.drawText(safe(author), { x: 48, y: 620, size: 17, font });

@@ -57,13 +57,15 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
   const [query, setQuery] = useState("");
-  const matches = filterBooks({ query, faculty, language, category });
+  const [format, setFormat] = useState("");
+  const matches = filterBooks({ query, faculty, language, category, format });
 
   function clearFilters() {
     setFaculty("");
     setLanguage("");
     setCategory("");
     setQuery("");
+    setFormat("");
   }
 
   return <section aria-labelledby="digital-library-heading" className="space-y-4">
@@ -77,7 +79,7 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
           {locale === "hy" ? "English" : "Հայերեն"}
         </Link>
       </div>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <label className="min-w-0">{copy.search}
           <input type="search" className={input} value={query} onChange={(event) => setQuery(event.target.value)} />
         </label>
@@ -99,11 +101,19 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
             {bookCategories.map((value) => <option key={value} value={value}>{copy.categories[value]}</option>)}
           </select>
         </label>
+        <label className="min-w-0">{copy.format}
+          <select className={input} value={format} onChange={(event) => setFormat(event.target.value)}>
+            <option value="">{copy.allFormats}</option>
+            <option value="PDF">PDF</option>
+            <option value="EPUB">EPUB</option>
+            <option value="online">{copy.read}</option>
+          </select>
+        </label>
       </div>
     </div>
     <div className="flex items-center justify-between gap-3 text-sm">
       <p role="status" className="text-slate-600">{copy.books(matches.length)}</p>
-      {(faculty || language || category || query) && <button type="button" onClick={clearFilters} className="font-semibold text-[#426852] underline">{copy.reset}</button>}
+      {(faculty || language || category || query || format) && <button type="button" onClick={clearFilters} className="font-semibold text-[#426852] underline">{copy.reset}</button>}
     </div>
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {matches.map(({ id, title, author, language, category, faculties, source, download }) => <li className={`${panel} min-w-0`} key={id}>

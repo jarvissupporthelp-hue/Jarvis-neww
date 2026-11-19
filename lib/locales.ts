@@ -271,6 +271,8 @@ export const digitalLibrary = {
   hy: {
     title: "Թվային գրադարան",
     description: "Գտեք դասագրքեր և դասական ստեղծագործություններ չորս լեզվով։",
+    courseLibraryHelp: "Այստեղ դասախոսների հրապարակած նյութերն են։ Թվային գրադարանում կան դասագրքեր և գեղարվեստական գրքեր։",
+    format: "Ձևաչափ", allFormats: "Բոլոր ձևաչափերը",
     search: "Որոնել վերնագրով կամ հեղինակով",
     faculty: "Ֆակուլտետ",
     allFaculties: "Բոլոր ֆակուլտետները",
@@ -290,6 +292,8 @@ export const digitalLibrary = {
   en: {
     title: "Digital library",
     description: "Find textbooks and classic works in four languages.",
+    courseLibraryHelp: "This page shows files published by lecturers. Browse the Digital Library for textbooks and other books.",
+    format: "Format", allFormats: "All formats",
     search: "Search by title or author",
     faculty: "Faculty",
     allFaculties: "All faculties",
