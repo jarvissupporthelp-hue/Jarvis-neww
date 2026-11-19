@@ -58,7 +58,9 @@ begin
   if first_context->'courses'->0->>'code' is distinct from 'DEMO-NET'
     or second_context->'courses'->0->>'code' is distinct from 'DEMO-DB'
     or first_context->'classes'->0->>'start' is distinct from '08:00:00'
-    or second_context->'classes'->0->>'start' is distinct from '09:00:00'
+    or first_context->'classes' is distinct from second_context->'classes'
+    or jsonb_array_length(first_context->'classes') <> 2
+    or second_context->'classes'->1->>'start' is distinct from '09:00:00'
     or jsonb_array_length(first_context->'busyTimes') <> 1
     or jsonb_array_length(second_context->'busyTimes') <> 0
     or first_context->'taskDueDates'->0->>'count' is distinct from '1'

@@ -4,13 +4,15 @@ import { createServer } from "node:http";
 
 export const identities = {
   "student-token": { id: "10000000-0000-4000-8000-000000000001", role: "student", active: true },
+  "other-student-token": { id: "10000000-0000-4000-8000-000000000006", role: "student", active: true },
   "lecturer-token": { id: "10000000-0000-4000-8000-000000000002", role: "lecturer", active: true },
   "admin-token": { id: "10000000-0000-4000-8000-000000000003", role: "admin", active: true },
+  "pending-token": { id: "10000000-0000-4000-8000-000000000005", role: "student", active: false },
   "disabled-token": { id: "10000000-0000-4000-8000-000000000004", role: "student", active: false },
 };
 
-export function startMockSupabase(port) {
-  const server = createServer((request, response) => {
+export function startMockSupabase(port, { demoPassword } = {}) {
+  const server = createServer(async (request, response) => {
     const url = new URL(request.url, "http://mock");
     const token = (request.headers.authorization ?? "").replace(/^Bearer /i, "");
     const identity = identities[token];
@@ -18,6 +20,23 @@ export function startMockSupabase(port) {
       response.writeHead(status, { "content-type": "application/json" });
       response.end(JSON.stringify(body));
     };
+    if (url.pathname === "/auth/v1/token" && url.searchParams.get("grant_type") === "password" && demoPassword) {
+      let body = "";
+      for await (const chunk of request) body += chunk;
+      let input;
+      try { input = JSON.parse(body); } catch { return send(400, { message: "invalid JSON" }); }
+      const fixtures = {
+        "jarvis-student@example.com": "student-token",
+        "jarvis-staff@example.com": "lecturer-token",
+        "jarvis-admin@example.com": "admin-token",
+      };
+      const accessToken = Object.hasOwn(fixtures, input?.email) ? fixtures[input.email] : undefined;
+      if (!accessToken || input.password !== demoPassword) return send(400, { message: "invalid fixture credentials" });
+      return send(200, {
+        access_token: accessToken, refresh_token: "fixture-refresh", expires_in: 3600,
+        token_type: "bearer", user: { id: identities[accessToken].id, email: input.email },
+      });
+    }
     if (url.pathname === "/auth/v1/user") return identity ? send(200, { id: identity.id }) : send(401, { message: "invalid JWT" });
     if (url.pathname === "/rest/v1/memberships") {
       const wanted = url.searchParams.get("user_id")?.replace(/^eq\./, "");

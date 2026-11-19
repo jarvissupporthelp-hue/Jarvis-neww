@@ -5,7 +5,7 @@ const origin = process.env.JARVIS_TEST_ORIGIN ?? "http://127.0.0.1:3000";
 const paths = [
   "/", "/account", "/account/calendar", "/account/tasks",
   "/account/admin/users", "/account/admin/group", "/account/admin/timetable",
-  "/dashboard", "/academics", "/learning",
+  "/dashboard", "/academics", "/academics/demo", "/learning",
   "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/campus", "/career", "/chat", "/chat/math-visualization",
   "/hy", "/en",
 ];
@@ -30,7 +30,7 @@ test("merged landing offers both new academic modules and account login", async 
 
 test("math lab topics deep-link to bundled same-origin visualizations", async () => {
   const agent = await (await fetch(origin + "/chat")).text();
-  assert.match(agent, /href="\/chat\/math-visualization"/);
+  assert.match(agent, /href="\/chat\/math-visualization\?lang=hy"/);
   const page = await fetch(origin + "/chat/math-visualization?lang=en&module=integrals");
   assert.equal(page.status, 200);
   const html = await page.text();
@@ -72,7 +72,7 @@ test("automatic invitations never accept anonymous requests", async () => {
 });
 
 test("sensitive application endpoints reject unauthenticated clients", async () => {
-  for (const path of ["/api/foundation", "/api/foundation/notifications", "/api/me", "/api/dashboard", "/api/admin"]) {
+  for (const path of ["/api/foundation", "/api/foundation/notifications", "/api/me", "/api/dashboard", "/api/admin", "/api/academic-portal"]) {
     const response = await fetch(origin + path);
     assert.ok([401, 403].includes(response.status), path + ": unexpected status " + response.status);
   }

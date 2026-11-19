@@ -25,7 +25,9 @@ const routes = [
   ["GET", "/api/resources", ["student", "lecturer"]], ["POST", "/api/resources", ["lecturer"]], ["PATCH", "/api/resources", ["lecturer"]],
   ["GET", "/api/timetable?week=2026-11-09", all], ["POST", "/api/timetable", ["admin"]],
   ["GET", "/api/admin", ["admin"]], ["POST", "/api/admin", ["admin"]],
-  ["POST", "/api/invitations", ["admin"]],
+  ["GET", "/api/invitations", ["admin"]], ["POST", "/api/invitations", ["admin"]],
+  ["GET", "/api/academic-portal", all],
+  ["GET", "/api/arena", all], ["POST", "/api/arena", ["student"]],
   ["GET", "/api/campus", all], ["POST", "/api/campus", all],
   ["GET", "/api/campus/meetings", ["student", "lecturer"]], ["POST", "/api/campus/meetings", ["student", "lecturer"]],
   ["GET", "/api/career", all], ["POST", "/api/career", all],
@@ -60,6 +62,9 @@ for (const [method, path, allowed, options = {}] of routes) {
     });
     await t.test("disabled account is denied with 403", async () => {
       assert.equal((await call(method, path, "disabled-token")).status, 403);
+    });
+    await t.test("pending account is denied with 403", async () => {
+      assert.equal((await call(method, path, "pending-token")).status, 403);
     });
     for (const role of all) {
       await t.test(`${role} is ${allowed.includes(role) ? "allowed past" : "stopped at"} the gate`, async () => {

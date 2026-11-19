@@ -1,15 +1,18 @@
-import { notFound } from "next/navigation";
-import { AcademicsWorkspace } from "@/modules/academics/workspace";
+import { notFound, redirect } from "next/navigation";
 import { pages } from "@/modules/academics/routes";
-import { courseCatalog } from "@/modules/academics/demo";
+import { offeringIdPattern } from "@/modules/academics/portal-types";
+import { AcademicPortal } from "@/modules/academics/portal";
 
 export default async function AcademicsPage({ params, searchParams }: PageProps<"/academics/[[...section]]">) {
-  const { section = [] } = await params;
-  const [page = "overview", code] = section;
-  if (!pages.some((entry) => entry.key === page) || section.length > 2
-    || (code && (page !== "courses" || !courseCatalog.some((course) => course.code === code)))) notFound();
-  const { date } = await searchParams;
-  const initialDate = typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)
-    && Number.isFinite(Date.parse(date)) && new Date(date).toISOString().slice(0, 10) === date ? date : undefined;
-  return <AcademicsWorkspace key={initialDate} page={page} code={code} initialDate={initialDate} />;
+  const [{ section = [] }, query] = await Promise.all([params, searchParams]);
+  const locale = query.lang === "en" ? "en" : "hy";
+  const [page = "overview", offering] = section;
+  if (!pages.some(({ key }) => key === page) || section.length > 2 || (offering && page !== "courses")) notFound();
+
+  if (page === "timetable") redirect(`/account/calendar?lang=${locale}`);
+  if (page === "assignments") redirect(`/account?lang=${locale}`);
+  if (offering && !offeringIdPattern.test(offering)) redirect(`/academics/demo/courses/${encodeURIComponent(offering)}`);
+  if (page !== "overview" && page !== "courses") redirect(`/academics/demo/${page}`);
+
+  return <AcademicPortal key={offering ?? page} locale={locale} offeringId={offering} />;
 }

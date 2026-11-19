@@ -49,10 +49,11 @@ export async function indexInChroma(resourceId: string, offeringId: string, titl
   return true;
 }
 
-export async function searchChroma(client: Client, prompt: string): Promise<Passage[] | null> {
+export async function searchChroma(client: Client, prompt: string, offeringId?: string): Promise<Passage[] | null> {
   if (!configured()) return null;
   // Supabase remains the authority. Chroma's metadata filter is only an optimization.
-  const allowed = await client.from("course_resources").select("id,offering_id,title");
+  const resources = client.from("course_resources").select("id,offering_id,title");
+  const allowed = await (offeringId ? resources.eq("offering_id", offeringId) : resources);
   if (allowed.error) throw new Error("Could not authorize course resources");
   if (!allowed.data?.length) return [];
   const offerings = [...new Set(allowed.data.map((item) => item.offering_id))];

@@ -10,6 +10,8 @@ export type StudyContext = {
   classes: (TimeSlot & { course: string })[];
   busyTimes: TimeSlot[];
   taskDueDates: { date: string; count: number }[];
+  selectedCourse?: { code: string; name: string };
+  courseDeadlines?: { course: string; title: string; date: string; time: string }[];
   officialDeadlinesAvailable: boolean;
   officialExamDatesAvailable: boolean;
   studentMemory?: { learningPreferences: string; currentGoal: string; topicsToPractice: string };

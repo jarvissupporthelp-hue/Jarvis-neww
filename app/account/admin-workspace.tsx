@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Locale } from "@/lib/locales";
 import { Timetable } from "./timetable";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -49,7 +50,7 @@ function Select({ name, label, options, value = "" }: {
   );
 }
 
-export function AdminWorkspace({ getToken, section = "users" }: { getToken: () => Promise<string | undefined>; section?: AdminSection }) {
+export function AdminWorkspace({ getToken, section = "users", locale = "en" }: { getToken: () => Promise<string | undefined>; section?: AdminSection; locale?: Locale }) {
   const [data, setData] = useState<Workspace | null>(null);
   const [selected, setSelected] = useState("");
   const [message, setMessage] = useState("");
@@ -149,7 +150,7 @@ export function AdminWorkspace({ getToken, section = "users" }: { getToken: () =
       </div>
       <nav className="jarvis-admin-tabs" aria-label="Administration sections">
         {adminSections.map((item) => (
-          <Link key={item.id} href={"/account/admin/" + item.id} className="jarvis-admin-tab"
+          <Link key={item.id} href={`/account/admin/${item.id}?lang=${locale}`} className="jarvis-admin-tab"
             aria-current={section === item.id ? "page" : undefined}>{item.title}</Link>
         ))}
       </nav>

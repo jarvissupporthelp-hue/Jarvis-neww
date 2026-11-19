@@ -1,25 +1,36 @@
 import Link from "next/link";
+import { academicPortal, mathVisualization } from "@/lib/locales";
+import { offeringIdPattern } from "@/modules/academics/portal-types";
 import { StudyAssistant } from "../account/study-assistant";
 
-export default function ChatPage() {
+export default async function ChatPage({ searchParams }: PageProps<"/chat">) {
+  const query = await searchParams;
+  const locale = query.lang === "en" ? "en" : "hy";
+  const copy = academicPortal[locale];
+  const math = mathVisualization[locale];
+  const offeringId = typeof query.offering === "string" && offeringIdPattern.test(query.offering) ? query.offering : undefined;
+  const pdf = query.mode === "course-pdfs";
+
   return (
-    <main className="jarvis-chat-page mx-auto max-w-7xl space-y-5 px-3 py-5 sm:px-6 sm:py-7">
+    <main lang={locale} className="jarvis-chat-page mx-auto max-w-7xl space-y-5 px-3 py-5 sm:px-6 sm:py-7">
       <header className="flex flex-wrap items-end justify-between gap-3 px-1">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#6c826d]">UFAR · Academic workspace</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[#1e3328] sm:text-4xl">AI Agent</h1>
-          <p className="mt-1 text-sm text-[#607565]">Ask JARVIS about your courses or explore interactive study tools.</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[#1e3328] sm:text-4xl">{copy.chat}</h1>
+          {offeringId && <p className="mt-2 text-sm text-[var(--muted)]">{pdf ? copy.search : copy.ask}</p>}
         </div>
-        <Link className="rounded-xl border border-[#bdd0bd] bg-white px-4 py-2 text-sm font-semibold text-[#315841] shadow-sm hover:bg-[#edf5e9]" href="/account">← Dashboard</Link>
+        <nav className="flex flex-wrap gap-4 text-sm font-semibold underline underline-offset-4">
+          <Link href={offeringId ? `/academics/courses/${offeringId}?lang=${locale}` : `/academics?lang=${locale}`}>← {copy.title}</Link>
+          {offeringId && <Link href={`/chat?lang=${locale}`}>{copy.chat}</Link>}
+        </nav>
       </header>
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5" aria-labelledby="math-tool-heading">
+      {!offeringId && <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-5" aria-labelledby="math-tool-heading">
         <div>
-          <h2 id="math-tool-heading" className="text-lg font-semibold">Math visualizations</h2>
-          <p className="mt-1 text-sm text-[var(--muted)]">Explore functions, integrals, matrices, vectors, and more in an interactive lab.</p>
+          <h2 id="math-tool-heading" className="text-lg font-semibold">{math.title}</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">{math.description}</p>
         </div>
-        <Link className="jarvis-primary-button inline-flex min-h-10 items-center px-4 py-2 no-underline" href="/chat/math-visualization">Open math lab →</Link>
-      </section>
-      <StudyAssistant />
+        <Link className="jarvis-primary-button inline-flex min-h-10 items-center px-4 py-2 no-underline" href={`/chat/math-visualization?lang=${locale}`}>{copy.openMath} →</Link>
+      </section>}
+      <div lang="en"><StudyAssistant key={`${offeringId ?? "all"}:${pdf}`} offeringId={offeringId} initialPdfMode={pdf} /></div>
     </main>
   );
 }

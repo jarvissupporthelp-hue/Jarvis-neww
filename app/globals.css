@@ -245,6 +245,8 @@ html[data-theme="light"] .jarvis-app [role="alert"] { color: #9a1c35; background
   .jarvis-landing-features { grid-template-columns: 1fr; margin-top: 32px; }
 }
 @media(max-width:420px) {
+  .jarvis-topbar { padding-inline: 10px; }
+  .jarvis-header-signin { padding-inline: 9px; white-space: nowrap; }
   .jarvis-theme-selector button { padding: 6px; }
   .jarvis-topbar-actions { gap: 7px; }
   .jarvis-profile-chip { display: none; }

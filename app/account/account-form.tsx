@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { accountCopy } from "@/lib/foundation/copy";
-import type { Locale } from "@/lib/locales";
-import { getClient, getAccessToken } from "@/lib/browser-supabase";
+import { academicPortal, roleWorkspace, type Locale } from "@/lib/locales";
+import { getClient, getAccessToken, passwordCallback, clearPasswordCallback } from "@/lib/browser-supabase";
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 type Flow = "signin" | "forgot" | "invite" | "recovery";
 type Role = "student" | "lecturer" | "admin";
 type Group = { id: string; name: string };
+type PendingInvitation = { email: string; role: "student" | "lecturer"; student_group_id: string | null; group_name: string | null };
 export type AccountView = "dashboard" | "calendar" | "tasks";
 
 async function currentIdentity(token: string): Promise<{role: Role; displayName: string} | null> {
@@ -32,11 +33,21 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
   locale?: Locale;
 }) {
   const copy = accountCopy[locale];
+  const workspace = roleWorkspace[locale];
+  const tools = academicPortal[locale];
+  const lang = `?lang=${locale}`;
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
   const [displayName, setDisplayName] = useState("");
   const [groups, setGroups] = useState<Group[]>([]);
-  const [inviteRole, setInviteRole] = useState("student");
+  const [inviteRole, setInviteRole] = useState<PendingInvitation["role"]>("student");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteGroup, setInviteGroup] = useState("");
+  const [pending, setPending] = useState<PendingInvitation[]>();
+  const [pendingError, setPendingError] = useState(false);
+  const [invitationRevision, setInvitationRevision] = useState(0);
+  const inviteEmailField = useRef<HTMLInputElement>(null);
+  const showInvitations = role === "admin" && view === "dashboard" && (!adminSection || adminSection === "users");
   const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const accountStatus = useRef<HTMLParagraphElement>(null);
@@ -53,22 +64,23 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
   useEffect(() => {
     let mounted = true;
     async function initialize() {
-      const location = new URL(window.location.href);
-      const expected = location.searchParams.get("flow");
-      const fragment = new URLSearchParams(location.hash.slice(1));
-      const callback = expected === "invite" || expected === "recovery";
-      const validFragment = callback && fragment.get("type") === expected && fragment.has("access_token");
+      const expected = new URL(window.location.href).searchParams.get("flow");
       try {
-        const { data } = await getClient().auth.getSession();
+        const supabase = getClient();
+        const callback = passwordCallback();
+        const initialization = await supabase.auth.initialize();
+        const { data } = await supabase.auth.getSession();
         if (!mounted) return;
-        if (callback) {
+        if (expected === "invite" || expected === "recovery") {
+          const valid = callback?.flow === expected && callback.validFragment && !initialization.error && Boolean(data.session);
           setFlow(expected);
-          setLinkReady(Boolean(validFragment && data.session));
-          if (!validFragment || !data.session) setError(expected === "invite"
-            ? copy.invalidInvite : copy.invalidRecovery);
-          window.history.replaceState(null, "", "/account?lang=" + locale);
+          setLinkReady(valid);
+          if (!valid) setError(expected === "invite" ? copy.invalidInvite : copy.invalidRecovery);
+          clearPasswordCallback();
+          window.history.replaceState(window.history.state, "", "/account?lang=" + locale);
         } else if (data.session) {
           const identity = await currentIdentity(data.session.access_token);
+          if (!mounted) return;
           setRole(identity?.role ?? null);
           setDisplayName(identity?.displayName ?? "");
         }
@@ -83,15 +95,34 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
   }, [copy, locale, setError]);
 
   useEffect(() => {
-    if (role !== "admin") return;
+    if (!showInvitations) return;
     let mounted = true;
     void getClient().from("student_groups").select("id,name").order("name").then(({ data, error }) => {
       if (!mounted) return;
-      if (error) setError("Could not load student groups.");
+      if (error) setError(workspace.unavailableGroups);
       else setGroups(data ?? []);
     });
     return () => { mounted = false; };
-  }, [role, setError]);
+  }, [showInvitations, workspace, setError]);
+
+  useEffect(() => {
+    if (!showInvitations) return;
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const token = await getAccessToken();
+        const response = await fetch("/api/invitations", {
+          cache: "no-store", signal: controller.signal, headers: { Authorization: `Bearer ${token ?? ""}` },
+        });
+        if (!response.ok) throw new Error();
+        const result = await response.json();
+        if (!controller.signal.aborted) { setPending(result.invitations); setPendingError(false); }
+      } catch {
+        if (!controller.signal.aborted) setPendingError(true);
+      }
+    })();
+    return () => controller.abort();
+  }, [showInvitations, invitationRevision]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,7 +188,6 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
     const fields = new FormData(event.currentTarget);
     setBusy(true);
     setMessage("");
-    setError("");
     try {
       const { data } = await getClient().auth.getSession();
       if (!data.session) throw new Error("Session unavailable");
@@ -167,11 +197,12 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         body: JSON.stringify({ email: fields.get("email"), role: inviteRole, groupId: fields.get("groupId") }),
       });
       const result = await response.json();
-      if (response.ok) setMessage(result.message);
+      if (response.ok) { setMessage(result.message); setInviteEmail(""); }
       else setError(result.message);
     } catch {
       setError("Could not confirm invitation delivery. Retry with the same email, role, and group.");
     } finally {
+      setInvitationRevision((current) => current + 1);
       setBusy(false);
     }
   }
@@ -194,32 +225,54 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
             <p ref={accountStatus} tabIndex={-1} className="text-sm">Signed in as <strong>{displayName || role}</strong> <span className="capitalize">({role})</span></p>
             <span className="jarvis-admin-status">Connected to JARVIS</span>
           </div>
-          {role === "admin" && (
+          {showInvitations && (
+            <>
             <form onSubmit={invite} className="jarvis-invite-form space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
               <div className="jarvis-section-heading">
-                <div><span className="jarvis-eyebrow">SUPABASE AUTH · EMAIL INVITATIONS</span><h2 className="text-xl font-semibold">Invite a new member</h2>
-                <p>When you approve a student or lecturer, JARVIS automatically emails their secure account activation link.</p></div>
+                <div><h2 className="text-xl font-semibold">{workspace.inviteTitle}</h2><p>{workspace.inviteHelp}</p></div>
               </div>
-              <label className="block">{copy.email}<input className={inputClass} name="email" type="email" required /></label>
-              <label className="block">Role
-                <select className={inputClass} value={inviteRole} onChange={(event) => setInviteRole(event.target.value)}>
-                  <option value="student">Student</option><option value="lecturer">Lecturer</option>
+              <label className="block">{copy.email}<input ref={inviteEmailField} className={inputClass} name="email" type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} required /></label>
+              <label className="block">{workspace.role}
+                <select className={inputClass} value={inviteRole} onChange={(event) => setInviteRole(event.target.value === "lecturer" ? "lecturer" : "student")}>
+                  <option value="student">{workspace.student}</option><option value="lecturer">{workspace.lecturer}</option>
                 </select>
               </label>
               {inviteRole === "student" && (
-                <label className="block">Group
-                  <select className={inputClass} name="groupId" required defaultValue="">
-                    <option value="" disabled>Choose a group</option>
+                <label className="block">{workspace.group}
+                  <select className={inputClass} name="groupId" required value={inviteGroup} onChange={(event) => setInviteGroup(event.target.value)}>
+                    <option value="" disabled>{workspace.chooseGroup}</option>
                     {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
                   </select>
                 </label>
               )}
-              <button className={buttonClass} disabled={busy}>{busy ? "Sending invitation…" : "Approve & email invitation"}</button>
+              <button className={buttonClass} disabled={busy}>{busy ? workspace.sending : workspace.send}</button>
             </form>
+            <section className="space-y-3 rounded-xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xl font-semibold">{workspace.pending}</h2>
+                <button type="button" className="underline" onClick={() => setInvitationRevision((value) => value + 1)}>{workspace.retry}</button>
+              </div>
+              {pendingError ? <p role="status">{workspace.pendingError}</p> : !pending ? <p role="status">{copy.checking}</p>
+                : !pending.length ? <p>{workspace.pendingEmpty}</p> : <ul className="divide-y divide-[var(--stroke)]">
+                  {pending.map((item) => <li key={item.email} className="flex flex-wrap items-center justify-between gap-2 py-2">
+                    <div className="min-w-0"><strong className="break-all">{item.email}</strong>
+                      <p className="text-sm text-[var(--muted)]">{workspace[item.role]}{item.group_name && ` · ${item.group_name}`}</p>
+                    </div>
+                    <button type="button" className="underline disabled:opacity-50" disabled={busy} onClick={() => {
+                      setInviteEmail(item.email); setInviteGroup(item.student_group_id ?? ""); setInviteRole(item.role);
+                      inviteEmailField.current?.focus();
+                    }}>{workspace.reuse}</button>
+                  </li>)}
+                </ul>}
+            </section>
+            </>
           )}
-          {role === "lecturer" && <Link href="/lecturer" className="inline-block font-semibold underline">Lecturer workspace</Link>}
-          {role === "admin" ? <div className="jarvis-view-enter" key={adminSection ?? "admin-overview"}>
-            <AdminWorkspace getToken={getAccessToken} section={adminSection ?? "users"} />
+          {(adminSection && role !== "admin") || (view === "tasks" && role !== "student") ? (
+            <div className="jarvis-empty-state"><p role="status">{workspace.denied}</p>
+              <Link href={`/account${lang}`} className="underline">{workspace.back}</Link>
+            </div>
+          ) : role === "admin" ? <div className="jarvis-view-enter" key={adminSection ?? view}>
+            <AdminWorkspace getToken={getAccessToken} section={adminSection ?? (view === "calendar" ? "timetable" : "users")} locale={locale} />
           </div> : (
             <div key={view} className="jarvis-view-enter">
               {role === "student" && view === "dashboard" && <StudentDashboard getToken={getAccessToken} />}
@@ -227,11 +280,11 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
               {role === "student" && view === "tasks" && <PersonalTasks client={getClient()} />}
               {role === "lecturer" && view === "dashboard" && (
                 <div className="jarvis-empty-state">
-                  <strong>Your teaching workspace</strong>
-                  <p>Open your timetable or manage courses and assignments.</p>
+                  <strong>{tools.lecturer}</strong>
                   <div className="flex flex-wrap gap-3">
-                    <Link href="/account/calendar" className="jarvis-secondary-button">View timetable</Link>
-                    <Link href="/lecturer" className="jarvis-secondary-button">Manage courses</Link>
+                    <Link href={`/account/calendar${lang}`} className="jarvis-secondary-button">{tools.calendar}</Link>
+                    <Link href="/lecturer" className="jarvis-secondary-button">{tools.lecturer}</Link>
+                    <Link href={`/academics${lang}`} className="jarvis-secondary-button">{tools.title}</Link>
                   </div>
                 </div>
               )}
@@ -240,7 +293,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setError("Could not sign out. Try again.");
-            else { setRole(null); setMessage(""); }
+            else { setRole(null); setPending(undefined); setGroups([]); setInviteEmail(""); setInviteGroup(""); setMessage(""); }
           }}>Sign out</button>
         </div>
       ) : (

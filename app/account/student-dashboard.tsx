@@ -163,7 +163,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
       {data.courses.length ? <ul className="ui-course-tiles">
         {data.courses.map((course) => <li key={course.id}>
           <span className="ui-course-avatar" aria-hidden="true">{course.code.slice(0,2).toUpperCase()}</span>
-          <span><strong>{course.name}</strong><small>{course.code} · {course.semester}</small></span>
+          <span><strong><Link href={`/academics/courses/${course.id}`}>{course.name}</Link></strong><small>{course.code} · {course.semester}</small></span>
         </li>)}
       </ul> : <div className="ui-empty-block"><strong>No courses enrolled</strong><p>Contact your university administrator about course access.</p></div>}
     </section>

@@ -1,8 +1,22 @@
 import { createClient } from "@supabase/supabase-js";
+import { createStudyClient } from "@/lib/study-context";
 import { authorize } from "@/lib/authorization";
 
 function reply(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
+}
+
+export async function GET(request: Request) {
+  const caller = await authorize(request, ["admin"]);
+  if (!caller.ok) return reply("Active admin access required.", caller.status);
+
+  const authorization = request.headers.get("authorization");
+  const client = authorization && createStudyClient(authorization);
+  if (!client) return reply("Invitation service unavailable.", 503);
+
+  const { data, error } = await client.rpc("pending_account_invitations");
+  if (error) return reply("Could not load pending invitations.", error.code === "42501" ? 403 : 503);
+  return Response.json({ invitations: data }, { headers: { "Cache-Control": "private, no-store" } });
 }
 
 export async function POST(request: Request) {

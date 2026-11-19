@@ -61,6 +61,7 @@ export function Timetable({ getToken, admin, personal }: {
         });
         if (!response.ok) throw new Error();
         const official = await response.json();
+        if (controller.signal.aborted) return;
         setLessons(official);
         if (personal) {
           const until = shiftDate(week, 7);

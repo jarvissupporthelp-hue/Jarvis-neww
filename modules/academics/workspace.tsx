@@ -109,7 +109,7 @@ function Timetable({ items, day }: { items: Event[]; day: string }) {
             return <tr key={start}>
               <th scope="row" className="border border-[#a6b8aa] p-2 font-medium">{start}–{finish}</th>
               {item ? <td colSpan={4} className="border border-[#a6b8aa] bg-[#eff5ef] p-3">
-                <Link className="font-semibold underline" href={`/academics/courses/${item.course}`}>{item.title}</Link>
+                <Link className="font-semibold underline" href={`/academics/demo/courses/${item.course}`}>{item.title}</Link>
                 {item.lecturer && <p>{item.lecturer}</p>}
                 {item.status !== "Scheduled" && <Badge warning>{item.status}</Badge>}
                 {item.room && <p className="text-sm">Room {item.room}</p>}
@@ -322,7 +322,7 @@ function SubjectsForDay({ timetable, today, date, onDateChange }: { timetable: E
     <label className="block">Choose a date <input type="date" className={field} value={date}
       onChange={(event) => { if (event.target.value) onDateChange(event.target.value); }} /></label>
     {subjects.length ? <ul className="space-y-2">{subjects.map((item) => (
-      <li key={item.course}><Link className="underline" href={`/academics/courses/${item.course}`}>{item.title}</Link></li>
+      <li key={item.course}><Link className="underline" href={`/academics/demo/courses/${item.course}`}>{item.title}</Link></li>
     ))}</ul> : <p>No subjects scheduled for this date.</p>}
   </Card>;
 }
@@ -370,7 +370,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
         <h3 className="font-semibold">Syllabus</h3><ul>{course.components.map((item) => <li key={item.name}>{item.name} · {formatGrade(decimal(item.weight) * 100n, decimal("1"))}%</li>)}</ul>
         <h3 className="font-semibold">Schedule</h3><Events items={schedule.timetable.filter((item) => item.course === code)} />
       </Card> : <div className="grid gap-3 sm:grid-cols-2">{visibleCourses.map((item) => <Card key={item.code} title={item.title}>
-        <p>{item.code} · {item.ects && `${item.ects} ECTS · `}{courseLecturer(item.code)}</p><Link className="underline" href={`/academics/courses/${item.code}`}>Open course</Link>
+        <p>{item.code} · {item.ects && `${item.ects} ECTS · `}{courseLecturer(item.code)}</p><Link className="underline" href={`/academics/demo/courses/${item.code}`}>Open course</Link>
       </Card>)}</div>;
       case "timetable": return <Timetable key={initialDate} items={schedule.timetable} day={initialDate ?? schedule.day} />;
       case "exams": return <div className="grid gap-4 sm:grid-cols-2">{schedule.exams.map((item) => {
@@ -400,7 +400,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
         <SubjectsForDay timetable={schedule.timetable} today={schedule.day} date={selectedDate} onDateChange={setSelectedDate} />
         <Card title="Exams today"><Events items={schedule.exams.filter((item) => item.start.startsWith(schedule.day))} /></Card>
       </div> : <Card title={role === "lecturer" ? "Teaching workspace" : "Academic administration"}>
-        <Link className="underline" href={role === "lecturer" ? "/academics/gradebook" : "/academics/manage"}>{role === "lecturer" ? "Open gradebook" : "Manage Academics"}</Link>
+        <Link className="underline" href={role === "lecturer" ? "/academics/demo/gradebook" : "/academics/demo/manage"}>{role === "lecturer" ? "Open gradebook" : "Manage Academics"}</Link>
       </Card>;
     }
   };
@@ -412,7 +412,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
     <nav aria-label="Academics" className="flex flex-wrap gap-2 border-b border-[#c5d0c6] pb-4">
       {allowed.map((entry) => <Link key={entry.key} aria-current={page === entry.key ? "page" : undefined}
         className={`rounded-md px-3 py-2 text-sm font-semibold ${page === entry.key ? "bg-[#234c3c] text-white" : "bg-[#e6eee6]"}`}
-        href={entry.key === "overview" ? "/academics" : `/academics/${entry.key}`}>{entry.title}</Link>)}
+        href={entry.key === "overview" ? "/academics/demo" : `/academics/demo/${entry.key}`}>{entry.title}</Link>)}
     </nav>
     {content()}
   </main>;

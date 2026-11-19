@@ -4,18 +4,20 @@ import { createStudyClient, examDateClarification, loadStudyContext } from "@/li
 import { formatCoursePdfSearch, type CoursePdfSearchResult } from "@/lib/course-pdf-search";
 import { getCourseProfessorGuides } from "@/lib/professor-guides";
 import { searchChroma } from "@/lib/chroma-retrieval";
+import { assignmentDeadlines, type AssignmentDeadline } from "@/lib/course-assignments";
+import { offeringIdPattern } from "@/modules/academics/portal-types";
 import { MAX_STUDY_PROMPT } from "@/lib/study-chat-limits";
 
 function reply(body: object, status = 200) {
   return Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
 }
 
-async function findPassages(client: NonNullable<ReturnType<typeof createStudyClient>>, prompt: string): Promise<CoursePdfSearchResult | null> {
-  const semantic = await searchChroma(client, prompt).catch(() => null);
+async function findPassages(client: NonNullable<ReturnType<typeof createStudyClient>>, prompt: string, offeringId?: string): Promise<CoursePdfSearchResult | null> {
+  const semantic = await searchChroma(client, prompt, offeringId).catch(() => null);
   if (semantic?.length) return { matches: semantic, unavailable: 0 };
   const words = [...new Set(prompt.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])];
   const terms = words.filter((word) => word.length > 1);
-  const { data, error } = await client.rpc("search_course_pdf_pages", { p_terms: terms });
+  const { data, error } = await client.rpc("search_course_pdf_pages", offeringId ? { p_terms: terms, p_offering: offeringId } : { p_terms: terms });
   return error || !data ? null : data as CoursePdfSearchResult;
 }
 
@@ -27,6 +29,10 @@ export async function POST(request: Request) {
 
   const input = await request.json().catch(() => null);
   const prompt: string = typeof input?.prompt === "string" ? input.prompt.trim() : "";
+  const offeringId = input?.offeringId;
+  if (offeringId !== undefined && (typeof offeringId !== "string" || !offeringIdPattern.test(offeringId))) {
+    return reply({ error: "Choose a valid course." }, 400);
+  }
   const coursePdfSearch = input?.mode === "course-pdfs";
   const conversationId = typeof input?.conversationId === "string" ? input.conversationId : "";
   if (!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(conversationId)) {
@@ -45,8 +51,17 @@ export async function POST(request: Request) {
   if (thread.error) return reply({ error: "Could not load the conversation. Your draft is still here." }, 503);
   if (!thread.data) return reply({ error: "Conversation not found." }, 404);
 
+  let selectedCourse: { code: string; name: string } | undefined;
+  if (offeringId) {
+    const { data, error } = await supabase.from("course_offerings").select("course:courses!inner(code,name)")
+      .eq("id", offeringId).maybeSingle<{ course: { code: string; name: string } }>();
+    if (error) return reply({ error: "Could not verify course access. Your draft is still here." }, 503);
+    if (!data) return reply({ error: "Course not found." }, 404);
+    selectedCourse = data.course;
+  }
+
   if (coursePdfSearch) {
-    const passages = await findPassages(supabase, prompt);
+    const passages = await findPassages(supabase, prompt, offeringId);
     if (!passages) return reply({ error: "Could not search course PDFs. Your draft is still here." }, 503);
     const answer = formatCoursePdfSearch(passages);
     return reply({ turn: { id: crypto.randomUUID(), prompt, answer } });
@@ -57,12 +72,22 @@ export async function POST(request: Request) {
     return reply({ error: "Could not load your study context. Your draft is still here." }, forbidden ? 403 : 503);
   }
 
-  const [profileResult, memoryResult] = await Promise.all([
-    supabase.from("professor_ai_profiles")
-      .select("professor_name,course_plan,teaching_style,explanation_preferences,assessment_style,course_rules,offering:course_offerings!inner(course:courses!inner(code,name))"),
+  context.selectedCourse = selectedCourse;
+  const deadlines = assignmentDeadlines(supabase).gte("due_on", context.from).lte("due_on", context.through);
+  const profilesQuery = supabase.from("professor_ai_profiles")
+    .select("professor_name,course_plan,teaching_style,explanation_preferences,assessment_style,course_rules,offering:course_offerings!inner(course:courses!inner(code,name))");
+  const [profileResult, memoryResult, deadlineResult] = await Promise.all([
+    offeringId ? profilesQuery.eq("offering_id", offeringId) : profilesQuery,
     supabase.from("student_ai_preferences")
       .select("learning_preferences,current_goal,topics_to_practice").eq("student_id", caller.userId).maybeSingle(),
+    (offeringId ? deadlines.eq("offering_id", offeringId) : deadlines).limit(12).returns<AssignmentDeadline[]>(),
   ]);
+  if (deadlineResult.data && !deadlineResult.error) {
+    context.officialDeadlinesAvailable = true;
+    context.courseDeadlines = deadlineResult.data.map((item) => ({
+      course: item.offering.course.name, title: item.title, date: item.due_on, time: item.due_at,
+    }));
+  }
   const profiles = profileResult.data;
   if (memoryResult.error) return reply({ error: "Could not load your study preferences. Your draft is still here." }, 503);
   if (memoryResult.data) context.studentMemory = {
@@ -70,7 +95,7 @@ export async function POST(request: Request) {
     currentGoal: memoryResult.data.current_goal,
     topicsToPractice: memoryResult.data.topics_to_practice,
   };
-  context.professorProfiles = getCourseProfessorGuides(context.courses);
+  context.professorProfiles = getCourseProfessorGuides(selectedCourse ? [selectedCourse] : context.courses);
   if (profiles) {
     type ProfileRow = {
       professor_name: string; course_plan: string;
@@ -107,7 +132,7 @@ export async function POST(request: Request) {
       .order("id", { ascending: false }).limit(4);
     if (history.error) return reply({ error: "Could not load chat history. Your draft is still here." }, 503);
 
-    const passages = await findPassages(supabase, prompt).catch(() => null);
+    const passages = await findPassages(supabase, prompt, offeringId).catch(() => null);
     const generated = await askStudyAI(prompt, provider.credential, history.data.reverse(), context, passages?.matches ?? []);
     if (generated && "errorStatus" in generated) return reply({ error: `${providerFailureMessage(generated.errorStatus)} Your draft is still here.` }, 502);
     if (!generated) return reply({ error: "The AI provider did not respond. Your draft is still here. Try again shortly." }, 502);

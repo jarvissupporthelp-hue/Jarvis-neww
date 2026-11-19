@@ -16,13 +16,13 @@ type Memory = { learning_preferences: string; current_goal: string; topics_to_pr
 const button = "min-h-11 rounded-xl bg-[#214b36] px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-[#163c2b] disabled:cursor-not-allowed disabled:opacity-50";
 const field = "w-full rounded-xl border border-[#bbccbc] bg-white p-3 text-[#1e3328] placeholder:text-[#73877a]";
 
-export function StudyAssistant() {
+export function StudyAssistant({ offeringId, initialPdfMode = false }: { offeringId?: string; initialPdfMode?: boolean }) {
   const [threads, setThreads] = useState<Thread[] | null>(null);
   const [selected, setSelected] = useState<Thread | null>(null);
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [title, setTitle] = useState("");
-  const [coursePdfSearch, setCoursePdfSearch] = useState(false);
+  const [coursePdfSearch, setCoursePdfSearch] = useState(initialPdfMode);
   const [error, setError] = useState("");
   const [threadsAttempt, setThreadsAttempt] = useState(0);
   const [turnsAttempt, setTurnsAttempt] = useState(0);
@@ -196,7 +196,7 @@ export function StudyAssistant() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { Authorization: `Bearer ${token ?? ""}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ conversationId: selectedId, prompt: question, mode: coursePdfSearch ? "course-pdfs" : "general" }),
+        body: JSON.stringify({ conversationId: selectedId, prompt: question, offeringId, mode: coursePdfSearch ? "course-pdfs" : "general" }),
       });
       const result = await response.json();
       if (!response.ok) {

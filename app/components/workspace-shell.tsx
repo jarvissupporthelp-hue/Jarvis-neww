@@ -7,7 +7,7 @@ import { getClient } from "@/lib/browser-supabase";
 
 type Role = "student" | "lecturer" | "admin";
 type Theme = "dark" | "light" | "system";
-type IconName = "dashboard" | "calendar" | "courses" | "tasks" | "chat" | "plans" | "focus" | "users" | "layers" | "shield" | "math" | "menu" | "close" | "sun" | "moon" | "monitor" | "arrow";
+type IconName = "dashboard" | "calendar" | "courses" | "tasks" | "chat" | "plans" | "focus" | "users" | "layers" | "shield" | "math" | "arena" | "menu" | "close" | "sun" | "moon" | "monitor" | "arrow";
 
 const paths: Record<IconName, ReactNode> = {
   dashboard: <><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></>,
@@ -21,6 +21,7 @@ const paths: Record<IconName, ReactNode> = {
   layers: <><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></>,
   shield: <><path d="M12 2 4 5v6c0 6 4 10 8 11 4-1 8-5 8-11V5z"/><path d="m9 12 2 2 4-4"/></>,
   math: <><path d="M4 19h16M4 4h16M8 4l7 15M18 7l-6 10"/></>,
+  arena: <path d="M7 8h10a4 4 0 0 1 4 3.1l1 4.2a2.5 2.5 0 0 1-4.1 2.4L15 15H9l-2.9 2.7A2.5 2.5 0 0 1 2 15.3l1-4.2A4 4 0 0 1 7 8Zm0 2v4m-2-2h4m6 0h.01m3 0h.01"/>,
   menu: <path d="M4 6h16M4 12h16M4 18h16"/>,
   close: <path d="M5 5 19 19M19 5 5 19"/>,
   sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></>,
@@ -40,6 +41,7 @@ const studentNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academics", icon: "courses" },
   { href: "/learning", label: "Learning tools", icon: "plans" },
+  { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
   { href: "/career", label: "Career", icon: "users" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
@@ -54,6 +56,7 @@ const studentNav: NavItem[] = [
 const lecturerNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "dashboard" },
   { href: "/academics", label: "Academics", icon: "layers" },
+  { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
   { href: "/career", label: "Career", icon: "users" },
   { href: "/lecturer", label: "My courses", icon: "courses" },
@@ -65,6 +68,7 @@ const adminNav: NavItem[] = [
   { href: "/account", label: "Administration", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academic tools", icon: "courses" },
+  { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
   { href: "/career", label: "Career", icon: "users" },
   { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },

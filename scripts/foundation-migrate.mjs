@@ -9,5 +9,5 @@ if (!databaseUrl || new URL(databaseUrl).searchParams.get("schema") !== "foundat
   throw new Error("Set DATABASE_URL to the intended database with schema=foundation.");
 }
 const require = createRequire(import.meta.url);
-const result = spawnSync(process.execPath, [require.resolve("prisma"), "migrate", "deploy"], { stdio: "inherit" });
+const result = spawnSync(process.execPath, [require.resolve("prisma/build/index.js"), "migrate", "deploy"], { stdio: "inherit" });
 process.exitCode = result.status ?? 1;

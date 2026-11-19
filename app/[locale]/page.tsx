@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Locale changes must reload the root document to update its lang attribute. */
 import { notFound } from "next/navigation";
-import { isLocale, landing } from "@/lib/locales";
+import Link from "next/link";
+import { arena, isLocale, landing } from "@/lib/locales";
 
 export default async function Home({ params }: PageProps<"/[locale]">) {
   const { locale } = await params;
@@ -19,6 +20,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
       <p className="mt-5 max-w-xl text-xl sm:text-2xl">{copy.description}</p>
       <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4">{copy.invitation}</p>
       <a href={`/account?lang=${locale}`} className="mt-5 w-fit font-semibold underline">{copy.signIn}</a>
+      <Link href={locale === "hy" ? "/arena" : "/arena?lang=en"} className="mt-4 w-fit font-semibold underline">{arena[locale].title}</Link>
     </main>
   );
 }

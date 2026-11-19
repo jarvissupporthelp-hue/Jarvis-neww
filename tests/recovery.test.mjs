@@ -6,7 +6,7 @@ import { indexCoursePdf } from "../lib/course-pdf-index.ts";
 const id = "12345678-1234-4234-8234-123456789012";
 const doubles = globalThis.recoveryTestDoubles = {};
 const modules = {
-  "@/lib/authorization": "export const authorize = () => ({ ok: true, userId: 'student' });",
+  "@/lib/authorization": "export const authorize = () => ({ ok: true, userId: 'student', role: 'student' });",
   "@/lib/study-ai": "export const askStudyAI = (...args) => globalThis.recoveryTestDoubles.ai(...args); export const resolveProviderAccess = () => ({ credential: 'test' }); export const providerFailureMessage = (status) => 'Provider error ' + status;",
   "@/lib/study-context": "export const createStudyClient = () => globalThis.recoveryTestDoubles.chat; export const examDateClarification = () => null; export const loadStudyContext = () => ({ context: { courses: [] } });",
   "@supabase/supabase-js": "export const createClient = () => globalThis.recoveryTestDoubles.email;",
@@ -25,6 +25,7 @@ const hooks = registerHooks({
 
 const { POST: invite } = await import("../app/api/invitations/route.ts");
 const { POST: chat } = await import("../app/api/chat/route.ts");
+const { GET: portal } = await import("../app/api/academic-portal/route.ts");
 hooks.deregister();
 
 function post(body) {
@@ -65,8 +66,8 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
   const turns = [];
   const rpcCalls = [];
   const query = {
-    select: () => query, eq: () => query, order: () => query,
-    maybeSingle: () => ({ data: { id } }), limit: () => ({ data: [] }),
+    select: () => query, eq: () => query, order: () => query, gte: () => query, lte: () => query,
+    maybeSingle: () => ({ data: { id } }), limit: () => ({ data: [], returns: () => ({ data: [] }) }),
     insert: (turn) => { turns.push(turn); return query; },
     single: () => ({ data: turns.at(-1) }),
   };
@@ -82,6 +83,59 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
   assert.equal((await chat(post(body))).status, 200);
   assert.deepEqual(turns, [{ conversation_id: id, prompt: body.prompt, answer: "Routers forward packets." }]);
   assert.deepEqual(rpcCalls, ["search_course_pdf_pages", "search_course_pdf_pages", "reserve_chat_attempt"]);
+});
+
+test("course pages return published assignments only for the requested visible offering", async () => {
+  const unseen = "abcdef00-1234-4234-8234-123456789012";
+  const calls = [];
+  const offering = { id, course: { code: "CS101", name: "Computing" } };
+  const assignment = { id: unseen, offering_id: id, title: "Week 1" };
+  doubles.chat = {
+    from: (table) => {
+      let selected;
+      const query = {
+        select: () => query, order: () => query,
+        eq: (column, value) => { selected = value; calls.push([table, column, value]); return query; },
+        then: (resolve) => resolve({ data: selected === id ? table === "course_offerings" ? [offering] : [assignment] : [] }),
+      };
+      return query;
+    },
+  };
+  const get = (offeringId) => new Request(`https://example.com/api/academic-portal?offering=${offeringId}`, {
+    headers: { Authorization: "Bearer test" },
+  });
+  assert.equal((await portal(get(unseen))).status, 404);
+  assert.deepEqual(calls, [["course_offerings", "id", unseen]]);
+  const response = await portal(get(id));
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.deepEqual(await response.json(), { role: "student", courses: [offering], assignments: [assignment] });
+  assert.deepEqual(calls.slice(1), [["course_offerings", "id", id], ["course_assignments", "offering_id", id]]);
+});
+
+test("course PDF mode checks enrollment scope before searching and filters the fallback", async () => {
+  const checks = [];
+  const calls = [];
+  const scope = "abcdef00-1234-4234-8234-123456789012";
+  let assigned = false;
+  doubles.chat = {
+    from: (table) => {
+      const query = {
+        select: () => query,
+        eq: (key, value) => { checks.push([table, key, value]); return query; },
+        maybeSingle: () => ({ data: table === "study_conversations"
+          ? { id } : assigned ? { course: { code: "NET101", name: "Networking" } } : null }),
+      };
+      return query;
+    },
+    rpc: (name, args) => { calls.push([name, args]); return { data: { matches: [], unavailable: 0 } }; },
+  };
+  const request = { prompt: "Explain routing", conversationId: id, offeringId: scope, mode: "course-pdfs" };
+  assert.equal((await chat(post(request))).status, 404);
+  assert.deepEqual(calls, []);
+  assigned = true;
+  assert.equal((await chat(post(request))).status, 200);
+  assert.ok(checks.some(([table, field, value]) => table === "course_offerings" && field === "id" && value === scope));
+  assert.deepEqual(calls, [["search_course_pdf_pages", { p_terms: ["explain", "routing"], p_offering: scope }]]);
 });
 
 test("a PDF processing failure can be recorded on retry against the same resource", async () => {

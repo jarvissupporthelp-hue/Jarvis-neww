@@ -1,5 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "@/lib/generated/prisma/client";
+import { PrismaClient } from "../generated/prisma/client.ts";
 
 const globalDatabase = globalThis as typeof globalThis & { foundationDatabase?: PrismaClient };
 

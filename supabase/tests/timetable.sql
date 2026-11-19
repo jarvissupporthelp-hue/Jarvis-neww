@@ -47,6 +47,7 @@ declare
   other_lecturer text := '00000000-0000-4000-8000-000000000065';
   primary_offering uuid;
   other_offering uuid;
+  other_lesson_id text;
   payload jsonb;
   lesson_id text;
   conflict jsonb;
@@ -74,6 +75,8 @@ begin
 
   perform public.timetable('save',payload || jsonb_build_object('id',lesson_id,'room','TEST-603'));
   perform public.timetable('save',payload || '{"start":"11:00","end":"12:00"}');
+  other_lesson_id := public.timetable('save',payload || jsonb_build_object(
+    'offeringId',other_offering,'lecturerId',other_lecturer,'room','TEST-604'))->>'id';
   perform set_config('request.jwt.claim.sub', student_id, true);
   if jsonb_array_length(public.timetable('list','{"week":"2026-11-09"}')) <> 2
     or (select count(*) from public.timetable_lessons where id = lesson_id::uuid) <> 1 then
@@ -90,14 +93,25 @@ begin
     raise exception 'Lecturer did not see assigned lessons';
   end if;
   perform set_config('request.jwt.claim.sub', other_lecturer, true);
-  if jsonb_array_length(public.timetable('list','{"week":"2026-11-09"}')) <> 0 then
-    raise exception 'Another lecturer saw lessons assigned to a colleague';
+  if jsonb_array_length(public.timetable('list','{"week":"2026-11-09"}')) <> 1
+    or (select count(*) from public.timetable_lessons where id = other_lesson_id::uuid) <> 1 then
+    raise exception 'Another lecturer did not see exactly their own lesson';
   end if;
   perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000064', true);
-  if jsonb_array_length(public.timetable('list','{"week":"2026-11-09"}')) <> 0 then
-    raise exception 'Unenrolled student saw lessons';
+  if jsonb_array_length(public.timetable('list','{"week":"2026-11-09"}')) <> 2
+    or (select count(*) from public.timetable_lessons where id = other_lesson_id::uuid) <> 0 then
+    raise exception 'Unenrolled student did not see exactly their group schedule';
   end if;
 
+  perform set_config('request.jwt.claim.sub', admin_id, true);
+  perform public.admin_workspace('user_group',jsonb_build_object(
+    'id','00000000-0000-4000-8000-000000000064','groupId',
+    (select id from public.student_groups where code='TEST-DAY6-OTHER')));
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000064', true);
+  if (public.timetable('list','{"week":"2026-11-09"}')->0->>'id') is distinct from other_lesson_id
+    or jsonb_array_length(public.timetable('list','{"week":"2026-11-09"}')) <> 1 then
+    raise exception 'Student schedule did not follow a group change';
+  end if;
   perform set_config('request.jwt.claim.sub', admin_id, true);
   perform public.timetable('remove',jsonb_build_object('id',lesson_id));
   if exists (select 1 from public.timetable_lessons where id = lesson_id::uuid) then
