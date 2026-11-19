@@ -14,6 +14,7 @@ export type StudyContext = {
   courseDeadlines?: { course: string; title: string; date: string; time: string }[];
   officialDeadlinesAvailable: boolean;
   officialExamDatesAvailable: boolean;
+  studentProfile?: { identity?: ReturnType<typeof import("./student-profile").studentIdentity>; preferences: Record<string, string> };
   studentMemory?: { learningPreferences: string; currentGoal: string; topicsToPractice: string };
   professorProfiles?: {
     professorName: string;

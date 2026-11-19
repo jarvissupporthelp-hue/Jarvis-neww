@@ -1,3 +1,4 @@
+import { studentIdentity, colorMemory, profileUpdate } from "@/lib/student-profile";
 import { authorize } from "@/lib/authorization";
 import { askStudyAI, providerFailureMessage, resolveProviderAccess } from "@/lib/study-ai";
 import { createStudyClient, examDateClarification, loadStudyContext } from "@/lib/study-context";
@@ -122,14 +123,22 @@ export async function POST(request: Request) {
     }
   }
 
-  let answer = examDateClarification(prompt, context);
+  const facts = await supabase.from("study_profile_facts").select("profile_field,profile_value")
+    .eq("student_id", caller.userId);
+  if (facts.error) return reply({ error: "Could not load your profile. Your draft is still here." }, 503);
+  const preferences: Record<string, string> = Object.fromEntries(facts.data.map(row => [row.profile_field, row.profile_value]));
+  const update = profileUpdate(prompt);
+  if (update) preferences[update.profile_field] = update.profile_value;
+  const memory = colorMemory(prompt, preferences.preferredColor);
+  context.studentProfile = { identity: studentIdentity(caller.email), preferences };
+  let answer = memory.answer ?? examDateClarification(prompt, context);
   if (!answer) {
     const provider = resolveProviderAccess(request);
     if ("error" in provider) return reply({ error: `${provider.error} Your draft is still here.` }, 503);
 
     const history = await supabase.from("study_turns").select("prompt,answer")
       .eq("conversation_id", conversationId).order("created_at", { ascending: false })
-      .order("id", { ascending: false }).limit(4);
+      .order("id", { ascending: false }).limit(8);
     if (history.error) return reply({ error: "Could not load chat history. Your draft is still here." }, 503);
 
     const passages = await findPassages(supabase, prompt, offeringId).catch(() => null);
@@ -153,7 +162,7 @@ export async function POST(request: Request) {
   }
 
   const saved = await supabase.from("study_turns")
-    .insert({ conversation_id: conversationId, prompt, answer })
+    .insert({ conversation_id: conversationId, prompt, answer, ...update })
     .select("id,prompt,answer").single();
   if (saved.error) return reply({ error: "Could not save the reply. Your draft is still here." }, 503);
   return reply({ turn: saved.data });

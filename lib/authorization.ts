@@ -1,7 +1,7 @@
 type Role = "student" | "lecturer" | "admin";
 
 type Authorization =
-  | { ok: true; userId: string; role: Role }
+  | { ok: true; userId: string; email?: string; role: Role }
   | { ok: false; status: 401 | 403 | 503 };
 
 export async function authorize(
@@ -49,7 +49,7 @@ export async function authorize(
     const role = allowedRoles.find((candidate) => candidate === rows[0]?.role);
     if (!role) return { ok: false, status: 403 };
 
-    return { ok: true, userId: user.id, role };
+    return { ok: true, userId: user.id, ...(typeof user.email === "string" && user.email_confirmed_at ? { email: user.email } : {}), role };
   } catch {
     return { ok: false, status: 503 };
   }

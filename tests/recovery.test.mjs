@@ -71,7 +71,7 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
     insert: (turn) => { turns.push(turn); return query; },
     single: () => ({ data: turns.at(-1) }),
   };
-  doubles.chat = { from: () => query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
+  doubles.chat = { from: (table) => table === "study_profile_facts" ? { select: () => ({ eq: () => ({ data: turns.filter(row => row.profile_field) }) }) } : query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
   doubles.ai = () => null;
   const body = { prompt: "Explain routing", conversationId: id, consent: true };
   const failure = await chat(post(body));
@@ -83,6 +83,10 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
   assert.equal((await chat(post(body))).status, 200);
   assert.deepEqual(turns, [{ conversation_id: id, prompt: body.prompt, answer: "Routers forward packets." }]);
   assert.deepEqual(rpcCalls, ["search_course_pdf_pages", "search_course_pdf_pages", "reserve_chat_attempt"]);
+  const say = async (prompt, conversationId) => (await (await chat(post({ prompt, conversationId }))).json()).turn;
+  await say("I like red", id);
+  const anotherThread = "abcdef00-1234-4234-8234-123456789012";
+  assert.equal((await say("What color do I like?", anotherThread)).answer, "You told me you like red.");
 });
 
 test("course pages return published assignments only for the requested visible offering", async () => {
