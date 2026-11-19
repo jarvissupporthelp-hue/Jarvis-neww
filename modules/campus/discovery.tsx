@@ -1,7 +1,9 @@
 "use client";
 
+import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { Avatar, labels, useLibrary } from "./library-personal";
 import { digitalLibrary, type Locale } from "@/lib/locales";
 import { bookCategories, bookLanguages, filterBooks, libraryFaculties } from "./books";
 
@@ -52,13 +54,17 @@ export function RoomSimulation() {
 }
 
 export function DigitalLibrary({ locale }: { locale: Locale }) {
-  const copy = digitalLibrary[locale];
+  const profile = useLibrary(locale);
+  const copy = digitalLibrary[profile.language];
+  const t = labels[profile.language];
+  const [shelf,setShelf] = useState("");
+  const saved = new Map(profile.entries.map(entry => [entry.book_id,entry]));
   const [faculty, setFaculty] = useState("");
   const [language, setLanguage] = useState("");
   const [category, setCategory] = useState("");
   const [query, setQuery] = useState("");
   const [format, setFormat] = useState("");
-  const matches = filterBooks({ query, faculty, language, category, format });
+  const matches = filterBooks({ query, faculty, language, category, format }).filter(book => !shelf || (shelf === "liked" ? saved.get(book.id)?.liked : saved.get(book.id)?.status === shelf));
 
   function clearFilters() {
     setFaculty("");
@@ -66,18 +72,18 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
     setCategory("");
     setQuery("");
     setFormat("");
+    setShelf("");
   }
 
   return <section aria-labelledby="digital-library-heading" className="space-y-4">
     <div className={panel}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="digital-library-heading" className="text-xl font-semibold">{copy.title}</h2>
+          <h2 id="digital-library-heading" className="flex items-center gap-3 text-3xl font-semibold tracking-tight"><BookOpen className="size-7 text-emerald-700" aria-hidden="true"/>{copy.title}</h2>
           <p className="mt-1 text-sm text-slate-600">{copy.description}</p>
         </div>
-        <Link href={`/campus?tab=library&lang=${locale === "hy" ? "en" : "hy"}`} className="text-sm font-semibold text-[#426852] underline" lang={locale === "hy" ? "en" : "hy"}>
-          {locale === "hy" ? "English" : "Հայերեն"}
-        </Link>
+        <Link href="/account/profile" className="flex items-center gap-2 rounded-full border px-4 py-2"><Avatar value={profile.avatar}/>{t[6]}</Link>
+        {!profile.user && <Link className="underline" href={`/campus?tab=library&lang=${locale === "hy" ? "en" : "hy"}`}>{locale === "hy" ? "English" : "Հայերեն"}</Link>}
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <label className="min-w-0">{copy.search}
@@ -111,20 +117,28 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
         </label>
       </div>
     </div>
+    {profile.user && <nav aria-label={t[0]} className="flex flex-wrap gap-2">{["","later","reading","read","liked"].map((v,i)=><button key={v} aria-pressed={shelf===v} onClick={()=>setShelf(v)} className="rounded-full border px-4 py-2 text-sm aria-pressed:bg-emerald-900 aria-pressed:text-white">{i?t[i]:t[5]}</button>)}</nav>}
+    {profile.notice && <p role="status">{profile.notice}</p>}
     <div className="flex items-center justify-between gap-3 text-sm">
       <p role="status" className="text-slate-600">{copy.books(matches.length)}</p>
-      {(faculty || language || category || query || format) && <button type="button" onClick={clearFilters} className="font-semibold text-[#426852] underline">{copy.reset}</button>}
+      {(faculty || language || category || query || format || shelf) && <button type="button" onClick={clearFilters} className="font-semibold text-[#426852] underline">{copy.reset}</button>}
     </div>
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {matches.map(({ id, title, author, language, category, faculties, source, download }) => <li className={`${panel} min-w-0`} key={id}>
+      {matches.map(({ id, title, author, language, category, faculties, source, download }) => <li className={`${panel} flex min-w-0 flex-col border-l-4 border-l-emerald-700 shadow-sm transition-shadow hover:shadow-md`} key={id}>
         <p className="text-xs font-semibold text-[#426852]">{copy.languages[language]} · {copy.categories[category]}</p>
-        <h3 lang={language} className="mt-1 break-words font-semibold">{title}</h3>
+        <h3 lang={language} className="mb-1 mt-2 break-words font-serif text-xl font-semibold leading-tight">{title}</h3>
         <p lang={language} className="text-sm text-slate-600">{author}</p>
         {faculties.length > 0 && <p className="mt-1 text-xs text-slate-600">{faculties.map((value) => copy.faculties[value]).join(" · ")}</p>}
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
           {(!download || download.url !== source) && <a href={source} target="_blank" rel="noreferrer" className="font-semibold underline" aria-label={`${copy.read} — ${title}`}>{copy.read} ↗</a>}
           {download && <a href={download.url} download={download.hosted || undefined} target={download.hosted ? undefined : "_blank"} rel="noreferrer" className="underline" aria-label={`${copy.download} ${download.format} — ${title}`}>{copy.download} {download.format}{download.hosted ? "" : " ↗"}</a>}
         </div>
+        {profile.user && <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+          <select aria-label={t[13]+" — "+title} disabled={profile.busy} value={saved.get(id)?.status??""} onChange={e=>void profile.saveBook(id,{status:e.target.value})}>
+            {["","later","reading","read"].map((v,i)=><option key={v} value={v}>{i?t[i]:t[13]}</option>)}
+          </select>
+          <button disabled={profile.busy} aria-label={(saved.get(id)?.liked?t[15]:t[14])+" — "+title} aria-pressed={!!saved.get(id)?.liked} onClick={()=>void profile.saveBook(id,{liked:!saved.get(id)?.liked})} className="rounded-full border px-3 py-1 aria-pressed:text-rose-700">{saved.get(id)?.liked?"♥":"♡"} {t[14]}</button>
+        </div>}
       </li>)}
     </ul>
     {!matches.length && <p>{copy.empty}</p>}

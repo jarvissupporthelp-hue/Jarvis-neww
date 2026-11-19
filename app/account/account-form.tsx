@@ -297,6 +297,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
               )}
             </div>
           )}
+          <Link href="/account/profile" className="mr-4 underline">{locale === "hy" ? "Անձնական էջ" : "Profile"}</Link>
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setError("Could not sign out. Try again.");
