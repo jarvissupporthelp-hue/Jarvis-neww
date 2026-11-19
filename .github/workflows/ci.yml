@@ -19,6 +19,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Install standalone Math Lab dependencies
+        run: npm ci --prefix math-lab --include=dev
+      - name: Type-check Math Lab independently
+        run: npm run typecheck --prefix math-lab
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
