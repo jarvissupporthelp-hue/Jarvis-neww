@@ -49,6 +49,7 @@ const studentNav: NavItem[] = [
   { href: "/chat", label: "AI Agent", icon: "chat" },
   { href: "/chat/math-visualization", label: "Math visualizations", icon: "math", nested: true },
   { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
+  { href: "/arena", label: "JARVIS Arena", icon: "layers" },
   { href: "/focus", label: "Focus timer", icon: "focus" },
 ];
 const lecturerNav: NavItem[] = [
@@ -60,6 +61,7 @@ const lecturerNav: NavItem[] = [
   { href: "/account/calendar", label: "Timetable", icon: "calendar" },
   { href: "/resources", label: "Course resources", icon: "layers" },
   { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
+  { href: "/arena", label: "JARVIS Arena", icon: "layers" },
 ];
 const adminNav: NavItem[] = [
   { href: "/account", label: "Administration", icon: "dashboard" },
