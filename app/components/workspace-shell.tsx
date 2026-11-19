@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
+import { Avatar, avatars } from "@/modules/campus/library-personal";
+import { workspaceText, type WorkspaceLanguage } from "@/lib/workspace-language";
 import { getClient } from "@/lib/browser-supabase";
 
 type Role = "student" | "lecturer" | "admin";
@@ -113,6 +115,8 @@ function subscribeTheme(callback: () => void) {
 
 export function WorkspaceShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [preferences, setPreferences] = useState<{ language: WorkspaceLanguage; avatar: string }>({language:"en",avatar:""});
+  const tr = (label: string) => workspaceText(preferences.language,label);
   const [role, setRole] = useState<Role | null>(null);
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const drawerOpen = drawerPath === pathname;
@@ -134,10 +138,10 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let revision = 0;
-    async function inspect(token: string | undefined) {
+    async function inspect(token: string | undefined, id?: string) {
       const current = ++revision;
       if (!token) {
-        if (active) setRole(null);
+        if (active) { document.cookie="jarvis-language=; Path=/; Max-Age=0; SameSite=Lax"; setRole(null); setPreferences({language:"en",avatar:""}); }
         return;
       }
       let next: Role | null = null;
@@ -148,13 +152,25 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           if (result.role === "student" || result.role === "lecturer" || result.role === "admin") next = result.role;
         }
       } catch { /* Keep the guest shell on auth errors. */ }
-      if (active && current === revision) setRole(next);
+      if (!active || current !== revision) return;
+      setRole(next);
+      if (next && id) {
+        const result = await getClient().from("library_profiles").select("language,avatar").eq("user_id",id).maybeSingle();
+        if (!active || current !== revision) return;
+        const language = result.data?.language ?? "hy";
+        const avatar = result.data?.avatar ?? avatars[parseInt(id.slice(0,8),16)%avatars.length];
+        setPreferences({language,avatar});
+        document.documentElement.lang = language;
+        document.cookie = "jarvis-language="+language+"; Path=/; Max-Age=31536000; SameSite=Lax";
+      }
     }
     try {
       const client = getClient();
-      void client.auth.getSession().then(({ data }) => inspect(data.session?.access_token)).catch(() => inspect(undefined));
-      const { data } = client.auth.onAuthStateChange((_event, session) => { void inspect(session?.access_token); });
-      return () => { active = false; data.subscription.unsubscribe(); };
+      void client.auth.getSession().then(({ data }) => inspect(data.session?.access_token,data.session?.user.id)).catch(() => inspect(undefined));
+      const { data } = client.auth.onAuthStateChange((_event, session) => { void inspect(session?.access_token, session?.user.id); });
+      const refresh = () => { void client.auth.getSession().then(({data})=>inspect(data.session?.access_token,data.session?.user.id)); };
+      window.addEventListener("jarvis-profile-saved",refresh);
+      return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener("jarvis-profile-saved",refresh); };
     } catch { return () => { active = false; }; }
   }, []);
 
@@ -193,13 +209,13 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
             <span className="jarvis-brand-text">JARVIS<small>ACADEMIC WORKSPACE</small></span>
           </Link>
           <span className="jarvis-topbar-divider"/>
-          <span className="jarvis-topbar-context">{workspace ? roleName : "University platform"}</span>
+          <span className="jarvis-topbar-context">{workspace ? tr(roleName) : "University platform"}</span>
         </div>
         <div className="jarvis-topbar-actions">
           <span className="jarvis-university-chip">UFAR · Pilot</span>
           <ThemeSelector theme={theme} onChange={changeTheme}/>
-          {!workspace && <Link className="jarvis-header-signin" href="/account">Sign in <Icon name="arrow" size={15}/></Link>}
-          {workspace && <span className="jarvis-profile-chip" aria-label={roleName}>{role === "admin" ? "AD" : role === "lecturer" ? "LC" : "ST"}</span>}
+          {!role && <Link className="jarvis-header-signin" href="/account">Sign in <Icon name="arrow" size={15}/></Link>}
+          {role && <Link href="/account/profile" className="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full" aria-label={tr("Profile")} title={tr("Profile")}><Avatar value={preferences.avatar || "👤"}/></Link>}
         </div>
       </header>
       <div className="jarvis-shell-body">
@@ -207,13 +223,13 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
           {drawerOpen && <button className="jarvis-drawer-overlay" type="button" aria-label="Close navigation" onClick={() => setDrawerPath(null)}/>}
           <aside id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
             <div className="jarvis-sidebar-content">
-              <div className="jarvis-sidebar-eyebrow">WORKSPACE</div>
-              <div className="jarvis-sidebar-title">{roleName}</div>
+              <div className="jarvis-sidebar-eyebrow">{tr("Workspace")}</div>
+              <div className="jarvis-sidebar-title">{tr(roleName)}</div>
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
                   const current = currentLink?.href === item.href;
                   return <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onNavigate={() => setDrawerPath(null)}>
-                    <Icon name={item.icon}/><span>{item.label}</span>
+                    <Icon name={item.icon}/><span>{tr(item.label)}</span>
                   </Link>;
                 })}
               </nav>

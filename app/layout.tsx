@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const locale = (await headers()).get("x-jarvis-locale") === "hy" ? "hy" : "en";
+  const preferred = (await headers()).get("x-jarvis-locale") ?? "en";
+  const locale = ["hy","en","fr","ru"].includes(preferred) ? preferred : "en";
   return <html lang={locale} suppressHydrationWarning><body><WorkspaceShell>{children}</WorkspaceShell></body></html>;
 }
