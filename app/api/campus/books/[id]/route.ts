@@ -8,6 +8,7 @@ async function loadBookText(id: string) {
   const urls = [
     `https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`,
     `https://mirror.fi.ossplanet.net/gutenberg/${mirrorPath}/${id}/${id}-0.txt`,
+    `https://mirror.fi.ossplanet.net/gutenberg/${mirrorPath}/${id}/${id}.txt`,
     `https://www.gutenberg.org/ebooks/${id}.txt.utf-8`,
   ];
   return Promise.any(urls.map(async (url) => {
