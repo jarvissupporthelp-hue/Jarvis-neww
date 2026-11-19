@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
+import type { Locale } from "@/lib/locales";
 import { getAccessToken } from "@/lib/browser-supabase";
 import { RoomSimulation, DigitalLibrary } from "./discovery";
 import { MeetingPanel } from "./meeting-panel";
@@ -29,8 +30,8 @@ async function request(params: URLSearchParams, payload?: Record<string, unknown
   return result;
 }
 
-export function CampusWorkspace() {
-  const [tab, setTab] = useState<Tab>("Rooms & map");
+export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: boolean; locale: Locale }) {
+  const [tab, setTab] = useState<Tab>(initialLibrary ? "Library" : "Rooms & map");
   const [data, setData] = useState<Data | null>(null);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
@@ -87,7 +88,7 @@ export function CampusWorkspace() {
       </button>)}
     </nav>
     {tab === "Rooms & map" && <RoomSimulation />}
-    {tab === "Library" && <DigitalLibrary />}
+    {tab === "Library" && <DigitalLibrary locale={locale} />}
     {tab === "Team booking" && <MeetingPanel />}
     {(tab === "Library" || tab === "Staff") && data && message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
     {tab === "Library" && !data && <p className="text-sm text-slate-600"><Link href="/account" className="underline">Sign in</Link> to access campus loans and equipment when available.</p>}

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { books } from "./books";
+import Link from "next/link";
+import { digitalLibrary, type Locale } from "@/lib/locales";
+import { bookCategories, bookLanguages, filterBooks, libraryFaculties } from "./books";
 
 const input = "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2";
 const panel = "rounded-2xl border border-slate-200 bg-white p-5";
@@ -49,30 +51,72 @@ export function RoomSimulation() {
   </section>;
 }
 
-export function DigitalLibrary() {
-  const [genre, setGenre] = useState("");
+export function DigitalLibrary({ locale }: { locale: Locale }) {
+  const copy = digitalLibrary[locale];
+  const [faculty, setFaculty] = useState("");
+  const [language, setLanguage] = useState("");
+  const [category, setCategory] = useState("");
   const [query, setQuery] = useState("");
-  const genres = [...new Set(books.map((book) => book[3]))];
-  const matches = books.filter(([, title, author, category]) => (!genre || category === genre)
-    && `${title} ${author} ${category}`.toLowerCase().includes(query.trim().toLowerCase()));
-  return <section className="space-y-4">
+  const matches = filterBooks({ query, faculty, language, category });
+
+  function clearFilters() {
+    setFaculty("");
+    setLanguage("");
+    setCategory("");
+    setQuery("");
+  }
+
+  return <section aria-labelledby="digital-library-heading" className="space-y-4">
     <div className={panel}>
-      <h2 className="text-xl font-semibold">International digital library</h2>
-      <p className="mt-1 text-sm text-slate-600">Browse 20 classic books in English, including translations of international works.</p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label>Search by title or author <input type="search" className={input} value={query} onChange={(e) => setQuery(e.target.value)} /></label>
-        <label>Category <select className={input} value={genre} onChange={(e) => setGenre(e.target.value)}><option value="">All categories</option>{genres.map((category) => <option key={category}>{category}</option>)}</select></label>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="digital-library-heading" className="text-xl font-semibold">{copy.title}</h2>
+          <p className="mt-1 text-sm text-slate-600">{copy.description}</p>
+        </div>
+        <Link href={`/campus?tab=library&lang=${locale === "hy" ? "en" : "hy"}`} className="text-sm font-semibold text-[#426852] underline" lang={locale === "hy" ? "en" : "hy"}>
+          {locale === "hy" ? "English" : "Հայերեն"}
+        </Link>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="min-w-0">{copy.search}
+          <input type="search" className={input} value={query} onChange={(event) => setQuery(event.target.value)} />
+        </label>
+        <label className="min-w-0">{copy.faculty}
+          <select className={input} value={faculty} onChange={(event) => setFaculty(event.target.value)}>
+            <option value="">{copy.allFaculties}</option>
+            {libraryFaculties.map((value) => <option key={value} value={value}>{copy.faculties[value]}</option>)}
+          </select>
+        </label>
+        <label className="min-w-0">{copy.language}
+          <select className={input} value={language} onChange={(event) => setLanguage(event.target.value)}>
+            <option value="">{copy.allLanguages}</option>
+            {bookLanguages.map((value) => <option key={value} value={value}>{copy.languages[value]}</option>)}
+          </select>
+        </label>
+        <label className="min-w-0">{copy.category}
+          <select className={input} value={category} onChange={(event) => setCategory(event.target.value)}>
+            <option value="">{copy.allCategories}</option>
+            {bookCategories.map((value) => <option key={value} value={value}>{copy.categories[value]}</option>)}
+          </select>
+        </label>
       </div>
     </div>
-    <p role="status" className="text-sm text-slate-600">{matches.length} {matches.length === 1 ? "book" : "books"}</p>
-    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{matches.map(([id, title, author, category]) => <li className={panel} key={id}>
-      <p className="text-xs font-semibold text-[#426852]">{category}</p>
-      <h3 className="mt-1 font-semibold">{title}</h3><p className="text-sm text-slate-600">{author}</p>
-      <div className="mt-3 flex flex-wrap gap-3 text-sm">
-        <a href={`/api/campus/books/${id}`} target="_blank" rel="noreferrer" aria-label={`Read ${title} as PDF (opens in new tab)`} className="font-semibold underline">Read PDF ↗</a>
-        <a href={`https://www.gutenberg.org/ebooks/${id}`} target="_blank" rel="noreferrer" className="underline">Source ↗</a>
-      </div>
-    </li>)}</ul>
-    {!matches.length && <p>Try a different title, author, or category.</p>}
+    <div className="flex items-center justify-between gap-3 text-sm">
+      <p role="status" className="text-slate-600">{copy.books(matches.length)}</p>
+      {(faculty || language || category || query) && <button type="button" onClick={clearFilters} className="font-semibold text-[#426852] underline">{copy.reset}</button>}
+    </div>
+    <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {matches.map(({ id, title, author, language, category, faculties, source, download }) => <li className={`${panel} min-w-0`} key={id}>
+        <p className="text-xs font-semibold text-[#426852]">{copy.languages[language]} · {copy.categories[category]}</p>
+        <h3 lang={language} className="mt-1 break-words font-semibold">{title}</h3>
+        <p lang={language} className="text-sm text-slate-600">{author}</p>
+        {faculties.length > 0 && <p className="mt-1 text-xs text-slate-600">{faculties.map((value) => copy.faculties[value]).join(" · ")}</p>}
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          {(!download || download.url !== source) && <a href={source} target="_blank" rel="noreferrer" className="font-semibold underline" aria-label={`${copy.read} — ${title}`}>{copy.read} ↗</a>}
+          {download && <a href={download.url} download={download.hosted || undefined} target={download.hosted ? undefined : "_blank"} rel="noreferrer" className="underline" aria-label={`${copy.download} ${download.format} — ${title}`}>{copy.download} {download.format}{download.hosted ? "" : " ↗"}</a>}
+        </div>
+      </li>)}
+    </ul>
+    {!matches.length && <p>{copy.empty}</p>}
   </section>;
 }

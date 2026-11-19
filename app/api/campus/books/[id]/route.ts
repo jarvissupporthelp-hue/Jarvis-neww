@@ -1,13 +1,13 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
-import { books } from "@/modules/campus/books";
+import { gutenbergBooks } from "@/modules/campus/books";
 
 export const maxDuration = 120;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const book = books.find(([key]) => String(key) === id);
+  const book = gutenbergBooks.find((item) => item.id === id);
   if (!book) return new Response("Book not found", { status: 404 });
-  const [, title, author] = book;
+  const { title, author } = book;
   try {
     const source = await fetch(`https://www.gutenberg.org/cache/epub/${id}/pg${id}.txt`, {
       next: { revalidate: 86400 }, signal: AbortSignal.timeout(105000),
