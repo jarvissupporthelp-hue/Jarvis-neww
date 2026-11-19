@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
 
 function inline(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean).map((part, index) => {
+  return text.split(/(\[UFAR §[0-9]+[A-H]?\]\(\/ufar-reference#section-[0-9]+[A-H]?\)|\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean).map((part, index) => {
+    const citation = /^\[UFAR §(\d+[A-H]?)\]\(\/ufar-reference#section-\1\)$/.exec(part);
+    if (citation) return <a key={index} className="underline" href={`/ufar-reference#section-${citation[1]}`}>UFAR §{citation[1]}</a>;
     if (part.startsWith("**") && part.endsWith("**")) return <strong key={index} className="font-semibold text-[#173326]">{part.slice(2, -2)}</strong>;
     if (part.startsWith("`") && part.endsWith("`")) return <code key={index} className="rounded bg-[#e9f0e8] px-1 py-0.5 font-mono text-[0.9em]">{part.slice(1, -1)}</code>;
     return part;
