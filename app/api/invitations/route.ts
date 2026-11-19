@@ -83,6 +83,14 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
     redirectTo: new URL("/account?flow=invite", origin).toString(),
   });
+  if (error?.code === "email_exists" || error?.code === "user_already_exists") {
+    const recovery = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: new URL("/account?flow=recovery", origin).toString(),
+    });
+    return recovery.error
+      ? reply("Approval saved. Could not send the account recovery email.", recovery.error.status === 429 ? 429 : 502)
+      : reply("Account recovery email sent. The recipient can set a password and finish JARVIS activation.", 200);
+  }
   if (error) {
     return reply("Approval saved. Invitation delivery failed. Retry after checking email settings.", 502);
   }

@@ -58,6 +58,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
 
   const setError = useCallback((text: string) => setNotice({ text, error: true }), []);
   const [ready, setReady] = useState(false);
+  const [finishActivation, setFinishActivation] = useState(false);
   const [linkReady, setLinkReady] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -74,6 +75,11 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         if (expected === "invite" || expected === "recovery") {
           const valid = callback?.flow === expected && callback.validFragment && !initialization.error && Boolean(data.session);
           setFlow(expected);
+          if (expected === "recovery" && valid && data.session) {
+            const identity = await currentIdentity(data.session.access_token);
+            if (!mounted) return;
+            setFinishActivation(!identity);
+          }
           setLinkReady(valid);
           if (!valid) setError(expected === "invite" ? copy.invalidInvite : copy.invalidRecovery);
           clearPasswordCallback();
@@ -146,7 +152,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         if (!linkReady) return;
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        if (flow === "invite") {
+        if (flow === "invite" || finishActivation) {
           const result = await supabase.rpc("activate_membership", {
             p_display_name: String(fields.get("displayName") ?? "").trim(),
           });
@@ -157,6 +163,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         }
         await supabase.auth.signOut({ scope: "local" });
         setFlow("signin");
+        setFinishActivation(false);
         setShowPassword(false);
         setLinkReady(false);
         setMessage(copy.passwordSaved);
@@ -306,7 +313,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
               </div>
               {callback && <h2 className="text-xl font-semibold">{flow === "invite" ? copy.invite : copy.recovery}</h2>}
               {!callback && <label className="block">Email<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
-              {flow === "invite" && <label className="block">{copy.name}<input className={inputClass} name="displayName" maxLength={100} required /></label>}
+              {(flow === "invite" || (flow === "recovery" && finishActivation)) && <label className="block">{copy.name}<input className={inputClass} name="displayName" maxLength={100} required /></label>}
               {flow !== "forgot" && (
                 <div>
                   <label className="block">{copy.password}<input className={inputClass} name="password" type={showPassword ? "text" : "password"} minLength={callback ? 8 : undefined} autoComplete={callback ? "new-password" : "current-password"} required /></label>

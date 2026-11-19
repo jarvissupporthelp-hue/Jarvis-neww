@@ -61,6 +61,28 @@ test("failed email delivery keeps one pending approval and the same invitation c
   assert.equal(attempts, 2);
 });
 
+test("resending a pending invite to a confirmed account sends a recovery email", async () => {
+  const group = id;
+  const recoveryLinks = [];
+  doubles.email = {
+    from: () => ({
+      upsert: () => ({}),
+      select: () => ({ eq: () => ({ single: () => ({ data: { role: "student", student_group_id: group } }) }) }),
+    }),
+    auth: {
+      admin: { inviteUserByEmail: () => ({ error: { code: "email_exists" } }) },
+      resetPasswordForEmail: (_email, options) => {
+        recoveryLinks.push(options.redirectTo);
+        return { error: null };
+      },
+    },
+  };
+  const response = await invite(post({ email: "student@example.com", role: "student", groupId: group }));
+  assert.equal(response.status, 200);
+  assert.match((await response.json()).message, /recovery email sent/i);
+  assert.deepEqual(recoveryLinks, ["https://example.com/account?flow=recovery"]);
+});
+
 test("an AI outage saves no partial turn and a retry saves one complete turn", async () => {
   process.env.AI_GATEWAY_API_KEY = "test";
   const turns = [];

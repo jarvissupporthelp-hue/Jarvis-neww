@@ -70,8 +70,13 @@ Deno.serve(async (request: Request) => {
   // Supabase Auth handles token creation and sends mail using the project's SMTP.
   const { error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo });
   if (inviteError) {
-    if (/already (registered|exists)|already been registered/i.test(inviteError.message)) {
-      return result("An account already exists. Ask the user to sign in or reset their password.", 409);
+    if (inviteError.code === "email_exists" || inviteError.code === "user_already_exists") {
+      const recovery = await admin.auth.resetPasswordForEmail(email, {
+        redirectTo: new URL("/account?flow=recovery", redirectTo).toString(),
+      });
+      return recovery.error
+        ? result("Approval saved. Could not send the account recovery email.", recovery.error.status === 429 ? 429 : 502)
+        : result("Account recovery email sent. The recipient can set a password and finish JARVIS activation.", 200);
     }
     return result("Approval saved, but Supabase Auth could not send the invitation. Check SMTP settings and retry.", 502);
   }
