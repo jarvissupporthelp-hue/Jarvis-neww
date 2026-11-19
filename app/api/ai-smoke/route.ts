@@ -1,3 +1,4 @@
+import { authorize } from "@/lib/authorization";
 import { askLecturerAI, resolveProviderAccess } from "@/lib/study-ai";
 
 export const dynamic = "force-dynamic";
@@ -6,6 +7,9 @@ export async function GET(request: Request) {
   if (process.env.VERCEL_ENV !== "preview") {
     return Response.json({ ok: false, error: "Preview only." }, { status: 404 });
   }
+
+  const caller = await authorize(request, ["admin"]);
+  if (!caller.ok) return Response.json({ ok: false }, { status: caller.status });
 
   const provider = resolveProviderAccess(request);
   if ("error" in provider) {

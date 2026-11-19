@@ -12,7 +12,7 @@ function permittedRedirect(input: unknown): string | null {
   try {
     const url = new URL(input);
     const hostname = url.hostname.toLowerCase();
-    const allowed = hostname === "jarvis-three-olive.vercel.app"
+    const allowed = hostname === "jarvis-s.app" || hostname === "jarvis-three-olive.vercel.app"
       || /^jarvis-[a-z0-9]+-jarvis-8637\.vercel\.app$/.test(hostname);
     if (url.protocol !== "https:" || !allowed || url.port || url.username || url.password || url.hash
       || url.pathname !== "/account" || url.searchParams.get("flow") !== "invite"
