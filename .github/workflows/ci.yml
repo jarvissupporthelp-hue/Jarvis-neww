@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, Vagharshak, integration/ara-vagharshak]
+    branches: [main, Vagharshak, integration/ara-vagharshak, feature/integrate-arena-portal-20261119]
 
 permissions:
   contents: read
