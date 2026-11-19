@@ -1,150 +1,104 @@
 "use client";
-
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { arenaGames, type ArenaGame } from "@/lib/arena-catalog";
+import { arenaGames, findArenaGame, type ArenaGame } from "@/lib/arena-games";
 
-function GameAction({ children, onClick, disabled = false }: {children: React.ReactNode;onClick: () => void; disabled?: boolean}) {
-  return <button className="arena-action" type="button" disabled={disabled} onClick={onClick}>{children}</button>;
-}
+const disciplines = ["All", "Computer Science", "Mathematics", "Physics", "Chemistry", "Economics"];
+type Result = { gameId:string; score:number; total:number; completedAt:string };
 
-function Readout({ label, children }: {label:string;children:React.ReactNode}) {
-  return <div className="arena-readout"><span>{label}</span><strong>{children}</strong></div>;
-}
-
-function LogicGame({ win }: { win: () => void }) {
-  const [a, setA] = useState(false);
-  const [b, setB] = useState(false);
-  const [gate, setGate] = useState("AND");
-  const output = gate === "AND" ? a && b : gate === "OR" ? a || b : gate === "XOR" ? a !== b : !(a && b);
-  return <div className="arena-play"><div className="arena-controls">
-    <GameAction onClick={() => setA(!a)}>Input A: {Number(a)}</GameAction>
-    <GameAction onClick={() => setB(!b)}>Input B: {Number(b)}</GameAction>
-    <label>Logic gate <select value={gate} onChange={e => setGate(e.target.value)}>{["AND","OR","XOR","NAND"].map(g => <option key={g}>{g}</option>)}</select></label>
-  </div><Readout label="Output" >{Number(output)}</Readout>
-  <GameAction onClick={win} disabled={!output}>Validate output 1</GameAction></div>;
-}
-function ProjectileGame({ win }: { win: () => void }) {
-  const [angle, setAngle] = useState(35), [speed,setSpeed] = useState(24);
-  const range = speed ** 2 * Math.sin(2 * angle * Math.PI / 180) / 9.81;
-  const target = 50;
-  return <div className="arena-play">
-    <label>Launch angle: {angle}° <input type="range" min="5" max="85" value={angle} onChange={e => setAngle(+e.target.value)}/></label>
-    <label>Speed: {speed} m/s <input type="range" min="10" max="35" value={speed} onChange={e => setSpeed(+e.target.value)}/></label>
-    <div className="arena-trajectory" role="img" aria-label="Illustration of projectile trajectory">
-      <svg viewBox="0 0 480 145" preserveAspectRatio="xMidYMid meet"><path d="M15 124 H465" stroke="currentColor" opacity=".3" strokeWidth="2"/><path d={"M15 124 Q "+(15+Math.min(range,100)*3.8/2)+" "+(18-Math.min(90,range))+" "+(15+Math.min(range,100)*3.8)+" 124"} fill="none" stroke="#ab8cff" strokeWidth="4" strokeDasharray="7 5"/><path d="M205 100v25" stroke="#61d5c3" strokeWidth="4"/><text x="210" y="95" fill="#61d5c3" fontSize="13">Target 50 m</text></svg>
-    </div>
-    <Readout label="Calculated range">{range.toFixed(1)} m / 50 m</Readout><GameAction disabled={Math.abs(range-target)>2} onClick={win}>Land within 2 meters</GameAction></div>;
-}
-function MatrixGame({win}:{win:()=>void}) {
-  const [matrix,setMatrix]=useState("identity");
-  const choices=[{id:"identity",label:"Identity",vals:[2,1]},{id:"rotate",label:"90° rotation",vals:[-1,2]},{id:"reflect",label:"Reflect X",vals:[2,-1]},{id:"scale",label:"Double scale",vals:[4,2]}];
-  const selected=choices.find(x=>x.id===matrix)!;
-  return <div className="arena-play"><div className="arena-controls">{choices.map(x=><GameAction key={x.id} onClick={()=>setMatrix(x.id)}>{x.label}</GameAction>)}</div>
-    <Readout label="Original vector">(2, 1)</Readout><Readout label="Transformed vector">({selected.vals.join(", ")})</Readout>
-    <GameAction onClick={win} disabled={matrix!=="rotate"}>Match target (-1, 2)</GameAction></div>;
-}
-function SortingGame({win}:{win:()=>void}) {
-  const [values,setValues]=useState([5,2,4,1,3]), [swaps,setSwaps]=useState(0);
-  const sorted=values.every((v,i)=>i===0||v>=values[i-1]);
-  function swap(i:number){setValues(prev=>{const next=[...prev];[next[i],next[i+1]]=[next[i+1],next[i]];return next;});setSwaps(s=>s+1);}
-  return <div className="arena-play"><div className="arena-number-line">{values.map((v,i)=><span key={i}>{v}</span>)}</div><div className="arena-controls">
-    {values.slice(0,-1).map((_,i)=><GameAction key={i} disabled={sorted} onClick={()=>swap(i)}>Swap {i+1} ↔ {i+2}</GameAction>)}
-    </div><Readout label="Adjacent swaps">{swaps}</Readout><GameAction disabled={!sorted} onClick={win}>Validate sorted array</GameAction></div>;
-}
-function ChemicalGame({win}:{win:()=>void}) {
-  const [coeff,setCoeff]=useState([1,1,1]);
-  const Hleft=2*coeff[0], Hright=2*coeff[2], Oleft=2*coeff[1], Oright=coeff[2];
-  const balanced=Hleft===Hright&&Oleft===Oright;
-  return <div className="arena-play"><p className="arena-equation">{coeff[0]}H₂ + {coeff[1]}O₂ → {coeff[2]}H₂O</p>
-    <div className="arena-controls">{coeff.map((v,i)=><label key={i}>{["H₂","O₂","H₂O"][i]} coefficient <input type="number" min="1" max="12" value={v} onChange={e=>setCoeff(old=>old.map((item,j)=>j===i?Math.max(1,Math.min(12,Math.trunc(Number(e.target.value)||1))):item))}/></label>)}</div>
-    <Readout label="Hydrogen left / right">{Hleft} / {Hright}</Readout><Readout label="Oxygen left / right">{Oleft} / {Oright}</Readout>
-    <GameAction disabled={!balanced} onClick={win}>Verify balanced equation</GameAction></div>;
-}
-function MarketGame({win}:{win:()=>void}) {
-  const [price,setPrice]=useState(8), demand=100-2*price, supply=20+2*price;
-  return <div className="arena-play"><label>Price: {price} <input type="range" min="0" max="40" value={price} onChange={e=>setPrice(+e.target.value)}/></label>
-    <Readout label="Demand quantity">{demand}</Readout><Readout label="Supply quantity">{supply}</Readout>
-    <Readout label="Surplus / shortage">{supply-demand}</Readout><GameAction disabled={demand!==supply} onClick={win}>Confirm equilibrium</GameAction></div>;
-}
-function CipherGame({win}:{win:()=>void}) {
-  const [shift,setShift]=useState(0);
-  const decoded=[..."KHOOR"].map(x=>String.fromCharCode(65+(x.charCodeAt(0)-65-shift+26)%26)).join("");
-  return <div className="arena-play"><Readout label="Encrypted message">KHOOR</Readout><label>Reverse Caesar shift: {shift}
-    <input type="range" min="0" max="25" value={shift} onChange={e=>setShift(+e.target.value)}/></label>
-    <Readout label="Your decoded text">{decoded}</Readout><GameAction disabled={decoded!=="HELLO"} onClick={win}>Decrypt HELLO</GameAction></div>;
-}
-function BinaryGame({win}:{win:()=>void}) {
-  const [bits,setBits]=useState([0,0,0,0,0,0,0,0]);
-  const value=bits.reduce((sum,bit,i)=>sum+bit*2**(7-i),0);
-  return <div className="arena-play"><div className="arena-bit-row" aria-label="8 bit register">{bits.map((bit,i)=><button key={i} type="button" aria-label={"Toggle bit "+(7-i)} aria-pressed={Boolean(bit)} onClick={()=>setBits(b=>b.map((v,j)=>i===j?1-v:v))}>{bit}<small>2^{7-i}</small></button>)}</div>
-    <Readout label="Binary">{bits.join("")}</Readout><Readout label="Hexadecimal">0x{value.toString(16).padStart(2,"0").toUpperCase()}</Readout>
-    <GameAction onClick={win} disabled={value!==0xA5}>Match A5</GameAction></div>;
-}
-function IntegralGame({win}:{win:()=>void}) {
-  const [n,setN]=useState(2);
-  const approx=(Array.from({length:n},(_,i)=>(i*i+(i+1)*(i+1))/(2*n*n*n))).reduce((a,b)=>a+b,0);
-  const delta=Math.abs(approx-1/3);
-  return <div className="arena-play"><label>Number of trapezoids: {n} <input type="range" min="2" max="32" step="1" value={n} onChange={e=>setN(+e.target.value)}/></label>
-    <Readout label="Trapezoidal approximation">{approx.toFixed(6)}</Readout><Readout label="Exact integral">0.333333</Readout>
-    <Readout label="Absolute error">{delta.toFixed(6)}</Readout><GameAction disabled={delta>=0.005} onClick={win}>Validate accuracy</GameAction></div>;
-}
-function AtomicGame({win}:{win:()=>void}) {
-  const [p,setP]=useState(1),[n,setN]=useState(1),[e,setE]=useState(1);
-  return <div className="arena-play"><div className="arena-controls">{[
-    {label:"Protons",v:p,set:setP},{label:"Neutrons",v:n,set:setN},{label:"Electrons",v:e,set:setE}
-  ].map(x=><label key={x.label}>{x.label}<input type="number" min="0" max="20" value={x.v} onChange={ev=>x.set(Math.max(0,Math.min(20,Math.trunc(Number(ev.target.value)||0))))}/></label>)}</div>
-    <Readout label="Mass number">{p+n}</Readout><Readout label="Net charge">{p-e}</Readout><Readout label="Element">{p===6?"Carbon":p===1?"Hydrogen":p===8?"Oxygen":"Unknown"}</Readout>
-    <GameAction disabled={p!==6||n!==6||e!==6} onClick={win}>Complete carbon-12</GameAction></div>;
-}
-function GameContent({id,win}:{id:string;win:()=>void}) {
-  switch(id){
-    case "logic-circuit-lab":return <LogicGame win={win}/>;
-    case "orbital-ballistics-sim":return <ProjectileGame win={win}/>;
-    case "matrix-transform-arena":return <MatrixGame win={win}/>;
-    case "algorithm-sort-duel":return <SortingGame win={win}/>;
-    case "stoichiometry-balancer":return <ChemicalGame win={win}/>;
-    case "equilibrium-market-sim":return <MarketGame win={win}/>;
-    case "cipher-breaker-lab":return <CipherGame win={win}/>;
-    case "binary-hex-bridge":return <BinaryGame win={win}/>;
-    case "calculus-integral-estimator":return <IntegralGame win={win}/>;
-    case "periodic-element-forge":return <AtomicGame win={win}/>;
-    default:return <p>Game not found.</p>;
+function Challenge({ game, onExit }:{game:ArenaGame;onExit:()=>void}) {
+  const [round,setRound]=useState(0);
+  const [choice,setChoice]=useState<number|null>(null);
+  const [checked,setChecked]=useState(false);
+  const [score,setScore]=useState(0);
+  const [done,setDone]=useState(false);
+  const [sound,setSound]=useState(false);
+  const [level,setLevel]=useState("Beginner");
+  const [saved,setSaved]=useState(false);
+  const question=game.puzzles[(round+["Beginner","Intermediate","Advanced","Expert"].indexOf(level))%game.puzzles.length];
+  function reset(next=level){setRound(0);setChoice(null);setChecked(false);setScore(0);setDone(false);setSaved(false);setLevel(next)}
+  function check(){if(choice===null||checked)return;setChecked(true);const right=choice===question.answer;if(right)setScore(s=>s+1);
+    if(sound)try{const ac=new AudioContext();const o=ac.createOscillator();const g=ac.createGain();o.frequency.value=right?700:250;g.gain.value=.025;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.1);void ac.close().catch(()=>{});}catch{/* optional sound */}}
+  function next(){if(round<game.puzzles.length-1){setRound(r=>r+1);setChoice(null);setChecked(false);return;}
+    const result:Result={gameId:game.id,score,total:game.puzzles.length,completedAt:new Date().toISOString()};
+    try{const prev=JSON.parse(localStorage.getItem("jarvis-arena-practice-v1")||"[]");if(Array.isArray(prev)){localStorage.setItem("jarvis-arena-practice-v1",JSON.stringify([result,...prev].slice(0,50)));setSaved(true)}}catch{/* storage optional */}
+    setDone(true);
   }
-}
-function PracticeGame({game,onBack}:{game:ArenaGame;onBack:()=>void}) {
-  const [completed,setCompleted]=useState(false),[retry,setRetry]=useState(0);
-  return <section className="arena-panel" aria-labelledby="arena-active-title">
-    <button type="button" className="arena-back" onClick={onBack}>← All games</button>
-    <p className="arena-eyebrow">{game.discipline} · PRACTICE ONLY</p>
-    <h2 id="arena-active-title">{game.title}</h2><p>{game.instructions}</p>
-    {completed?<div role="status" className="arena-success"><strong>Challenge solved!</strong><p>Great work. Practice results are not counted toward ranked XP or leaderboards.</p><GameAction onClick={()=>{setCompleted(false);setRetry(x=>x+1)}}>Play again</GameAction></div>:
-      <GameContent key={retry} id={game.id} win={()=>setCompleted(true)}/>}
+  return <section className="space-y-5" aria-label="Game challenge">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <button type="button" onClick={onExit} className="rounded-xl border border-slate-600 px-4 py-2">← All games</button>
+      <span className="rounded-full border border-amber-400/40 px-3 py-1 text-xs font-bold text-amber-300">PRACTICE · NO RANKED XP</span>
+    </div>
+    <article className="rounded-2xl border border-slate-700 bg-[#151b30] p-5 sm:p-8">
+      <p className="text-xs font-semibold uppercase tracking-widest text-violet-300">{game.discipline}</p>
+      <h2 className="mt-2 text-2xl font-bold text-white">{game.symbol} {game.title}</h2>
+      <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-300">
+        <label>Difficulty <select aria-label="Difficulty" className="ml-2 rounded-lg border border-slate-600 bg-[#101625] p-2" value={level} onChange={e=>reset(e.target.value)}>
+        {["Beginner","Intermediate","Advanced","Expert"].map(d=><option key={d}>{d}</option>)}</select></label>
+        <button type="button" onClick={()=>setSound(v=>!v)} aria-pressed={sound} className="rounded-lg border border-slate-600 px-3 py-2">{sound?"Sound on":"Sound off"}</button>
+        <button type="button" onClick={()=>reset()} className="rounded-lg border border-slate-600 px-3 py-2">Restart</button>
+        <span>Correct: {score}/{game.puzzles.length}</span>
+      </div>
+      {done?<div role="status" className="mt-7 space-y-4 rounded-xl border border-emerald-500/40 bg-emerald-600/10 p-5">
+        <h3 className="text-xl font-bold">Challenge completed</h3>
+        <p>{score} of {game.puzzles.length} correct.</p>
+        <p className="text-sm text-slate-300">{saved?"Saved locally on this device.":"Local storage unavailable."} Competitive scores and XP are disabled until server verification is implemented.</p>
+        <button type="button" onClick={()=>reset()} className="rounded-lg bg-violet-600 px-5 py-3 font-semibold">Play again</button>
+      </div>:<div className="mt-7 space-y-5">
+        <div className="h-2 overflow-hidden rounded-full bg-slate-800"><div className="h-full bg-violet-500" style={{width:((round+1)/game.puzzles.length*100)+"%"}}/></div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-400">Question {round+1} of {game.puzzles.length}</p>
+        <h3 className="text-lg font-semibold text-white">{question.prompt}</h3>
+        <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Select answer">
+          {question.choices.map((answer,i)=><button key={i} type="button" role="radio" aria-checked={choice===i} disabled={checked}
+            onClick={()=>setChoice(i)} className={"min-h-16 rounded-xl border p-4 text-left font-semibold "+(checked&&i===question.answer?"border-emerald-400 bg-emerald-400/10":checked&&i===choice?"border-rose-400 bg-rose-400/10":i===choice?"border-violet-400 bg-violet-500/20":"border-slate-700 bg-[#0e1424] hover:border-violet-400")}>
+            {String.fromCharCode(65+i)}. {answer}</button>)}
+        </div>
+        {checked?<div role="status" className="rounded-xl border border-slate-700 bg-slate-800/50 p-4">
+          <p className={choice===question.answer?"font-bold text-emerald-300":"font-bold text-rose-300"}>{choice===question.answer?"Correct!":"Not quite."}</p>
+          <p className="mt-2 text-sm text-slate-300">{question.explanation}</p>
+          <button type="button" onClick={next} className="mt-4 rounded-lg bg-violet-600 px-5 py-3 font-bold">{round===game.puzzles.length-1?"Finish challenge":"Next question →"}</button>
+        </div>:<button type="button" onClick={check} disabled={choice===null} className="rounded-lg bg-violet-600 px-5 py-3 font-bold disabled:opacity-40">Check answer</button>}
+      </div>}
+    </article>
   </section>;
 }
-export function ArenaWorkspace(){
-  const [selected,setSelected]=useState<string|null>(null);
-  const [filter,setFilter]=useState("All"),[search,setSearch]=useState("");
-  const game=arenaGames.find(x=>x.id===selected);
-  const disciplines=useMemo(()=>["All",...new Set(arenaGames.map(x=>x.discipline))],[]);
-  const filtered=arenaGames.filter(x=>(filter==="All"||x.discipline===filter)&&(x.title+" "+x.description).toLowerCase().includes(search.toLowerCase().trim()));
-  return <main className="arena-page">
-    <div className="arena-hero"><div><p className="arena-eyebrow">JARVIS · INTERACTIVE LEARNING</p><h1>Arena<span>.</span></h1>
-    <p>Turn academic concepts into interactive practice. Ten learning challenges across five subjects.</p>
-    <div className="arena-hero-links"><span>10 interactive games</span><span>No account or XP required for practice</span></div></div>
-    <Link className="arena-back-to-learning" href="/learning">Learning tools ↗</Link></div>
-    {game?<PracticeGame key={game.id} game={game} onBack={()=>setSelected(null)}/>:<>
-      <section className="arena-tools" aria-label="Filter Arena games">
-        <label>Search games<input value={search} onChange={e=>setSearch(e.target.value)} type="search" placeholder="Search by title or subject…"/></label>
-        <label>Discipline<select value={filter} onChange={e=>setFilter(e.target.value)}>{disciplines.map(x=><option key={x}>{x}</option>)}</select></label>
-      </section>
-      <div className="arena-grid">{filtered.map(g=><article key={g.id} className="arena-card">
-        <div className="arena-card-symbol" aria-hidden="true">{g.icon}</div>
-        <p className="arena-eyebrow">{g.discipline}</p><h2>{g.title}</h2><p>{g.description}</p>
-        <div className="arena-card-footer"><span>Practice mode</span><button type="button" onClick={()=>setSelected(g.id)} aria-label={"Play "+g.title}>Play now →</button></div>
-      </article>)}</div>
-      {!filtered.length&&<div className="arena-empty">No games match that search. Try another subject.</div>}
-    </>}
-    <p className="arena-disclaimer">This is an adapted practice version of the supplied Arena game catalogue. Ranked XP, badges and leaderboards are not yet active; they require verified server-side scoring in Step 4.</p>
+
+export function ArenaWorkspace({ initialGameId }:{initialGameId?:string}) {
+  const [active,setActive]=useState(initialGameId&&findArenaGame(initialGameId)?initialGameId:"");
+  const [filter,setFilter]=useState("All");
+  const [search,setSearch]=useState("");
+  const selected=active?findArenaGame(active):undefined;
+  const games=useMemo(()=>arenaGames.filter(g=>(filter==="All"||g.discipline===filter)&&
+    (g.title+" "+g.discipline).toLowerCase().includes(search.toLowerCase().trim())),[filter,search]);
+  function open(id:string){setActive(id);window.history.replaceState(window.history.state,"","/arena?game="+encodeURIComponent(id));window.scrollTo({top:0,behavior:"smooth"})}
+  function exit(){setActive("");window.history.replaceState(window.history.state,"","/arena")}
+  return <main className="min-h-screen bg-[#0b101d] text-slate-100">
+    <div className="mx-auto max-w-[1200px] space-y-6 px-4 py-8 sm:px-8">
+      <nav className="text-xs font-bold uppercase tracking-widest text-slate-400"><Link href="/dashboard">University hub</Link> / Arena</nav>
+      <header className="relative overflow-hidden rounded-2xl border border-violet-500/40 bg-gradient-to-br from-[#24204f] to-[#111827] p-7 sm:p-10">
+        <p className="text-xs font-bold uppercase tracking-[.2em] text-violet-200">JARVIS · INTERACTIVE LEARNING</p>
+        <h1 className="mt-2 text-4xl font-black text-white sm:text-5xl">The Arena<span className="text-violet-400">.</span></h1>
+        <p className="mt-3 max-w-2xl text-slate-300">Ten university learning challenges across five disciplines. Learn through short interactive practice rounds.</p>
+        <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold"><span className="rounded-full border border-violet-400/40 px-3 py-2">10 games</span><span className="rounded-full border border-violet-400/40 px-3 py-2">5 subjects</span><span className="rounded-full border border-amber-400/40 px-3 py-2 text-amber-200">Unranked practice</span></div>
+      </header>
+      {selected?<Challenge key={selected.id} game={selected} onExit={exit}/>:<>
+        <section className="rounded-xl border border-slate-700 bg-[#151b30] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-bold">Academic Game Library</h2>
+            <input type="search" aria-label="Search games" placeholder="Search games…" value={search} onChange={e=>setSearch(e.target.value)} className="rounded-lg border border-slate-600 bg-[#0d1422] p-3 text-white"/>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">{disciplines.map(d=><button type="button" key={d} aria-pressed={d===filter} onClick={()=>setFilter(d)}
+            className={"rounded-full border px-3 py-2 text-sm "+(d===filter?"border-violet-400 bg-violet-600 text-white":"border-slate-600 text-slate-300")}>{d}</button>)}</div>
+        </section>
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="Game library">
+          {games.map(g=><article key={g.id} className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-700 bg-[#151b30] p-5">
+            <div><div className="flex items-center justify-between"><span className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/20 text-2xl font-bold text-violet-300">{g.symbol}</span><span className="text-xs font-bold text-amber-300">PRACTICE</span></div>
+            <p className="mt-4 text-xs font-bold uppercase tracking-wider text-violet-300">{g.discipline}</p><h3 className="mt-1 text-lg font-bold">{g.title}</h3><p className="mt-2 text-sm text-slate-400">Three interactive exercises with feedback and explanations.</p></div>
+            <button type="button" onClick={()=>open(g.id)} className="rounded-lg bg-violet-600 px-4 py-3 font-semibold text-white hover:bg-violet-500">Play challenge →</button>
+          </article>)}
+          {!games.length&&<p role="status">No matching games.</p>}
+        </section>
+        <p className="text-sm text-slate-400">Practice scores stay on this device. XP, leagues, and server-backed leaderboards will be implemented in Step 4.</p>
+      </>}
+    </div>
   </main>;
 }
