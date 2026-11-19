@@ -5,7 +5,7 @@ const origin = process.env.JARVIS_TEST_ORIGIN ?? "http://127.0.0.1:3000";
 const paths = [
   "/", "/account", "/account/calendar", "/account/tasks",
   "/account/admin/users", "/account/admin/group", "/account/admin/timetable",
-  "/dashboard", "/academics", "/learning",
+  "/dashboard", "/academics", "/learning", "/arena",
   "/lecturer", "/resources", "/study-plans", "/focus", "/quizzes", "/campus", "/career", "/chat", "/chat/math-visualization",
   "/hy", "/en",
 ];
@@ -97,4 +97,20 @@ test("the math lab is not served to signed-out visitors", async () => {
     const html = await (await fetch(origin + path)).text();
     assert.ok(!/<iframe[^>]*math-lab/.test(html), path + " embeds the lab before sign-in");
   }
+});
+
+test("Arena presents ten original-catalogue activities as practice-only", async () => {
+  const response = await fetch(origin + "/arena");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  for (const name of [
+    "Logic Circuit Lab", "Projectile Ballistics Sim", "Matrix Transform Arena",
+    "Algorithm Sort Duel", "Stoichiometry Balancer", "Equilibrium Market Sim",
+    "Cipher Breaker Lab", "Binary &amp; Bitwise Bridge", "Riemann Integral Lab",
+    "Atomic Orbital Forge",
+  ]) {
+    assert.ok(html.includes(name), "Missing Arena activity " + name);
+  }
+  assert.match(html, /practice.only/i);
+  assert.ok(!html.includes('Awarded XP'), "Practice must not advertise verified XP");
 });
