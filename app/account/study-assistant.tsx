@@ -233,7 +233,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
   </div>;
   if (!threads) return error ? (
     <div className="rounded-2xl border border-[#e8c8bb] bg-white p-6">
-      <p role="alert" className="mb-4 text-[#9b3d31]">{error}</p>
+      <p role="alert" className="mb-4 text-[#9b3d31]"><UiText value={error}/></p>
       <button type="button" className={button} onClick={() => {
         setError("");
         setThreadsAttempt((value) => value + 1);
@@ -322,7 +322,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
             </form>
           </div>
         </details>}
-        {error && <p role="alert" className="mx-4 mt-3 shrink-0 rounded-xl border border-[#ebc5b9] bg-[#fff2ed] px-4 py-3 text-sm text-[#9b3d31] sm:mx-6">{error}</p>}
+        {error && <p role="alert" className="mx-4 mt-3 shrink-0 rounded-xl border border-[#ebc5b9] bg-[#fff2ed] px-4 py-3 text-sm text-[#9b3d31] sm:mx-6"><UiText value={error}/></p>}
         <ol ref={history} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" tabIndex={0}
           className="jarvis-chat-history min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-6">
           {!selected && <li className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">

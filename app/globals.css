@@ -765,3 +765,8 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
 .jarvis-countdown { display:grid; justify-items:center; gap:.6rem; padding:clamp(1.5rem,5vw,3.5rem) 1rem; background:#132f34; color:#dcfff2; border-radius:1.25rem; }
 .jarvis-countdown strong { font:650 clamp(3.5rem,14vw,7rem)/1.05 system-ui,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-.045em; }
 .jarvis-countdown progress { width:min(17rem,78%); height:.45rem; accent-color:#6be6bd; }
+
+.jarvis-countdown button { padding:.55rem 1rem; min-height:44px; border:1px solid currentColor; border-radius:2rem; }
+.jarvis-timer-dialog[open] { margin:auto; width:100vw; max-width:none; height:100dvh; max-height:none; background:#132f34; color:#dcfff2; }
+.jarvis-timer-dialog .jarvis-countdown { height:100%; align-content:center; gap:1.5rem; }
+.jarvis-timer-dialog strong { font-size:min(23vw,35dvh); }

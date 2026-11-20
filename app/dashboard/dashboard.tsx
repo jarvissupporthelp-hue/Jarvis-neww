@@ -1,10 +1,10 @@
 "use client";
-import {UiText} from "@/app/components/interface-language";
+import {InterfaceLanguage, UiText, useInterfaceCopy} from "@/app/components/interface-language";
 
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Component, useEffect, useState, type ReactNode } from "react";
+import { Component, useContext, useEffect, useState, type ReactNode } from "react";
 import { getAccessToken, getClient } from "@/lib/browser-supabase";
 import { dashboardCopy } from "@/lib/foundation/copy";
 import * as registeredModules from "@/lib/foundation/registry";
@@ -101,14 +101,14 @@ function SlotContent({ render }: { render: () => ReactNode }) {
 
 export function Dashboard({ moduleKey }: { moduleKey?: string }) {
   const router = useRouter();
-  const [locale, setLocale] = useState<Locale>("hy");
+  const language = useContext(InterfaceLanguage);
+  const locale: Locale = language === "hy" ? "hy" : "en";
+  const t = useInterfaceCopy();
   const [role, setRole] = useState<FoundationRole | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "denied" | "error">("loading");
   const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [saveFailed, setSaveFailed] = useState(false);
-  const copy = dashboardCopy[locale];
+  const copy = dashboardCopy[language === "fr" || language === "ru" ? language : locale];
 
   useEffect(() => {
     const controller = new AbortController();
@@ -121,32 +121,10 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
       const result = await response.json();
       if (controller.signal.aborted) return;
       setRole(result.role);
-      if (result.locale) setLocale(result.locale);
-      else if (new URLSearchParams(window.location.search).get("lang") === "en") setLocale("en");
       setStatus("ready");
     }).catch(() => { if (!controller.signal.aborted) setStatus("error"); });
     return () => controller.abort();
   }, [attempt]);
-
-  useEffect(() => {
-    const previous = document.documentElement.lang;
-    document.documentElement.lang = locale;
-    return () => { document.documentElement.lang = previous; };
-  }, [locale]);
-
-  async function changeLocale(next: Locale) {
-    setSaving(true);
-    setSaveFailed(false);
-    try {
-      const response = await request("/api/foundation", { method: "PATCH", body: JSON.stringify({ locale: next }) });
-      if (!response.ok) throw new Error();
-      setLocale(next);
-    } catch {
-      setSaveFailed(true);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function signOut() {
     try {
@@ -167,8 +145,8 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
   const ModulePage = selected?.Page;
   if (moduleKey && !ModulePage) return <main className="p-8"><p><UiText value={copy.denied}/></p></main>;
 
-  const title = (entry: ModuleRegistration) => entry.titles[locale][entry.titleKey];
-  const matches = permitted.filter((entry) => title(entry).toLocaleLowerCase(locale).includes(query.trim().toLocaleLowerCase(locale)));
+  const title = (entry: ModuleRegistration) => t(entry.titles[locale][entry.titleKey]);
+  const matches = permitted.filter((entry) => title(entry).toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
 
   function widget(slot: DashboardSlot) {
     if (slot === "notifications") return <Notifications copy={copy} />;
@@ -189,16 +167,8 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div><h1 className="text-3xl font-semibold"><UiText value={copy.heading}/></h1><p>{copy[role]}</p></div>
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2"><UiText value={copy.language}/>
-            <select className="rounded border bg-white p-2" value={locale} disabled={saving}
-              onChange={(event) => void changeLocale(event.target.value === "en" ? "en" : "hy")}>
-              <option value="hy" lang="hy">Հայերեն</option>
-              <option value="en" lang="en">English</option>
-            </select>
-          </label>
           <button className="underline" onClick={() => void signOut()}><UiText value={copy.signOut}/></button>
         </div>
-        {saveFailed && <p role="alert"><UiText value={copy.saveError}/></p>}
       </header>
       {permitted.length > 0 && <nav aria-label={copy.navigation} className="flex flex-wrap gap-4">
         {permitted.map((entry) => <Link className="underline" href={entry.navItem} key={entry.key}>{title(entry)}</Link>)}
