@@ -30,7 +30,10 @@ test("merged landing offers both new academic modules and account login", async 
 
 test("math lab topics deep-link to bundled same-origin visualizations", async () => {
   const agent = await (await fetch(origin + "/chat")).text();
-  assert.match(agent, /href="\/chat\/math-visualization\?lang=hy"/);
+  assert.match(agent, /href="\/chat\/math-visualization\?lang=en"/);
+  const french = await (await fetch(origin + "/chat?lang=fr")).text();
+  assert.match(french, /href="\/chat\/math-visualization\?lang=fr"/);
+  assert.match(french, /Assistant IA pour les études/);
   const page = await fetch(origin + "/chat/math-visualization?lang=en&module=integrals");
   assert.equal(page.status, 200);
   const html = await page.text();

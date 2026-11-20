@@ -248,8 +248,8 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
 
   if (needsSignIn) return <div className="mx-auto max-w-xl rounded-3xl border border-[#d8e3d5] bg-white p-8 text-center shadow-sm">
     <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#e5f2e3] text-2xl text-[#214b36]">✦</div>
-    <h2 className="text-2xl font-semibold">Your study space is ready</h2>
-    <p className="mt-2 text-[#536a59]">Sign in with an active student account to see your conversations and ask JARVIS a question.</p>
+    <h2 className="text-2xl font-semibold">{translate("Your study space is ready")}</h2>
+    <p className="mt-2 text-[#536a59]">{translate("Sign in with an active student account to see your conversations and ask JARVIS a question.")}</p>
     <Link className={button + " mt-6 inline-flex items-center"} href="/account"><UiText value={"Sign in to JARVIS"}/></Link>
   </div>;
   if (!threads) return error ? (
@@ -260,23 +260,23 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
         setThreadsAttempt((value) => value + 1);
       }}>Retry loading conversations</button>
     </div>
-  ) : <p role="status" className="rounded-2xl bg-white p-6 text-[#536a59]">Loading your study space…</p>;
+  ) : <p role="status" className="rounded-2xl bg-white p-6 text-[#536a59]">{translate("Loading your study space…")}</p>;
 
   const navigation = <div className="flex h-full min-h-0 flex-col gap-4">
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#69836d]">Your workspace</p>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#69836d]">{translate("Your workspace")}</p>
       <h2 className="mt-1 text-xl font-semibold"><UiText value={"Conversations"}/></h2>
     </div>
-    <button type="button" className={button + " w-full"} disabled={busy} onClick={() => void manage("create")}>+ New conversation</button>
+    <button type="button" className={button + " w-full"} disabled={busy} onClick={() => void manage("create")}>+ {translate("New conversation")}</button>
     <div aria-label="Daily AI usage" className="rounded-2xl border border-[#d9e7d7] bg-[#edf5e9] p-4">
-      <p className="text-sm font-semibold text-[#294b32]">Daily AI messages</p>
+      <p className="text-sm font-semibold text-[#294b32]">{translate("Daily AI messages")}</p>
       {usage ? <>
         <p className="mt-1 text-2xl font-bold text-[#183d2b]">{usage.remaining} <span className="text-sm font-normal text-[#55705a]">/ {usage.limit} {"left"}</span></p>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#d3e4d2]">
           <div className="h-full rounded-full bg-[#4c8a5a]" style={{ width: String((usage.remaining / usage.limit) * 100) + "%" }} />
         </div>
         <p className="mt-2 text-xs text-[#55705a]">{"Resets at 00:00 UTC ·"} {usage.used} {"used"}</p>
-        <details className="mt-2"><summary className="cursor-pointer text-xs font-medium">Token usage</summary>
+        <details className="mt-2"><summary className="cursor-pointer text-xs font-medium">{translate("Token usage")}</summary>
         <p className="mt-3 border-t border-[#d3e4d2] pt-2 text-xs text-[#4c6653]">
           {usage.inputTokens + usage.outputTokens} {"tokens reported ("}{usage.inputTokens} {"in ·"} {usage.outputTokens} {"out)"}
         </p>
@@ -289,26 +289,26 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
         : <ul className="space-y-1">{threads.map((thread) => <li key={thread.id}>
           <button type="button" disabled={busy} aria-current={thread.id === selectedId ? "page" : undefined}
             className="w-full rounded-xl px-3 py-3 text-left text-sm break-words transition hover:bg-[#edf4eb] aria-[current=page]:bg-[#e0efdf] aria-[current=page]:font-semibold disabled:opacity-60"
-            onClick={() => open(thread)}>{thread.title}</button>
+            onClick={() => open(thread)}>{thread.title === "New conversation" ? translate("New conversation") : thread.title}</button>
         </li>)}</ul>}
     </nav>
     <details className="shrink-0 rounded-xl border border-[#d9e2d7] bg-white p-3">
-      <summary className="cursor-pointer text-sm font-semibold">My study memory</summary>
+      <summary className="cursor-pointer text-sm font-semibold">{translate("My study memory")}</summary>
       <p className="mt-2 text-xs text-[#647868]">Only your account can edit this. JARVIS uses it only to personalize your account.</p>
       {memory ? <form className="mt-3 space-y-3" onSubmit={saveMemory}>
-        <label className="block text-xs font-medium">How I learn best<textarea className={field} rows={2} maxLength={1000} value={memory.learning_preferences} onChange={(event) => setMemory({ ...memory, learning_preferences: event.target.value })} /></label>
-        <label className="block text-xs font-medium">Current goal<textarea className={field} rows={2} maxLength={1000} value={memory.current_goal} onChange={(event) => setMemory({ ...memory, current_goal: event.target.value })} /></label>
-        <label className="block text-xs font-medium">Topics to practice<textarea className={field} rows={2} maxLength={1000} value={memory.topics_to_practice} onChange={(event) => setMemory({ ...memory, topics_to_practice: event.target.value })} /></label>
-        <label className="block text-xs font-medium">Favorite color<input className={field} maxLength={1000} value={memory.preferred_color} onChange={event => setMemory({ ...memory, preferred_color: event.target.value })} /></label>
-        <label className="block text-xs font-medium">Interest<input className={field} maxLength={1000} value={memory.interest} onChange={event => setMemory({ ...memory, interest: event.target.value })} /></label>
+        <label className="block text-xs font-medium">{translate("How I learn best")}<textarea className={field} rows={2} maxLength={1000} value={memory.learning_preferences} onChange={(event) => setMemory({ ...memory, learning_preferences: event.target.value })} /></label>
+        <label className="block text-xs font-medium">{translate("Current goal")}<textarea className={field} rows={2} maxLength={1000} value={memory.current_goal} onChange={(event) => setMemory({ ...memory, current_goal: event.target.value })} /></label>
+        <label className="block text-xs font-medium">{translate("Topics to practice")}<textarea className={field} rows={2} maxLength={1000} value={memory.topics_to_practice} onChange={(event) => setMemory({ ...memory, topics_to_practice: event.target.value })} /></label>
+        <label className="block text-xs font-medium">{translate("Favorite color")}<input className={field} maxLength={1000} value={memory.preferred_color} onChange={event => setMemory({ ...memory, preferred_color: event.target.value })} /></label>
+        <label className="block text-xs font-medium">{translate("Interest")}<input className={field} maxLength={1000} value={memory.interest} onChange={event => setMemory({ ...memory, interest: event.target.value })} /></label>
         <div className="flex flex-wrap items-center gap-3">
-          <button className={button}>Save memory</button>
+          <button className={button}>{translate("Save memory")}</button>
           <button type="button" className="text-sm underline" onClick={async () => {
             const token = await getAccessToken();
             const response = await fetch("/api/chat/memory", { method: "DELETE", headers: { Authorization: "Bearer " + (token ?? "") } });
             if (response.ok) { setMemory((await response.json()).memory); setMemoryStatus("Memory cleared."); }
             else setMemoryStatus("Could not clear memory.");
-          }}>Clear</button>
+          }}>{translate("Clear")}</button>
         </div>
       </form> : <p className="mt-2 text-sm">Memory unavailable.</p>}
       {memoryStatus && <p role="status" className="mt-2 text-xs">{memoryStatus}</p>}
@@ -319,14 +319,14 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
     <aside aria-label="Conversations and usage" className="hidden min-h-0 rounded-3xl border border-[#d7e2d4] bg-white p-5 shadow-sm lg:block">{navigation}</aside>
     <div className="flex min-w-0 flex-col gap-3 lg:min-h-0">
       <details className="rounded-2xl border border-[#d7e2d4] bg-white p-3 shadow-sm lg:hidden">
-        <summary className="cursor-pointer font-semibold">Conversations, usage & memory</summary>
+        <summary className="cursor-pointer font-semibold">{translate("Conversations, usage & memory")}</summary>
         <div className="mt-4 max-h-[60dvh] overflow-y-auto">{navigation}</div>
       </details>
       <dialog open ref={panel} aria-label="Study conversation" onCancel={event => { event.preventDefault(); setPanelExpanded(false); }} className={styles.panel + " jarvis-chat-panel flex h-[min(78dvh,820px)] min-h-[540px] min-w-0 flex-col overflow-hidden rounded-3xl border border-[#d7e2d4] bg-white shadow-[0_18px_45px_rgba(30,51,40,0.08)] lg:h-full lg:min-h-0"}>
         <header className="jarvis-chat-header flex shrink-0 items-center justify-between gap-3 border-b border-[#e8eee6] bg-[#fbfdf9] px-4 py-3 sm:px-6">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#58745f]"><span className="size-2 rounded-full bg-[#64aa70]" /> JARVIS AI</p>
-            <h2 className="mt-1 truncate text-lg font-semibold sm:text-xl">{selected?.title ?? "Your new conversation"}</h2>
+            <h2 className="mt-1 truncate text-lg font-semibold sm:text-xl">{selected ? (selected.title === "New conversation" ? translate("New conversation") : selected.title) : translate("Your new conversation")}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {usage && <span className="hidden rounded-full bg-[#e7f1e4] px-3 py-1 text-xs font-semibold text-[#315b3a] sm:block">{usage.remaining} {"messages left"}</span>}
@@ -337,15 +337,15 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           </div>
         </header>
         {selected && <details className="shrink-0 border-b border-[#e8eee6] bg-white px-4 py-2 text-sm sm:px-6">
-          <summary className="cursor-pointer font-medium text-[#496b51]">Course context, study plans & chat settings</summary>
+          <summary className="cursor-pointer font-medium text-[#496b51]">{translate("Course context, study plans & chat settings")}</summary>
           <div className="grid gap-3 py-3 md:grid-cols-2">
             <StudyContextSummary />
             <ChatPlanStarter />
             <form className="flex flex-col gap-2 rounded-xl bg-[#f3f7f1] p-3 md:col-span-2" onSubmit={(event) => { event.preventDefault(); void manage("rename"); }}>
-              <label className="text-sm font-medium">Conversation title<input className={field} required maxLength={100} value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} /></label>
+              <label className="text-sm font-medium">{translate("Conversation title")}<input className={field} required maxLength={100} value={title} disabled={busy} onChange={(event) => setTitle(event.target.value)} /></label>
               <div className="flex items-center gap-4">
-                <button type="submit" className="font-semibold text-[#214b36] underline disabled:opacity-50" disabled={busy || !title.trim() || title.trim() === selected.title}>Rename</button>
-                <button type="button" className="text-[#a23c36] underline disabled:opacity-50" disabled={busy} onClick={() => void manage("delete")}>Delete conversation</button>
+                <button type="submit" className="font-semibold text-[#214b36] underline disabled:opacity-50" disabled={busy || !title.trim() || title.trim() === selected.title}>{translate("Rename")}</button>
+                <button type="button" className="text-[#a23c36] underline disabled:opacity-50" disabled={busy} onClick={() => void manage("delete")}>{translate("Delete conversation")}</button>
               </div>
             </form>
           </div>
@@ -355,18 +355,18 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           className="jarvis-chat-history min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-6">
           {!selected && <li className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
             <div className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-[#e5f2e3] text-3xl text-[#214b36]">✦</div>
-            <h3 className="text-2xl font-semibold">Learn with JARVIS</h3>
-            <p className="mt-2 text-[#647868]">Ask about your courses, prepare for an exam, or work through a difficult concept step by step.</p>
-            <button type="button" className={button + " mt-6"} onClick={() => void manage("create")}>Start a conversation</button>
+            <h3 className="text-2xl font-semibold">{translate("Learn with JARVIS")}</h3>
+            <p className="mt-2 text-[#647868]">{translate("Ask about your courses, prepare for an exam, or work through a difficult concept step by step.")}</p>
+            <button type="button" className={button + " mt-6"} onClick={() => void manage("create")}>{translate("Start a conversation")}</button>
           </li>}
-          {selected && !turns && !error && <li role="status" className="text-center text-sm text-[#647868]">Loading conversation…</li>}
+          {selected && !turns && !error && <li role="status" className="text-center text-sm text-[#647868]">{translate("Loading conversation…")}</li>}
           {selected && !turns && error && <li className="text-center"><button type="button" className={button} onClick={() => {
             setError("");
             setTurnsAttempt((value) => value + 1);
           }}>Retry loading messages</button></li>}
           {selected && turns?.length === 0 && !pendingPrompt && <li className="mx-auto max-w-md py-10 text-center">
-            <p className="text-lg font-semibold">What would you like to study?</p>
-            <p className="mt-2 text-sm text-[#647868]">Try a course question or ask for an exam preparation plan.</p>
+            <p className="text-lg font-semibold">{translate("What would you like to study?")}</p>
+            <p className="mt-2 text-sm text-[#647868]">{translate("Try a course question or ask for an exam preparation plan.")}</p>
           </li>}
           {turns?.map((turn) => <li key={turn.id} className="space-y-4">
             <div className="ml-auto w-fit max-w-[92%] rounded-2xl rounded-br-md bg-[#214b36] px-4 py-3 text-[15px] leading-6 text-white shadow-sm sm:max-w-[78%]">
@@ -411,9 +411,9 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
             </label>
             {coursePdfSearch && <span className="text-xs text-[#708473]">Cited pages · no AI message used</span>}
           </div>
-          <label className="sr-only" htmlFor="study-question">Study question</label>
+          <label className="sr-only" htmlFor="study-question">{translate("Study question")}</label>
           <textarea id="study-question" className={field + " jarvis-chat-input block max-h-40 min-h-20 resize-y"} rows={2} maxLength={MAX_STUDY_PROMPT} required
-            placeholder={coursePdfSearch ? "Search your course material…" : "Ask JARVIS anything about your studies…"}
+            placeholder={translate(coursePdfSearch ? "Search your course material…" : "Ask JARVIS anything about your studies…")}
             value={draft}
             onChange={(event) => {
               const value = event.currentTarget.value;
@@ -428,15 +428,15 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="min-w-0 flex-1 text-xs text-[#637766]">
               {coursePdfSearch ? <>Answers include source pages. <Link href="/resources" className="underline"><UiText value={"View course resources"}/></Link></>
-                : <>Enter to send · Shift + Enter for a new line</>}
+                : <>{translate("Enter to send · Shift + Enter for a new line")}</>}
             </p>
             <button className={button + " jarvis-chat-send min-w-28"} disabled={busy || !turns || !draft.trim()}>
-              {busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Send"}
+              {translate(busy ? "Working…" : coursePdfSearch ? "Search PDFs" : "Send")}
               {!busy && <span aria-hidden="true">↗</span>}
             </button>
           </div>
           <p role="status" className="sr-only">{sendStatus}</p>
-        </form> : <p className="shrink-0 border-t border-[#e4ece2] px-5 py-4 text-center text-sm text-[#647868]">Create a conversation to start chatting.</p>}
+        </form> : <p className="shrink-0 border-t border-[#e4ece2] px-5 py-4 text-center text-sm text-[#647868]">{translate("Create a conversation to start chatting.")}</p>}
       </dialog>
     </div>
   </div>;
