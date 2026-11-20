@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     const { data: reserved, error } = await supabase.rpc("reserve_chat_attempt");
     if (error?.code === "42501") return reply({ error: "Active student access required." }, 403);
     if (error || reserved === null) return reply({ error: "The study assistant is unavailable. Your draft is still here." }, 503);
-    if (reserved === false) return reply({ error: "You reached 20 messages today. Try again after midnight UTC." }, 429);
+    if (reserved === false) return reply({ error: "You reached your daily AI message limit. Try again after midnight UTC." }, 429);
 
     answer = generated.answer;
     if (generated.inputTokens !== null && generated.outputTokens !== null) {
