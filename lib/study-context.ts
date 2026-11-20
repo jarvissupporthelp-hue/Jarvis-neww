@@ -50,8 +50,9 @@ export async function loadStudyContext(client: NonNullable<ReturnType<typeof cre
 export function examDateClarification(prompt: string, context: StudyContext) {
   if (context.officialExamDatesAvailable) return null;
 
-  if (/^(?:when (?:is|are)|what (?:date|day) (?:is|are)|what is the date of)\b[^?\n]*\bexams?\b/i.test(prompt)) {
-    return "I don’t have a verified exam date. Which course and exam date should I use? If you don’t know the date yet, check the official course announcement or confirm with your lecturer.";
+  const dateQuestion = /^(?:when (?:is|are)|what (?:date|day) (?:is|are)|what is the date of)\s+(?:(?:my|our|the|next|final)\s+)*(?:[\p{L}\d-]+\s+){0,4}exams?(?:\s+scheduled)?\s*[?.!]?$/iu;
+  if (dateQuestion.test(prompt.trim())) {
+    return "I don’t have a verified exam date for you. Check your official course announcement or ask your lecturer. If you share the date, I can help you plan your revision.";
   }
   return null;
 }
