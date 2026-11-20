@@ -22,7 +22,6 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
   const offering = offeringId ? data?.courses[0] : undefined;
   const tile = "rounded-2xl border border-[var(--stroke)] bg-[var(--panel)] p-4 sm:p-5";
   const link = "inline-block font-semibold underline underline-offset-4";
-  const tab = "inline-flex min-h-11 items-center rounded-lg px-3 font-semibold aria-[current=page]:bg-[var(--panel-raised)]";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -67,18 +66,18 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
       <p><UiText value={copy.failed}/></p><button type="button" className={link} onClick={() => { setResponse(undefined); setAttempt((n) => n + 1); }}><UiText value={copy.retry}/></button>
     </div>}
     {data && !offering && <>
-      <nav className={tile + " flex flex-wrap gap-x-6 gap-y-3"} aria-label={copy.title}>
-        <Link className={tab} href={`/academics?${lang}`} aria-current={page === "overview" ? "page" : undefined}><UiText value={copy.overview}/></Link>
-        <Link className={tab} href={`/academics/courses?${lang}`} aria-current={page === "courses" ? "page" : undefined}><UiText value={copy.courses}/></Link>
-        {data.role !== "admin" && <Link className={tab} href={`/academics/assignments?${lang}`} aria-current={page === "assignments" ? "page" : undefined}><UiText value={copy.assignments}/></Link>}
-        <Link className={link} href={`/account/calendar?${lang}`}><UiText value={copy.calendar}/></Link>
+      <nav className="jarvis-section-nav" aria-label={copy.title}>
+        <Link href={`/academics?${lang}`} aria-current={page === "overview" ? "page" : undefined}><UiText value={copy.overview}/></Link>
+        <Link href={`/academics/courses?${lang}`} aria-current={page === "courses" ? "page" : undefined}><UiText value={copy.courses}/></Link>
+        {data.role !== "admin" && <Link href={`/academics/assignments?${lang}`} aria-current={page === "assignments" ? "page" : undefined}><UiText value={copy.assignments}/></Link>}
+        <Link href={`/account/calendar?${lang}`}><UiText value={copy.calendar}/></Link>
         {data.role === "student" && <>
-          <Link className={link} href={`/account?${lang}`}><UiText value={copy.dashboard}/></Link>
-          <Link className={link} href={`/chat?${lang}`}><UiText value={copy.chat}/></Link>
-          <Link className={link} href="/study-plans"><UiText value={copy.plans}/></Link>
+          <Link href={`/account?${lang}`}><UiText value={copy.dashboard}/></Link>
+          <Link href={`/chat?${lang}`}><UiText value={copy.chat}/></Link>
+          <Link href="/study-plans"><UiText value={copy.plans}/></Link>
         </>}
-        {data.role === "lecturer" && <Link className={link} href="/lecturer"><UiText value={copy.lecturer}/></Link>}
-        {data.role === "admin" && <Link className={link} href={`/account/admin/group?${lang}`}><UiText value={copy.admin}/></Link>}
+        {data.role === "lecturer" && <Link href="/lecturer"><UiText value={copy.lecturer}/></Link>}
+        {data.role === "admin" && <Link href={`/account/admin/group?${lang}`}><UiText value={copy.admin}/></Link>}
       </nav>
       {page !== "assignments" && <section aria-labelledby="portal-courses">
         <h2 id="portal-courses" className="mb-3 text-xl font-semibold"><UiText value={copy.courses}/></h2>

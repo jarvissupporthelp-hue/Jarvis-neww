@@ -118,7 +118,7 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
         </label>
       </div>
     </div>
-    {profile.user && <nav aria-label={t[0]} className="flex flex-wrap gap-2">{["","later","reading","read","liked"].map((v,i)=><button key={v} aria-pressed={shelf===v} onClick={()=>setShelf(v)} className="rounded-full border px-4 py-2 text-sm aria-pressed:bg-emerald-900 aria-pressed:text-white">{i?t[i]:t[5]}</button>)}</nav>}
+    {profile.user && <nav aria-label={t[0]} className="jarvis-section-nav">{["","later","reading","read","liked"].map((v,i)=><button key={v} aria-pressed={shelf===v} onClick={()=>setShelf(v)}>{i?t[i]:t[5]}</button>)}</nav>}
     {profile.notice && <p role="status">{profile.notice}</p>}
     <div className="flex items-center justify-between gap-3 text-sm">
       <p role="status" className="text-slate-600">{copy.books(matches.length)}</p>

@@ -32,24 +32,6 @@
   color: #e2dff6;
 }
 
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.filters a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 7px 13px;
-  border-radius: 10px;
-  border: 1px solid var(--stroke);
-  text-decoration: none;
-  font-size: .875rem;
-  font-weight: 650;
-}
-
 .hub h2 {
   margin: 0 0 4px;
   font-size: 1.4rem;
@@ -59,17 +41,6 @@
 .status {
   margin: 0 0 16px;
   color: var(--muted);
-}
-
-.filters a {
-  color: var(--text);
-  background: var(--panel);
-}
-
-.filters a:hover,
-.filters a[aria-current] {
-  border-color: var(--violet);
-  background: var(--panel-raised);
 }
 
 .games {

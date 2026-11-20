@@ -284,9 +284,8 @@ export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
     <header><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link>
       <h1 id="learning-title" className="mt-2 text-4xl font-semibold"><UiText value="Learning tools"/></h1>
     </header>
-    <nav aria-labelledby="learning-title" className="flex flex-wrap gap-2">
-      {pages.map(([key, label]) => <Link key={key} href={`/learning/${key}`} aria-current={page === key ? "page" : undefined}
-        className={page === key ? button : "ui-action-secondary"}><UiText value={label}/></Link>)}
+    <nav aria-labelledby="learning-title" className="jarvis-section-nav">
+      {pages.map(([key, label]) => <Link key={key} href={`/learning/${key}`} aria-current={page === key ? "page" : undefined}><UiText value={label}/></Link>)}
     </nav>
     {title ? <section className="space-y-4 rounded-xl border border-[#c5d0c6] bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-2xl font-semibold"><UiText value={title}/></h2>

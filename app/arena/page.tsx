@@ -30,7 +30,7 @@ export default async function ArenaPage({ searchParams }: PageProps<"/arena">) {
       <section aria-labelledby="arena-catalogue">
         <h2 id="arena-catalogue"><UiText value={copy.catalogue}/></h2>
         <p className={styles.status}><UiText value={copy.practiceNote}/></p>
-        <nav className={styles.filters} aria-label={copy.subjects}>
+        <nav className="jarvis-section-nav" aria-label={copy.subjects}>
           <Link href={arenaHref(locale)} aria-current={subject === undefined ? "page" : undefined}><UiText value={copy.all}/></Link>
           {arenaDisciplines.map((discipline) => (
             <Link key={discipline} href={arenaHref(locale, discipline)} aria-current={subject === discipline ? "page" : undefined}>

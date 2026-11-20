@@ -411,9 +411,8 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
       <div><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link><h1 className="mt-2 text-4xl font-semibold"><UiText value="Academics"/></h1><p className="mt-1">{"Demo"} {role} {"· Asia/Yerevan"}</p></div>
       <button className="underline" onClick={() => setRole(null)}><UiText value="Sign out"/></button>
     </header>
-    <nav aria-label="Academics" className="flex flex-wrap gap-2 border-b border-[#c5d0c6] pb-4">
+    <nav aria-label="Academics" className="jarvis-section-nav">
       {allowed.map((entry) => <Link key={entry.key} aria-current={page === entry.key ? "page" : undefined}
-        className={`rounded-md px-3 py-2 text-sm font-semibold ${page === entry.key ? "bg-[#234c3c] text-white" : "bg-[#e6eee6]"}`}
         href={entry.key === "overview" ? "/academics/demo" : `/academics/demo/${entry.key}`}>{entry.title}</Link>)}
     </nav>
     {content()}

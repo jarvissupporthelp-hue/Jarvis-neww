@@ -35,9 +35,9 @@ export default async function MathVisualizationPage({ searchParams }: PageProps<
 
     <div className="math-page-topics">
       <div className="math-page-topics-heading"><h2><UiText value={copy.topics}/></h2><Link href="/chat">← <UiText value={copy.back}/></Link></div>
-      <nav aria-label={copy.topics} className="math-topic-list">
-        <Link className={!selected ? "is-selected" : ""} aria-current={!selected ? "page" : undefined} href={href()}><UiText value={copy.all}/></Link>
-        {mathTopics.map((topic) => <Link key={topic.id} href={href(topic.id)} aria-current={selected?.id === topic.id ? "page" : undefined} className={selected?.id === topic.id ? "is-selected" : ""}>
+      <nav aria-label={copy.topics} className="jarvis-section-nav">
+        <Link aria-current={!selected ? "page" : undefined} href={href()}><UiText value={copy.all}/></Link>
+        {mathTopics.map((topic) => <Link key={topic.id} href={href(topic.id)} aria-current={selected?.id === topic.id ? "page" : undefined}>
           <span aria-hidden="true">{topic.symbol}</span>{topic[locale]}
         </Link>)}
       </nav>

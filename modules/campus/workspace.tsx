@@ -82,10 +82,9 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
     <button className={`${button} w-fit`} disabled={pending}>Create pending booking</button>
   </form>;
   return <div className="mt-7 space-y-5">
-    <nav aria-label="Campus tools" className="flex flex-wrap gap-2">
+    <nav aria-label="Campus tools" className="jarvis-section-nav">
       {[...tabs, ...(data?.staff ? ["Staff" as const] : [])].map((item) => <button type="button" key={item}
-        aria-pressed={tab === item} onClick={() => { setTab(item); setSelected(""); setQuery(""); setMessage(""); }}
-        className={tab === item ? button : "rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold"}>
+        aria-pressed={tab === item} onClick={() => { setTab(item); setSelected(""); setQuery(""); setMessage(""); }}>
         {item}
       </button>)}
     </nav>

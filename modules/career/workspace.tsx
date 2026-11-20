@@ -349,8 +349,8 @@ export function CareerWorkspace({ initialJob }: { initialJob?: string }) {
   const review = snapshot && snapshot.role !== "student" ? snapshot.review : undefined;
   const job = postings.find(({ id }) => id === selected);
   return <div className="space-y-5">
-    <nav aria-label="Career tools" className="flex flex-wrap gap-2">{[...sections, ...(review ? ["Review" as const] : [])].map((tab) =>
-      <button key={tab} aria-pressed={section === tab} className={section === tab ? primary : secondary} onClick={() => { setSection(tab); if (tab === "Opportunities") setSelected(""); }}>{tab}</button>
+    <nav aria-label="Career tools" className="jarvis-section-nav">{[...sections, ...(review ? ["Review" as const] : [])].map((tab) =>
+      <button key={tab} aria-pressed={section === tab} type="button" onClick={() => { setSection(tab); if (tab === "Opportunities") setSelected(""); }}>{tab}</button>
     )}</nav>
     {notice && <p role="status" className="rounded-lg bg-slate-100 p-3">{notice} {notice.startsWith("Sign in") && <Link href="/account" className="underline"><UiText value="Open account"/></Link>}</p>}
     {!loading && !snapshot && !notice && <p className="text-sm text-slate-600">Browse sample opportunities, or <Link href="/account" className="underline">sign in</Link> to save your work.</p>}

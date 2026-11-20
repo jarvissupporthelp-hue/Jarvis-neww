@@ -150,9 +150,9 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
         <div className="jarvis-admin-metric"><span><UiText value="Student groups"/></span><strong>{data.groups.length}</strong></div>
         <div className="jarvis-admin-metric"><span>Course offerings</span><strong>{data.offerings.length}</strong></div>
       </div>
-      <nav className="jarvis-admin-tabs" aria-label="Administration sections">
+      <nav className="jarvis-section-nav mt-5" aria-label="Administration sections">
         {adminSections.map((item) => (
-          <Link key={item.id} href={`/account/admin/${item.id}?lang=${locale}`} className="jarvis-admin-tab"
+          <Link key={item.id} href={`/account/admin/${item.id}?lang=${locale}`}
             aria-current={section === item.id ? "page" : undefined}>{item.title}</Link>
         ))}
       </nav>
