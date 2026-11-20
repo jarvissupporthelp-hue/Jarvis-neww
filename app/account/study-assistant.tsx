@@ -1,5 +1,7 @@
 "use client";
-import {UiText} from "@/app/components/interface-language";
+import { Maximize2, Minimize2 } from "lucide-react";
+import styles from "./study-assistant.module.css";
+import {UiText, useInterfaceCopy} from "@/app/components/interface-language";
 
 
 import Link from "next/link";
@@ -19,6 +21,22 @@ const button = "min-h-11 rounded-xl bg-[#214b36] px-4 py-2 font-semibold text-wh
 const field = "w-full rounded-xl border border-[#bbccbc] bg-white p-3 text-[#1e3328] placeholder:text-[#73877a]";
 
 export function StudyAssistant({ offeringId, initialPdfMode = false }: { offeringId?: string; initialPdfMode?: boolean }) {
+  const panel = useRef<HTMLDialogElement>(null);
+  const expandButton = useRef<HTMLButtonElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const translate = useInterfaceCopy();
+  const screenLabel = translate(expanded ? "Exit full screen" : "Full screen");
+
+  function setPanelExpanded(next: boolean) {
+    const dialog = panel.current;
+    if (!dialog) return;
+    dialog.close();
+    if (next) dialog.showModal();
+    else dialog.show();
+    setExpanded(next);
+    expandButton.current?.focus({ preventScroll: true });
+  }
+
   const [threads, setThreads] = useState<Thread[] | null>(null);
   const [selected, setSelected] = useState<Thread | null>(null);
   const [turns, setTurns] = useState<Turn[] | null>(null);
@@ -304,14 +322,18 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
         <summary className="cursor-pointer font-semibold">Conversations, usage & memory</summary>
         <div className="mt-4 max-h-[60dvh] overflow-y-auto">{navigation}</div>
       </details>
-      <section aria-label="Study conversation" className="jarvis-chat-panel flex h-[min(78dvh,820px)] min-h-[540px] min-w-0 flex-col overflow-hidden rounded-3xl border border-[#d7e2d4] bg-white shadow-[0_18px_45px_rgba(30,51,40,0.08)] lg:h-full lg:min-h-0">
+      <dialog open ref={panel} aria-label="Study conversation" onCancel={event => { event.preventDefault(); setPanelExpanded(false); }} className={styles.panel + " jarvis-chat-panel flex h-[min(78dvh,820px)] min-h-[540px] min-w-0 flex-col overflow-hidden rounded-3xl border border-[#d7e2d4] bg-white shadow-[0_18px_45px_rgba(30,51,40,0.08)] lg:h-full lg:min-h-0"}>
         <header className="jarvis-chat-header flex shrink-0 items-center justify-between gap-3 border-b border-[#e8eee6] bg-[#fbfdf9] px-4 py-3 sm:px-6">
           <div className="min-w-0">
-            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#58745f]"><span className="size-2 rounded-full bg-[#64aa70]" /> JARVIS · Study coach</p>
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#58745f]"><span className="size-2 rounded-full bg-[#64aa70]" /> JARVIS AI</p>
             <h2 className="mt-1 truncate text-lg font-semibold sm:text-xl">{selected?.title ?? "Your new conversation"}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {usage && <span className="hidden rounded-full bg-[#e7f1e4] px-3 py-1 text-xs font-semibold text-[#315b3a] sm:block">{usage.remaining} {"messages left"}</span>}
+            <button ref={expandButton} type="button" className={styles.expand} title={screenLabel} aria-label={screenLabel} onClick={() => setPanelExpanded(!expanded)}>
+              {expanded ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
+              <span>{screenLabel}</span>
+            </button>
           </div>
         </header>
         {selected && <details className="shrink-0 border-b border-[#e8eee6] bg-white px-4 py-2 text-sm sm:px-6">
@@ -328,7 +350,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
             </form>
           </div>
         </details>}
-        {error && <p role="alert" className="mx-4 mt-3 shrink-0 rounded-xl border border-[#ebc5b9] bg-[#fff2ed] px-4 py-3 text-sm text-[#9b3d31] sm:mx-6"><UiText value={error}/></p>}
+        {error && !failedPrompt && <p role="alert" className="mx-4 mt-3 shrink-0 rounded-xl border border-[#ebc5b9] bg-[#fff2ed] px-4 py-3 text-sm text-[#9b3d31] sm:mx-6"><UiText value={error}/></p>}
         <ol ref={history} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" tabIndex={0}
           className="jarvis-chat-history min-h-0 flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-6">
           {!selected && <li className="mx-auto flex h-full max-w-md flex-col items-center justify-center text-center">
@@ -387,7 +409,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
               <span><strong><UiText value={"Course sources"}/></strong><small><UiText value={coursePdfSearch ? "Search PDFs only" : "Use general AI"}/></small></span>
               <span className="jarvis-mode-switch" aria-hidden="true"><i /></span>
             </label>
-            <span className="text-xs text-[#708473]">{coursePdfSearch ? "Cited pages · no AI message used" : usage ? usage.remaining + " AI messages left today" : "AI study mode"}</span>
+            {coursePdfSearch && <span className="text-xs text-[#708473]">Cited pages · no AI message used</span>}
           </div>
           <label className="sr-only" htmlFor="study-question">Study question</label>
           <textarea id="study-question" className={field + " jarvis-chat-input block max-h-40 min-h-20 resize-y"} rows={2} maxLength={MAX_STUDY_PROMPT} required
@@ -415,7 +437,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           </div>
           <p role="status" className="sr-only">{sendStatus}</p>
         </form> : <p className="shrink-0 border-t border-[#e4ece2] px-5 py-4 text-center text-sm text-[#647868]">Create a conversation to start chatting.</p>}
-      </section>
+      </dialog>
     </div>
   </div>;
 }

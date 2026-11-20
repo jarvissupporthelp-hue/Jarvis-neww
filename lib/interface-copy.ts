@@ -1,4 +1,6 @@
 export const interfaceCopy: Record<string, readonly [string,string,string]> = {
+"Full screen":["Ամբողջ էկրանով","Plein écran","На весь экран"],
+"Exit full screen":["Դուրս գալ ամբողջ էկրանից","Quitter le plein écran","Выйти из полноэкранного режима"],
 "Expand timer":["Մեծացնել ժամաչափը","Agrandir le minuteur","Развернуть таймер"],
 "Close timer view":["Փակել մեծացված տեսքը","Fermer la vue agrandie","Свернуть таймер"],
 "The AI Gateway denied this deployment. Add an AI Gateway API key to the server settings, then redeploy. Your draft is still here.":["AI ծառայությունը մերժեց հարցումը։ Ադմինիստրատորը պետք է կարգավորի ծառայության հասանելիությունը։ Ձեր սևագիրը պահպանված է այս պատուհանում։","Le service d’IA a refusé la demande. Un administrateur doit vérifier son accès. Votre brouillon reste dans cette fenêtre.","Сервис ИИ отклонил запрос. Администратору нужно проверить доступ. Ваш черновик остался в этом окне."],

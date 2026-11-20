@@ -1,0 +1,45 @@
+.panel {
+  position: relative;
+  inset: auto;
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+}
+.panel:modal {
+  position: fixed;
+  inset: 0;
+  height: 100dvh;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+:global(body):has(.panel:modal) { overflow: hidden; }
+.panel:modal > * { padding-inline: max(1rem, calc((100% - 54rem) / 2)); }
+.panel > details[open] { max-height: 34dvh; overflow-y: auto; }
+.panel :global(.jarvis-chat-history) { overscroll-behavior: contain; }
+.panel :global(.jarvis-chat-history) > li { max-width: 54rem; margin-inline: auto; }
+.expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-width: 44px;
+  min-height: 44px;
+  padding-inline: .75rem;
+  border: 1px solid var(--stroke);
+  border-radius: .75rem;
+  background: var(--panel);
+  color: var(--text);
+  font-size: .8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.expand:hover { background: var(--highlight); }
+.expand:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+@media (max-width: 560px) {
+  .expand span { display: none; }
+  .panel:modal :global(.jarvis-chat-input) { font-size: 16px; }
+}
