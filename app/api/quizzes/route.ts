@@ -1,5 +1,6 @@
 import { authorize } from "@/lib/authorization";
-import { quizQuestions, gradeQuiz } from "@/lib/course-quizzes";
+import { quizQuestions, gradeQuiz, publicQuizQuestions, gradeQuestions } from "@/lib/course-quizzes";
+import { practiceQuestions } from "@/lib/practice-quiz-questions";
 import { createStudyClient } from "@/lib/study-context";
 
 type Course = { id: string; code: string; name: string; semester: string };
@@ -22,6 +23,11 @@ async function loadCourses(request: Request) {
 }
 
 export async function GET(request: Request) {
+  const practiceId = new URL(request.url).searchParams.get("practice");
+  if (practiceId !== null) {
+    const questions = publicQuizQuestions(practiceQuestions(practiceId));
+    return questions ? reply({ questions }) : reply({ error: "Practice quiz not found." }, 404);
+  }
   const courses = await loadCourses(request);
   if (courses instanceof Response) return courses;
   return reply({
@@ -33,9 +39,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const input = await request.json().catch(() => null);
+  if (typeof input?.practiceId === "string") {
+    const questions = practiceQuestions(input.practiceId);
+    if (!questions) return reply({ error: "Practice quiz not found." }, 404);
+    const result = gradeQuestions(questions, input.answers);
+    return result ? reply(result) : reply({ error: "Choose one answer for each question and submit again." }, 400);
+  }
   const courses = await loadCourses(request);
   if (courses instanceof Response) return courses;
-  const input = await request.json().catch(() => null);
   const course = courses.find((item) => item.id === input?.offeringId);
   if (!course) return reply({ error: "Quiz not available for this course." }, 404);
   const result = gradeQuiz(course.code, input.answers);

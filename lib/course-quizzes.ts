@@ -1,4 +1,4 @@
-type Question = {
+export type Question = {
   id: string;
   topic: string;
   prompt: string;
@@ -52,11 +52,18 @@ const banks: ReadonlyMap<string, readonly Question[]> = new Map([
 ]);
 
 export function quizQuestions(code: string) {
-  return banks.get(code)?.map(({ id, topic, prompt, options }) => ({ id, topic, prompt, options }));
+  return publicQuizQuestions(banks.get(code));
+}
+
+export function publicQuizQuestions(questions: readonly Question[] | undefined) {
+  return questions?.map(({ id, topic, prompt, options }) => ({ id, topic, prompt, options }));
 }
 
 export function gradeQuiz(code: string, answers: unknown) {
-  const questions = banks.get(code);
+  return gradeQuestions(banks.get(code), answers);
+}
+
+export function gradeQuestions(questions: readonly Question[] | undefined, answers: unknown) {
   if (!questions || !Array.isArray(answers) || answers.length !== questions.length) return null;
   if (questions.some((question, index) => {
     const answer = answers[index];

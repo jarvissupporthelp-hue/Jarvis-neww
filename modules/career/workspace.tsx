@@ -14,7 +14,7 @@ import { canonicalSkill, cvFields, newProfile, portfolioScore, sampleCv, stages,
 const panel = "rounded-2xl border border-slate-200 bg-white p-5";
 const field = "mt-1 block w-full rounded-lg border border-slate-300 bg-white p-2.5 text-sm";
 const primary = "inline-block rounded-lg bg-[#214c3b] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50";
-const secondary = "inline-block rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold disabled:opacity-50";
+const secondary = "ui-action-secondary";
 const sections = ["Opportunities", "Applications", "CV builder", "Skill portfolio"] as const;
 type Section = typeof sections[number] | "Review";
 type Posting = typeof postings[number];
@@ -123,7 +123,7 @@ function Job({ job, profile, save, pending }: { job: Posting; profile: Profile; 
 function Board({ profile, save, pending }: { profile: Profile; save: Save; pending: boolean }) {
   return <section className="space-y-4">
     <h2 className="text-xl font-semibold">Application board</h2>
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{stages.map((stage) => <div key={stage} className="min-w-0 rounded-xl bg-slate-100 p-3">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{stages.map((stage) => <div key={stage} className="min-w-0 rounded-xl border border-[var(--stroke)] bg-[var(--panel-raised)] p-3">
       <h3 className="mb-3 font-semibold capitalize">{stage}</h3>
       {Object.entries(profile.applications).filter(([, value]) => value.stage === stage).map(([id, value]) => <form key={id} className={`${panel} mb-3 space-y-2 !p-3`} onSubmit={(event) => void save({ ...formValues(event), action: "application", id })}>
         <Link href={`/career/${id}`} className="font-semibold underline">{postings.find((job) => job.id === id)?.title}</Link>
