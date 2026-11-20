@@ -1,4 +1,5 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
 
 import { useState } from "react";
 import { button, field, useLearningData } from "./storage";
@@ -20,7 +21,7 @@ export function CodeTrace() {
   const challenge = challenges[index];
   return <div className="space-y-4">
     <p>{"Predict the console output before running the code."} {solved.length}/{challenges.length} {"solved."}</p>
-    <label>Challenge <select className={field} value={index} onChange={(event) => {
+    <label><UiText value="Challenge"/> <select className={field} value={index} onChange={(event) => {
       setIndex(Number(event.target.value)); setAnswer(""); setCorrect(null);
     }}>{challenges.map(({ title }, position) => <option key={title} value={position}>{title}</option>)}</select></label>
     <pre className="overflow-x-auto rounded bg-[#1e3328] p-4 text-white"><code>{challenge.code}</code></pre>
@@ -29,8 +30,8 @@ export function CodeTrace() {
       const matches = answer.trim() === challenge.answer;
       setCorrect(matches);
       if (matches && !solved.includes(index)) setSolved([...solved, index]);
-    }}><label>Console output <input className={field} value={answer} onChange={(event) => setAnswer(event.target.value)} required /></label>
-      <button className={button}>Check output</button>
+    }}><label><UiText value="Console output"/> <input className={field} value={answer} onChange={(event) => setAnswer(event.target.value)} required /></label>
+      <button className={button}><UiText value="Check output"/></button>
     </form>
     {correct !== null && <p role="status">{correct ? `Correct. ${challenge.why}` : "Try again. Trace one line at a time."}</p>}
   </div>;

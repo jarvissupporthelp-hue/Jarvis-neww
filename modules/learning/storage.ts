@@ -23,5 +23,5 @@ export function useLearningData<T>(key: string, initial: T) {
   return [JSON.parse(value) as T, save] as const;
 }
 
-export const field = "rounded-md border border-[#a6b8aa] bg-white px-3 py-2";
-export const button = "rounded-md bg-[#234c3c] px-4 py-2 font-semibold text-white disabled:opacity-50";
+export const field = "rounded-lg border border-[var(--stroke)] bg-[var(--panel-raised)] px-3 py-2 text-[var(--text)]";
+export const button = "inline-flex min-h-11 items-center justify-center rounded-lg bg-[#5338b2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#49319e] disabled:opacity-50";

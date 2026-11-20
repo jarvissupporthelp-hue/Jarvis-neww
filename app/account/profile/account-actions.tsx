@@ -30,5 +30,21 @@ export function AccountActions({language}:{language:WorkspaceLanguage}) {
   try{const {error}=await getClient().auth.signOut({scope:"local"});if(error)throw error;location.replace("/account");}
   catch{setMessage(t[6]);setBusy(false);}
  }
- return <section className="space-y-4 border-t pt-5"><form onSubmit={change}><fieldset disabled={busy} className="space-y-3"><legend className="font-semibold">{t[0]}</legend>{[["current",t[1],"current-password"],["new",t[2],"new-password"]].map(([name,title,complete])=><label className="block" key={name}>{title}<input className="block w-full rounded border p-2" type="password" name={name} autoComplete={complete} required minLength={name==="new"?8:1}/></label>)}<button className="jarvis-primary-button">{t[0]}</button></fieldset></form><p role="status">{message}</p><button disabled={busy} onClick={logout} className="underline">{t[5]}</button></section>;
+ return <section className="jarvis-panel space-y-5" aria-labelledby="password-heading">
+  <h2 id="password-heading" className="text-lg font-semibold">{t[0]}</h2>
+  <form onSubmit={change}>
+    <fieldset disabled={busy} className="grid min-w-0 gap-4">
+      {[["current", t[1], "current-password"], ["new", t[2], "new-password"]].map(([name, title, complete]) =>
+        <label className="grid gap-2" key={name}>
+          {title}
+          <input className="w-full" type="password" name={name} autoComplete={complete} required minLength={name === "new" ? 8 : 1}/>
+        </label>)}
+      <button type="submit" className="ui-action-secondary justify-self-start">{t[0]}</button>
+    </fieldset>
+  </form>
+  {message && <p role="status" className="text-sm text-[var(--muted)]">{message}</p>}
+  <div className="border-t pt-4">
+    <button type="button" disabled={busy} onClick={logout} className="ui-action-secondary">{t[5]}</button>
+  </div>
+ </section>;
 }
