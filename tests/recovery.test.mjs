@@ -93,7 +93,10 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
     insert: (turn) => { turns.push(turn); return query; },
     single: () => ({ data: turns.at(-1) }),
   };
-  doubles.chat = { from: (table) => table === "student_ai_preferences" ? { select: () => ({ eq: () => ({ maybeSingle: () => ({ data: { preferred_color: turns.findLast(row => row.profile_field === "preferredColor")?.profile_value } }) }) }) } : query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
+  doubles.chat = { from: (table) => table === "memberships" ? { select: () => ({ eq: (column, value) => {
+    assert.equal(column, "user_id"); assert.equal(value, "student");
+    return { maybeSingle: () => ({ data: { profile: { display_name: "Demo Student" }, group: { code: "LAW-Y2", academic_year: 2, program: { faculty: { name: "Law" } } } } }) };
+  } }) } : table === "student_ai_preferences" ? { select: () => ({ eq: () => ({ maybeSingle: () => ({ data: { preferred_color: turns.findLast(row => row.profile_field === "preferredColor")?.profile_value } }) }) }) } : query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
   doubles.ai = () => null;
   const body = { prompt: "Explain routing", conversationId: id, consent: true };
   const failure = await chat(post(body));
@@ -101,7 +104,13 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
   assert.match((await failure.json()).error, /draft is still here/);
   assert.deepEqual(turns, []);
   assert.deepEqual(rpcCalls, ["search_course_pdf_pages"]);
-  doubles.ai = () => ({ answer: "Routers forward packets.", inputTokens: null, outputTokens: null });
+  doubles.ai = (_prompt, _credential, _history, context) => {
+    assert.equal(context.studentProfile.displayName, "Demo Student");
+    assert.equal(context.studentProfile.academicYear, 2);
+    assert.equal(context.studentProfile.faculty, "Law");
+    assert.equal(context.studentProfile.group, "LAW-Y2");
+    return { answer: "Routers forward packets.", inputTokens: null, outputTokens: null };
+  };
   assert.equal((await chat(post(body))).status, 200);
   assert.deepEqual(turns, [{ conversation_id: id, prompt: body.prompt, answer: "Routers forward packets." }]);
   assert.deepEqual(rpcCalls, ["search_course_pdf_pages", "search_course_pdf_pages", "reserve_chat_attempt"]);

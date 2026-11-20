@@ -79,11 +79,17 @@ export async function POST(request: Request) {
   const deadlines = assignmentDeadlines(supabase).gte("due_on", context.from).lte("due_on", context.through);
   const profilesQuery = supabase.from("professor_ai_profiles")
     .select("professor_name,course_plan,teaching_style,explanation_preferences,assessment_style,course_rules,offering:course_offerings!inner(course:courses!inner(code,name))");
-  const [profileResult, memoryResult, deadlineResult] = await Promise.all([
+  const [profileResult, memoryResult, deadlineResult, enrollment] = await Promise.all([
     offeringId ? profilesQuery.eq("offering_id", offeringId) : profilesQuery,
     supabase.from("student_ai_preferences")
       .select("learning_preferences,current_goal,topics_to_practice,preferred_color,interest").eq("student_id", caller.userId).maybeSingle(),
     (offeringId ? deadlines.eq("offering_id", offeringId) : deadlines).limit(12).returns<AssignmentDeadline[]>(),
+    supabase.from("memberships")
+      .select("profile:profiles!memberships_user_id_fkey(display_name),group:student_groups(code,academic_year,program:programs(faculty:faculties(name)))")
+      .eq("user_id", caller.userId).maybeSingle<{
+        profile: { display_name: string } | null;
+        group: { code: string; academic_year: number; program: { faculty: { name: string } | null } | null } | null;
+      }>(),
   ]);
   if (deadlineResult.data && !deadlineResult.error) {
     context.officialDeadlinesAvailable = true;
@@ -133,7 +139,16 @@ export async function POST(request: Request) {
   const update = profileUpdate(prompt);
   if (update) preferences[update.profile_field] = update.profile_value;
   const memory = colorMemory(prompt, preferences.preferredColor);
-  context.studentProfile = { identity: studentIdentity(caller.email), preferences };
+  const group = enrollment.data?.group;
+  const inferred = studentIdentity(caller.email);
+  context.studentProfile = {
+    displayName: enrollment.data?.profile?.display_name,
+    group: group?.code,
+    academicYear: group?.academic_year,
+    faculty: group?.program?.faculty?.name ?? inferred?.faculty,
+    identity: inferred && { givenName: inferred.givenName, surname: inferred.surname },
+    preferences,
+  };
   let answer = memory.answer ?? examDateClarification(prompt, context) ?? directoryAnswer(prompt);
   if (!answer) {
     const provider = resolveProviderAccess(request);

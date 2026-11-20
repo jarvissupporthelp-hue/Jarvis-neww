@@ -14,7 +14,14 @@ export type StudyContext = {
   courseDeadlines?: { course: string; title: string; date: string; time: string }[];
   officialDeadlinesAvailable: boolean;
   officialExamDatesAvailable: boolean;
-  studentProfile?: { identity?: ReturnType<typeof import("./student-profile").studentIdentity>; preferences: Record<string, string> };
+  studentProfile?: {
+    displayName?: string;
+    identity?: { givenName: string; surname: string };
+    faculty?: string;
+    academicYear?: number;
+    group?: string;
+    preferences: Record<string, string>;
+  };
   studentMemory?: { learningPreferences: string; currentGoal: string; topicsToPractice: string };
   professorProfiles?: {
     professorName: string;
