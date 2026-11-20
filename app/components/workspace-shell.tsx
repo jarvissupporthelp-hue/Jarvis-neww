@@ -3,6 +3,7 @@ import {UiText} from "@/app/components/interface-language";
 
 
 import { InterfaceLanguage } from "./interface-language";
+import { ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
@@ -39,64 +40,134 @@ function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-type NavItem = { href: string; label: string; icon: IconName; nested?: boolean };
+type NavItem = { href: string; label: string; icon: IconName; children?: NavItem[] };
 
 const prefetchedRoutes = new Set(["/account", "/account/calendar", "/chat", "/lecturer"]);
-
-const libraryNav: NavItem[] = [
-  { href: "/library", label: "Library", icon: "courses" },
-  { href: "/library/digital", label: "Digital Library", icon: "courses", nested: true },
-  { href: "/library/loans", label: "My loans", icon: "courses", nested: true },
-  { href: "/library/physical", label: "Physical Library", icon: "courses", nested: true },
-];
+const libraryNav: NavItem = { href: "/library", label: "Library", icon: "courses", children: [
+    { href: "/library/digital", label: "Digital Library", icon: "courses" },
+    { href: "/library/physical", label: "Physical Library", icon: "courses" },
+    { href: "/library/loans", label: "My loans", icon: "courses" },
+  ] };
 
 const studentNav: NavItem[] = [
   { href: "/account", label: "My day", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
-  { href: "/academics", label: "Academics", icon: "courses" },
-  { href: "/learning", label: "Learning tools", icon: "plans" },
-  { href: "/arena", label: "Arena", icon: "arena" },
+  { href: "/academics", label: "Academics", icon: "courses", children: [
+    { href: "/academics", label: "Overview", icon: "courses" },
+    { href: "/academics/courses", label: "Courses", icon: "courses" },
+    { href: "/academics/assignments", label: "Assignments", icon: "tasks" },
+  ] },
+  { href: "/learning", label: "Learning tools", icon: "plans", children: [
+    { href: "/learning", label: "Overview", icon: "plans" },
+    { href: "/study-plans", label: "Study plans", icon: "plans" },
+    { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
+    { href: "/focus", label: "Focus timer", icon: "focus" },
+  ] },
+  { href: "/arena", label: "Arena", icon: "arena", children: [
+    { href: "/arena", label: "Games", icon: "arena" },
+    { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
+  ] },
   { href: "/campus", label: "Campus resources", icon: "layers" },
-  ...libraryNav,
+  libraryNav,
   { href: "/career", label: "Career", icon: "users" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
-  { href: "/study-plans", label: "Study plans", icon: "plans" },
-  { href: "/chat", label: "AI Agent", icon: "chat" },
-  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math", nested: true },
-  { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
-  { href: "/focus", label: "Focus timer", icon: "focus" },
-];
-const lecturerNav: NavItem[] = [
-  { href: "/dashboard", label: "University hub", icon: "dashboard" },
-  { href: "/academics", label: "Academics", icon: "layers" },
-  { href: "/arena", label: "Arena", icon: "arena" },
-  { href: "/campus", label: "Campus resources", icon: "layers" },
-  ...libraryNav,
-  { href: "/career", label: "Career", icon: "users" },
-  { href: "/lecturer", label: "My courses", icon: "courses" },
-  { href: "/account/calendar", label: "Timetable", icon: "calendar" },
-  { href: "/resources", label: "Course resources", icon: "layers" },
-  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
-];
-const adminNav: NavItem[] = [
-  { href: "/account", label: "Administration", icon: "dashboard" },
-  { href: "/dashboard", label: "University hub", icon: "layers" },
-  { href: "/academics", label: "Academic tools", icon: "courses" },
-  { href: "/arena", label: "Arena", icon: "arena" },
-  { href: "/campus", label: "Campus resources", icon: "layers" },
-  ...libraryNav,
-  { href: "/career", label: "Career", icon: "users" },
-  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
-  { href: "/account/admin/users", label: "Users & access", icon: "users" },
-  { href: "/account/admin/group", label: "Student groups", icon: "layers" },
-  { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },
-  { href: "/account/admin/course", label: "Courses", icon: "courses" },
-  { href: "/account/admin/offering", label: "Course offerings", icon: "plans" },
-  { href: "/account/admin/timetable", label: "Timetable", icon: "calendar" },
-  { href: "/account/admin/audit", label: "Audit history", icon: "shield" },
+  { href: "/chat", label: "AI Agent", icon: "chat", children: [
+    { href: "/chat", label: "AI chat", icon: "chat" },
+    { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
+  ] },
 ];
 
+const lecturerNav: NavItem[] = [
+  { href: "/dashboard", label: "University hub", icon: "dashboard" },
+  { href: "/academics", label: "Academics", icon: "layers", children: [
+    { href: "/academics", label: "Overview", icon: "layers" },
+    { href: "/academics/courses", label: "Courses", icon: "courses" },
+    { href: "/academics/assignments", label: "Assignments", icon: "tasks" },
+    { href: "/lecturer", label: "My courses", icon: "courses" },
+    { href: "/resources", label: "Course resources", icon: "layers" },
+  ] },
+  { href: "/arena", label: "Arena", icon: "arena", children: [
+    { href: "/arena", label: "Games", icon: "arena" },
+    { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
+  ] },
+  { href: "/campus", label: "Campus resources", icon: "layers" },
+  libraryNav,
+  { href: "/career", label: "Career", icon: "users" },
+  { href: "/account/calendar", label: "Timetable", icon: "calendar" },
+  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
+];
+
+const adminNav: NavItem[] = [
+  { href: "/account", label: "Administration", icon: "dashboard", children: [
+    { href: "/account", label: "Overview", icon: "dashboard" },
+    { href: "/account/admin/users", label: "Users & access", icon: "users" },
+    { href: "/account/admin/group", label: "Student groups", icon: "layers" },
+    { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },
+    { href: "/account/admin/course", label: "Courses", icon: "courses" },
+    { href: "/account/admin/offering", label: "Course offerings", icon: "plans" },
+    { href: "/account/admin/timetable", label: "Timetable", icon: "calendar" },
+    { href: "/account/admin/audit", label: "Audit history", icon: "shield" },
+  ] },
+  { href: "/dashboard", label: "University hub", icon: "layers" },
+  { href: "/academics", label: "Academic tools", icon: "courses", children: [
+    { href: "/academics", label: "Overview", icon: "courses" },
+    { href: "/academics/courses", label: "Courses", icon: "courses" },
+    { href: "/academics/assignments", label: "Assignments", icon: "tasks" },
+  ] },
+  { href: "/arena", label: "Arena", icon: "arena", children: [
+    { href: "/arena", label: "Games", icon: "arena" },
+    { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
+  ] },
+  { href: "/campus", label: "Campus resources", icon: "layers" },
+  libraryNav,
+  { href: "/career", label: "Career", icon: "users" },
+  { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
+];
+
+function WorkspaceNavigation({ items, pathname, language, onNavigate }: {
+  items: NavItem[]; pathname: string; language: WorkspaceLanguage; onNavigate: () => void;
+}) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const links = items.flatMap(item => item.children ?? [item]);
+  const current = links.filter(link => pathname === link.href || pathname.startsWith(link.href + "/"))
+    .sort((a,b) => b.href.length - a.href.length)[0];
+  const renderLink = (item: NavItem, nested = false) => <Link key={item.href} href={item.href}
+    prefetch={current === item ? false : prefetchedRoutes.has(item.href) || undefined}
+    aria-current={current === item ? "page" : undefined}
+    className={"jarvis-side-link" + (current === item ? " is-active" : "") + (nested ? " is-nested" : "")}
+    onClick={onNavigate}><Icon name={item.icon}/><span>{workspaceText(language,item.label)}</span></Link>;
+  return <nav aria-label={workspaceText(language,"Workspace")} className="jarvis-side-links">{items.map(item => {
+    if (!item.children) return renderLink(item);
+    const active = item.children.some(child => child === current);
+    const open = expanded[item.href] ?? active;
+    const id = "subnav-" + item.href.slice(1);
+    return <div key={item.href}>
+      <button type="button" className={"jarvis-side-link nav-group" + (active ? " active-group" : "")}
+        aria-expanded={open} aria-controls={id} onClick={() => setExpanded({...expanded,[item.href]:!open})}>
+        <Icon name={item.icon}/><span>{workspaceText(language,item.label)}</span><ChevronDown size={15} className="nav-chevron"/>
+      </button>
+      <div className="nav-disclosure" data-open={open} inert={!open} id={id}><div>
+        {item.children.map(child => renderLink(child,true))}
+      </div></div>
+    </div>;
+  })}</nav>;
+}
+
+function mobileSnapshot() { return window.matchMedia("(max-width:740px)").matches; }
+function subscribeMobile(change: () => void) {
+  const query = window.matchMedia("(max-width:740px)");
+  query.addEventListener("change",change);
+  return () => query.removeEventListener("change",change);
+}
+function sidebarSnapshot() {
+  try { return localStorage.getItem("jarvis-sidebar-hidden") === "true"; } catch { return false; }
+}
+function subscribeSidebar(change: () => void) {
+  window.addEventListener("jarvis-sidebar",change);
+  window.addEventListener("storage",change);
+  return () => { window.removeEventListener("jarvis-sidebar",change); window.removeEventListener("storage",change); };
+}
 function ThemeSelector({ theme, onChange }: { theme: Theme; onChange: (theme: Theme) => void }) {
   const options: { value: Theme; name: string; icon: IconName }[] = [
     { value: "dark", name: "Dark", icon: "moon" },
@@ -136,6 +207,25 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const drawerOpen = drawerPath === pathname;
   const menuButton = useRef<HTMLButtonElement>(null);
+  const mobile = useSyncExternalStore(subscribeMobile,mobileSnapshot,() => false);
+  const savedHidden = useSyncExternalStore(subscribeSidebar,sidebarSnapshot,() => false);
+  const [fallbackHidden,setFallbackHidden] = useState(false);
+  const hidden = savedHidden || fallbackHidden;
+  const sidebarOpen = mobile ? drawerOpen : !hidden;
+  const closeButton = useRef<HTMLButtonElement>(null);
+  function toggleSidebar() {
+    if (mobile) setDrawerPath(drawerOpen ? null : pathname);
+    else {
+      try {
+        localStorage.setItem("jarvis-sidebar-hidden", String(!hidden));
+        window.dispatchEvent(new Event("jarvis-sidebar"));
+      } catch { setFallbackHidden(!hidden); }
+    }
+    if (sidebarOpen) menuButton.current?.focus();
+  }
+  useEffect(() => {
+    if (mobile && drawerOpen) closeButton.current?.focus();
+  }, [mobile, drawerOpen]);
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "dark");
 
   useEffect(() => {
@@ -212,7 +302,6 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
 
   const isLanding = pathname === "/";
   const items = role === "admin" ? adminNav : role === "lecturer" ? lecturerNav : studentNav;
-  const currentLink = items.findLast(({ href }) => pathname === href || pathname.startsWith(href + "/"));
   const workspace = !isLanding && role !== null;
   const roleName = role === "admin" ? "Administration" : role === "lecturer" ? "Lecturer workspace" : "Student workspace";
   return (
@@ -221,9 +310,9 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
       <a className="jarvis-skip-link" href="#jarvis-main-content"><UiText value={"Skip to main content"}/></a>
       <header className="jarvis-topbar">
         <div className="jarvis-topbar-start">
-          {workspace && <button ref={menuButton} className="jarvis-mobile-menu" aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
-            aria-controls="jarvis-workspace-navigation" aria-expanded={drawerOpen} type="button"
-            onClick={() => setDrawerPath(drawerOpen ? null : pathname)}><Icon name={drawerOpen ? "close" : "menu"}/></button>}
+          {workspace && <button ref={menuButton} className="jarvis-nav-control" aria-label={tr(sidebarOpen ? "Close navigation" : "Open navigation")}
+            aria-controls="jarvis-workspace-navigation" aria-expanded={sidebarOpen} type="button"
+            onClick={toggleSidebar}>{sidebarOpen ? <PanelLeftClose size={19}/> : <PanelLeftOpen size={19}/>}</button>}
           <Link href="/" className="jarvis-brand" aria-label="JARVIS home">
             <span className="jarvis-brand-symbol"><span>J</span></span>
             <span className="jarvis-brand-text">JARVIS<small>ACADEMIC WORKSPACE</small></span>
@@ -238,29 +327,19 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
           {role && <Link href="/account/profile" className="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full" aria-label={tr("Profile")} title={tr("Profile")}><Avatar value={preferences.avatar || "👤"}/></Link>}
         </div>
       </header>
-      <div className="jarvis-shell-body">
+      <div className="jarvis-shell-body" data-collapsed={hidden}>
         {workspace && <>
-          {drawerOpen && <button className="jarvis-drawer-overlay" type="button" aria-label="Close navigation" onClick={() => setDrawerPath(null)}/>}
-          <aside id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
+          {drawerOpen && <button className="jarvis-drawer-overlay" type="button" aria-label={tr("Close navigation")} onClick={toggleSidebar}/>}
+          <aside inert={!sidebarOpen} id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
             <div className="jarvis-sidebar-content">
-              <div className="jarvis-sidebar-eyebrow">{tr("Workspace")}</div>
-              <div className="jarvis-sidebar-title">{tr(roleName)}</div>
-              <nav aria-label="Main navigation" className="jarvis-side-links">
-                {items.map((item) => {
-                  const current = currentLink?.href === item.href;
-                  return <Link key={item.href} href={item.href} prefetch={current ? false : prefetchedRoutes.has(item.href) ? true : undefined} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onNavigate={() => setDrawerPath(null)}>
-                    <Icon name={item.icon}/><span>{tr(item.label)}</span>
-                  </Link>;
-                })}
-              </nav>
-            </div>
-            <div className="jarvis-sidebar-foot">
-              <div className="jarvis-sidebar-foot-mark">✦</div>
-              <div><strong>Designed for learning</strong><span>One workspace. More clarity.</span></div>
+              <div className="nav-sidebar-heading"><strong>{tr(roleName)}</strong>
+                <button type="button" ref={closeButton} className="jarvis-nav-control" onClick={toggleSidebar} aria-label={tr("Close navigation")} title={tr("Close navigation")}><PanelLeftClose size={18}/></button>
+              </div>
+              <WorkspaceNavigation key={role + pathname} items={items} pathname={pathname} language={preferences.language} onNavigate={() => setDrawerPath(null)}/>
             </div>
           </aside>
         </>}
-        <div id="jarvis-main-content" tabIndex={-1} className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>{children}</div>
+        <div id="jarvis-main-content" inert={workspace && mobile && drawerOpen} tabIndex={-1} className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>{children}</div>
       </div>
     </div>
     </InterfaceLanguage.Provider>

@@ -789,3 +789,29 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
 .jarvis-section-nav > :is([aria-current="page"], [aria-pressed="true"]):hover {
   background: #1e4033;
 }
+
+.jarvis-nav-control { display:grid; place-items:center; flex:none; width:40px; height:40px; color:var(--muted); border:1px solid var(--stroke); border-radius:10px; background:var(--panel); }
+.jarvis-nav-control:hover { color:var(--text); background:var(--panel-raised); }
+.nav-sidebar-heading { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:0 2px 16px 10px; }
+.nav-group { width:100%; text-align:start; }
+.nav-group.active-group { color:var(--text); font-weight:650; }
+.nav-chevron { margin-inline-start:auto; flex:none; transition:transform .2s ease; }
+.nav-group[aria-expanded=true] .nav-chevron { transform:rotate(180deg); }
+.nav-disclosure { display:grid; grid-template-rows:0fr; opacity:0; transition:grid-template-rows .22s ease,opacity .18s ease; }
+.nav-disclosure[data-open=true] { grid-template-rows:1fr; opacity:1; }
+.nav-disclosure > div { min-height:0; overflow:hidden; }
+.jarvis-sidebar { overflow-x:hidden; transition:flex-basis .24s ease,width .24s ease,padding .24s ease; }
+.jarvis-main-area.has-sidebar { flex:1; min-width:0; }
+@media(min-width:741px) {
+  .jarvis-shell-body[data-collapsed=true] .jarvis-sidebar { flex-basis:0; width:0; padding-inline:0; border:0; overflow:hidden; }
+  .jarvis-sidebar-content { min-width:184px; }
+}
+@media(max-width:740px) {
+  .jarvis-sidebar { transform:translateX(-101%); transition:transform .22s ease,visibility 0s .22s; }
+  .jarvis-sidebar.is-open { transform:translateX(0); transition-delay:0s; }
+  .jarvis-drawer-overlay { animation:jarvis-overlay-in .18s ease; }
+}
+@keyframes jarvis-overlay-in { from { opacity:0; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) {
+  .jarvis-sidebar,.nav-chevron,.nav-disclosure,.jarvis-drawer-overlay { transition:none; animation:none; }
+}
