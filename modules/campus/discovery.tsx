@@ -1,5 +1,5 @@
 "use client";
-import {UiText} from "@/app/components/interface-language";
+import {UiText, useInterfaceCopy} from "@/app/components/interface-language";
 
 
 import { BookOpen } from "lucide-react";
@@ -14,42 +14,81 @@ const subjects = ["Computer Networks", "Applied Mathematics", "Algorithms", "Fre
 const times = [540, 630, 720, 840, 930, 1020];
 const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
+const floorLabels = ["First floor", "Second floor", "Third floor", "Fourth floor", "Fifth floor", "Sixth floor"];
+const imaRoomCounts = [4, 5, 4];
+
 export function RoomSimulation() {
-  const [building, setBuilding] = useState("A");
+  const t = useInterfaceCopy();
+  const [building, setBuilding] = useState("main");
   const [floor, setFloor] = useState(1);
   const [weekday, setWeekday] = useState(0);
   const [slot, setSlot] = useState(1);
-  const rooms = Array.from({ length: 3 }, (_, index) => {
-    const rotation = weekday + index + floor + (building === "B" ? 1 : 0);
-    const busy = (rotation + slot) % 3 !== 0;
-    return { id: `${building}-${floor}0${index + 1}`, busy, subject: subjects[(rotation + slot) % subjects.length], seats: (index + 1) * 6 };
+  const isIma = building === "ima";
+  const rooms = Array.from({ length: isIma ? imaRoomCounts[floor - 1] : 6 }, (_, index) => {
+    const rotation = weekday + index + floor + (isIma ? 1 : 0);
+    const roomNumber = floor * 100 + index + 1;
+    const isHall = isIma && roomNumber === 301;
+    const office = isIma
+      ? roomNumber === 304 ? "Dean’s office" : null
+      : floor === 1 ? "Administrative and dean’s offices" : null;
+    return {
+      label: isHall ? "IAPI HALL" : String(roomNumber),
+      isHall,
+      office,
+      busy: (rotation + slot) % 3 !== 0,
+      subject: subjects[(rotation + slot) % subjects.length],
+    };
   });
+
   return <section className="space-y-5">
     <div className={panel}>
-      <h2 className="text-xl font-semibold"><UiText value={"Classroom occupancy"}/></h2>
-      <p className="mb-4 mt-1 text-sm text-slate-600">Simulated teaching timetable · Asia/Yerevan. Change the day or class period to see which rooms are busy.</p>
-      <div className="grid gap-3 sm:grid-cols-4">
-        <label><UiText value="Building"/> <select className={input} value={building} onChange={(e) => setBuilding(e.target.value)}><option value="A"><UiText value={"Main Building"}/></option><option value="B"><UiText value={"Science Building"}/></option></select></label>
-        <label><UiText value={"Floor"}/> <select className={input} value={floor} onChange={(e) => setFloor(+e.target.value)}><option value={1}><UiText value={"First floor"}/></option><option value={2}><UiText value={"Second floor"}/></option></select></label>
-        <label><UiText value="Day"/> <select className={input} value={weekday} onChange={(e) => setWeekday(+e.target.value)}>{["Monday","Tuesday","Wednesday","Thursday","Friday"].map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>
-        <label><UiText value={"Class period"}/> <select className={input} value={slot} onChange={(e) => setSlot(+e.target.value)}>{times.map((start, index) => <option key={start} value={index}>{time(start)}–{time(start + 80)}</option>)}</select></label>
+      <h2 className="text-xl font-semibold">{t("Classroom occupancy")}</h2>
+      <p className="mb-4 mt-1 text-sm text-slate-600">{t("Classroom availability is simulated. Times are shown in Asia/Yerevan.")}</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <label className="min-w-0">{t("Building")}
+          <select className={input} value={building} onChange={e => {
+            const next = e.target.value;
+            setBuilding(next);
+            if (next === "ima" && floor > imaRoomCounts.length) setFloor(1);
+          }}>
+            <option value="main">{t("Main Building")}</option>
+            <option value="ima">{t("IMA Faculty Building")}</option>
+          </select>
+        </label>
+        <label className="min-w-0">{t("Floor")}
+          <select className={input} value={floor} onChange={e => setFloor(Number(e.target.value))}>
+            {floorLabels.slice(0, isIma ? imaRoomCounts.length : floorLabels.length).map((label, index) =>
+              <option key={label} value={index + 1}>{t(label)}</option>)}
+          </select>
+        </label>
+        <label className="min-w-0">{t("Day")}
+          <select className={input} value={weekday} onChange={e => setWeekday(Number(e.target.value))}>
+            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day, index) =>
+              <option key={day} value={index}>{t(day)}</option>)}
+          </select>
+        </label>
+        <label className="min-w-0">{t("Class period")}
+          <select className={input} value={slot} onChange={e => setSlot(Number(e.target.value))}>
+            {times.map((start, index) => <option key={start} value={index}>{time(start)}–{time(start + 80)}</option>)}
+          </select>
+        </label>
       </div>
     </div>
     <div className={panel}>
-      <h3 className="font-semibold"><UiText value={"Floor plan"}/></h3>
-      <svg role="img" aria-label={rooms.map(({ id, busy }) => `${id} ${busy ? "busy" : "free"}`).join(", ")} className="mt-4 w-full max-w-2xl" viewBox="0 0 420 145">
-        <rect x="1" y="1" width="418" height="143" rx="14" fill="#f1f5f9" />
-        {rooms.map(({ id, busy }, index) => <g key={id} transform={`translate(${13 + index * 136} 12)`}>
-          <rect width="122" height="88" rx="8" fill={busy ? "#fee2e2" : "#dcfce7"} stroke={busy ? "#b91c1c" : "#15803d"} />
-          <text x="61" y="39" textAnchor="middle" fontSize="17" fontWeight="600">{id}</text>
-          <text x="61" y="65" textAnchor="middle" fontSize="14"><UiText value={busy ? "Busy" : "Free"}/></text>
-        </g>)}
-        <text x="210" y="127" textAnchor="middle" fontSize="12">Corridor</text>
-      </svg>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-3">{rooms.map(({ id, busy, seats, subject }) => <li className="rounded-xl border p-3" key={id}>
-        <strong>{id}</strong> <span className={busy ? "text-red-800" : "text-green-800"}><UiText value={busy ? "Busy" : "Free"}/></span>
-        <p className="mt-1 text-sm">{busy ? subject : "No class scheduled"} · {seats} {"seats"}</p>
-      </li>)}</ul>
+      <h3 className="font-semibold">{t("Floor plan")}</h3>
+      <ul className="mt-4 grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label={t("Floor plan")}>
+        {rooms.map(({ label, isHall, office, busy, subject }) => {
+          const status = office ?? (busy ? "Busy" : "Free");
+          const color = office || busy
+            ? "border-red-700 bg-red-50 text-red-950 dark:border-red-400 dark:bg-red-950 dark:text-red-100"
+            : "border-emerald-700 bg-emerald-50 text-emerald-950 dark:border-emerald-400 dark:bg-emerald-950 dark:text-emerald-100";
+          return <li key={label} className={`min-w-0 rounded-xl border p-4 ${color} ${isHall ? "min-h-32 sm:col-span-2" : ""}`}>
+            <h4 className={isHall ? "text-xl font-semibold" : "text-lg font-semibold"}>{label}</h4>
+            <p className="mt-1 text-sm font-medium">{t(status)}</p>
+            {!office && <p className="mt-1 text-sm">{t(busy ? subject : "No class scheduled")}</p>}
+          </li>;
+        })}
+      </ul>
     </div>
   </section>;
 }
