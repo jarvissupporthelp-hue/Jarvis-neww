@@ -1,4 +1,4 @@
-import { UiText } from "./components/interface-language";
+import { UiText } from "@/app/components/interface-language";
 
 export default function Loading() {
   return (
