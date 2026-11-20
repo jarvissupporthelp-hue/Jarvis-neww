@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useState } from 'react';
 import { Binary, CheckCircle2 } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -87,7 +89,7 @@ export const BinaryHexBridge: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-emerald-400">
-            REGISTER {idx + 1} OF {puzzles.length}
+            {"REGISTER"} {idx + 1} {"OF"} {puzzles.length}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
             {puzzle.title}
@@ -127,7 +129,7 @@ export const BinaryHexBridge: React.FC<ActiveGameRenderProps> = ({
                   2^{7 - bitIdx} ({weight})
                 </span>
                 <span className="font-mono text-2xl font-bold tabular-nums">
-                  {isSet ? '1' : '0'}
+                  <UiText value={isSet ? '1' : '0'}/>
                 </span>
               </button>
             );
@@ -206,7 +208,7 @@ export const BinaryHexBridge: React.FC<ActiveGameRenderProps> = ({
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>
-            {idx + 1 === puzzles.length ? 'Verify & Finish' : 'Verify Register'}
+            <UiText value={idx + 1 === puzzles.length ? 'Verify & Finish' : 'Verify Register'}/>
           </span>
         </button>
       </div>

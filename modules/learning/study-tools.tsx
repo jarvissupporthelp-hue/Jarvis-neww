@@ -1,5 +1,9 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
 
+
+import {Countdown} from "@/app/components/countdown";
+import {useInterfaceCopy} from "@/app/components/interface-language";
 import { useEffect, useState } from "react";
 import { button, field, useLearningData } from "./storage";
 import { learningCourses } from "./seed";
@@ -8,6 +12,7 @@ type Session = { course: string; minutes: number; finished: number };
 type Settings = { work: number; rest: number; long: number };
 
 export function Pomodoro({ course }: { course: string }) {
+  const t=useInterfaceCopy();
   const [settings, setSettings] = useLearningData<Settings>("timer-settings", { work: 25, rest: 5, long: 15 });
   const [sessions, setSessions] = useLearningData<Session[]>("timer-sessions", []);
   const [phase, setPhase] = useState<keyof Settings>("work");
@@ -44,38 +49,39 @@ export function Pomodoro({ course }: { course: string }) {
   });
   const max = Math.max(1, ...week.map(({ minutes }) => minutes));
   return <div className="space-y-5">
+    <Countdown seconds={remaining} total={settings[phase]*60} label={phase==="work"?"Focus":phase==="rest"?"Short break":"Long break"} running={!!running}/>
     <div className="flex flex-wrap gap-2">
       {([["Quick review", 10, 3], ["Problem solving", 25, 5], ["Coding sprint", 50, 10]] as const).map(([label, work, rest]) => (
         <button key={label} className={field} disabled={!!running} onClick={() => {
           setSettings({ ...settings, work, rest }); setPhase("work"); setSeconds(null);
-        }}>{label} · {work} min</button>
+        }}>{t(label)} · {work} {"min"}</button>
       ))}
     </div>
     <div className="flex flex-wrap gap-3">{([["work", "Work"], ["rest", "Break"], ["long", "Long break"]] as const).map(([key, label]) => (
-      <label key={key}>{label} (min) <input className={`w-20 ${field}`} type="number" min="1" max="120" value={settings[key]} disabled={!!running}
+      <label key={key}>{t(label)} {"(min)"} <input className={`w-20 ${field}`} type="number" min="1" max="120" value={settings[key]} disabled={!!running}
         onChange={(event) => { const value = Number(event.target.value); if (Number.isInteger(value) && value >= 1 && value <= 120) { setSettings({ ...settings, [key]: value }); setSeconds(null); } }} /></label>
     ))}</div>
-    <p className="text-sm">{phase === "work" ? "Focus" : phase === "rest" ? "Short break" : "Long break"} · {rounds} completed rounds</p>
-    <p className="text-5xl font-semibold tabular-nums">{Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, "0")}</p>
+    <p className="text-sm">{t(phase === "work" ? "Focus" : phase === "rest" ? "Short break" : "Long break")} · {rounds} {t("completed rounds")}</p>
+
     <div className="flex gap-3">
       <button className={button} onClick={() => {
         if (running) {
           setSeconds(Math.max(1, Math.ceil((running.end - Date.now()) / 1000)));
           setRunning(null);
         } else setRunning({ end: Date.now() + remaining * 1000, minutes: settings[phase], course });
-      }}>{running ? "Pause" : seconds === null ? "Start" : "Resume"}</button>
-      <button className={field} onClick={() => { setRunning(null); setSeconds(null); }}>Reset</button>
+      }}>{t(running ? "Pause" : seconds === null ? "Start" : "Resume")}</button>
+      <button className={field} onClick={() => { setRunning(null); setSeconds(null); }}><UiText value="Reset"/></button>
     </div>
     {notice && <p role="alert">{notice}</p>}
-    <h3 className="font-semibold">Focus minutes over the last seven days</h3>
+    <h3 className="font-semibold"><UiText value="Focus minutes over the last seven days"/></h3>
     <div className="space-y-2">{week.map(({ day, minutes }) => <div key={day} className="grid grid-cols-[7rem_1fr_4rem] items-center gap-2 text-sm">
-      <time dateTime={day}>{day}</time><meter min={0} max={max} value={minutes} className="w-full" aria-label={`Focus minutes on ${day}`} /><span>{minutes} min</span>
+      <time dateTime={day}>{day}</time><meter min={0} max={max} value={minutes} className="w-full" aria-label={`Focus minutes on ${day}`} /><span>{minutes} {"min"}</span>
     </div>)}</div>
   </div>;
 }
 
 export function CoursePicker({ course, onChange }: { course: string; onChange: (value: string) => void }) {
-  return <label>Course <select className={field} value={course} onChange={(event) => onChange(event.target.value)}>
+  return <label><UiText value="Course"/> <select className={field} value={course} onChange={(event) => onChange(event.target.value)}>
     {learningCourses.map(({ code, title }) => <option key={code} value={code}>{title}</option>)}
   </select></label>;
 }

@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, KeyRound, Minus, Plus } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -96,7 +98,7 @@ export const CipherBreakerLab: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-sky-400">
-            CIPHER {idx + 1} OF {challenges.length} · {challenge.mode} Mode
+            {"CIPHER"} {idx + 1} {"OF"} {challenges.length} · {challenge.mode} {"Mode"}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
             {challenge.title}
@@ -106,7 +108,7 @@ export const CipherBreakerLab: React.FC<ActiveGameRenderProps> = ({
           </p>
         </div>
         <div className="font-mono text-xs bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-slate-300 shrink-0">
-          a⁻¹ mod 26 = {modInverse(guessA, 26)}
+          {"a⁻¹ mod 26 ="} {modInverse(guessA, 26)}
         </div>
       </div>
 
@@ -156,7 +158,7 @@ export const CipherBreakerLab: React.FC<ActiveGameRenderProps> = ({
             <div className="space-y-2">
               <div className="text-xs font-medium text-slate-300 flex items-center justify-between">
                 <span>Multiplier (a, coprime to 26)</span>
-                <span className="font-mono text-sky-400 font-bold">a = {guessA}</span>
+                <span className="font-mono text-sky-400 font-bold">{"a ="} {guessA}</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {VALID_A.map((val) => (
@@ -188,7 +190,7 @@ export const CipherBreakerLab: React.FC<ActiveGameRenderProps> = ({
                 Shift Offset (b mod 26)
               </span>
               <span className="font-mono text-amber-400 font-bold tabular-nums">
-                b = {guessB}
+                {"b ="} {guessB}
               </span>
             </div>
             <input
@@ -250,9 +252,9 @@ export const CipherBreakerLab: React.FC<ActiveGameRenderProps> = ({
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>
-              {idx + 1 === challenges.length
+              <UiText value={idx + 1 === challenges.length
                 ? 'Verify & Finish Lab'
-                : 'Submit Decrypted Plaintext'}
+                : 'Submit Decrypted Plaintext'}/>
             </span>
           </button>
         </div>

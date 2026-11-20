@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import type { Locale } from "@/lib/locales";
@@ -43,7 +45,7 @@ function Select({ name, label, options, value = "" }: {
   return (
     <label className="block">{label}
       <select name={name} defaultValue={value} required className={field}>
-        <option value="" disabled>Choose {label.toLowerCase()}</option>
+        <option value="" disabled>{"Choose"} {label.toLowerCase()}</option>
         {options.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
       </select>
     </label>
@@ -107,9 +109,9 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
   }
 
   if (!data) return <div className="jarvis-empty-state" role={message ? "alert" : "status"}>
-    <strong>{message ? "Administration unavailable" : "Loading your workspace…"}</strong>
+    <strong><UiText value={message ? "Administration unavailable" : "Loading your workspace…"}/></strong>
     <p>{message || "Checking the latest university data."}</p>
-    {message && <button className="jarvis-secondary-button" type="button" onClick={() => { setMessage(""); setLoadAttempt((n) => n + 1); }}>Try again</button>}
+    {message && <button className="jarvis-secondary-button" type="button" onClick={() => { setMessage(""); setLoadAttempt((n) => n + 1); }}><UiText value="Try again"/></button>}
   </div>;
 
   const records = section === "group" ? data.groups : section === "semester" ? data.semesters : data.courses;
@@ -137,7 +139,7 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
       <div className="jarvis-admin-hero">
         <div>
           <span className="jarvis-eyebrow">UNIVERSITY CONTROL CENTER</span>
-          <h2>Administration</h2>
+          <h2><UiText value={"Administration"}/></h2>
           <p>Manage university people, academic structure, and teaching schedules.</p>
         </div>
         <span className="jarvis-admin-hero-badge">● Secure workspace</span>
@@ -145,7 +147,7 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
       <div className="jarvis-admin-metrics" aria-label="University overview">
         <div className="jarvis-admin-metric"><span>Total members</span><strong>{data.users.length}</strong></div>
         <div className="jarvis-admin-metric"><span>Active accounts</span><strong>{activeUsers}</strong></div>
-        <div className="jarvis-admin-metric"><span>Student groups</span><strong>{data.groups.length}</strong></div>
+        <div className="jarvis-admin-metric"><span><UiText value="Student groups"/></span><strong>{data.groups.length}</strong></div>
         <div className="jarvis-admin-metric"><span>Course offerings</span><strong>{data.offerings.length}</strong></div>
       </div>
       <nav className="jarvis-admin-tabs" aria-label="Administration sections">
@@ -168,8 +170,8 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
                 <div className="jarvis-directory-filter-row">
                   <label>Role
                     <select className={field} value={roleFilter} onChange={(event) => { setRoleFilter(event.target.value); setSelected(""); }}>
-                      <option value="all">All roles</option><option value="student">Student</option>
-                      <option value="lecturer">Lecturer</option><option value="admin">Admin</option>
+                      <option value="all">All roles</option><option value="student"><UiText value="Student"/></option>
+                      <option value="lecturer"><UiText value="Lecturer"/></option><option value="admin">Admin</option>
                     </select>
                   </label>
                   <label>Status
@@ -179,7 +181,7 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
                     </select>
                   </label>
                 </div>
-                <p className="jarvis-directory-count" role="status">{filteredUsers.length} of {data.users.length} accounts shown</p>
+                <p className="jarvis-directory-count" role="status">{filteredUsers.length} {"of"} {data.users.length} {"accounts shown"}</p>
               </div>
               {filteredUsers.length ? <div className="jarvis-directory-results" aria-label="Filtered accounts">
                 {filteredUsers.map((person) => (
@@ -194,8 +196,8 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
                   </button>
                 ))}
               </div> : <div className="jarvis-empty-state">
-                <strong>{data.users.length ? "No matching people" : "No accounts yet"}</strong>
-                <p>{data.users.length ? "Try another name or change the filters." : "Invite your first student or lecturer above."}</p>
+                <strong><UiText value={data.users.length ? "No matching people" : "No accounts yet"}/></strong>
+                <p><UiText value={data.users.length ? "Try another name or change the filters." : "Invite your first student or lecturer above."}/></p>
                 {data.users.length > 0 && <button type="button" className="jarvis-secondary-button" onClick={() => { setUserSearch(""); setRoleFilter("all"); setStatusFilter("all"); }}>Clear filters</button>}
               </div>}
             </div>
@@ -224,7 +226,7 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
                     <input type="hidden" name="action" value="user_status" />
                     <input type="hidden" name="id" value={user.id} />
                     <input type="hidden" name="status" value={user.status === "active" ? "disabled" : "active"} />
-                    <button className={button}>{user.status === "active" ? "Disable account" : "Reactivate account"}</button>
+                    <button className={button}><UiText value={user.status === "active" ? "Disable account" : "Reactivate account"}/></button>
                   </form>
                 )}
                 {user.role === "student" && (
@@ -280,7 +282,7 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
                   <label className="block">End date<input className={field} name="end" type="date" defaultValue={semester?.ends_on} required /></label>
                 </>
               )}
-              <button className={button}>Save {section}</button>
+              <button className={button}><UiText value={"Save"}/> {section}</button>
             </form>
           </>
         )}
@@ -300,7 +302,7 @@ export function AdminWorkspace({ getToken, section = "users", locale = "en" }: {
           data.audit.length ? <ul className="space-y-2">
             {data.audit.map((entry) => <li key={entry.id}>
               <strong>{entry.action.replaceAll("_", " ")}</strong> · {new Date(entry.created_at).toLocaleString()}
-              <span className="block break-all text-sm">Actor {users.find((item) => item.id === entry.actor_id)?.name ?? entry.actor_id} · Record {entry.resource_id}</span>
+              <span className="block break-all text-sm">{"Actor"} {users.find((item) => item.id === entry.actor_id)?.name ?? entry.actor_id} {"· Record"} {entry.resource_id}</span>
             </li>)}
           </ul> : <p>No admin changes recorded yet.</p>
         )}

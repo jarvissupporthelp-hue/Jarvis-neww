@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -83,19 +85,19 @@ export function QuizWorkspace() {
     }
   }
 
-  if (needsSignIn) return <p>Sign in with an active student account. <Link className="underline" href="/account">Sign in</Link></p>;
-  if (!quizzes) return error ? <p role="alert">{error}</p> : <p role="status">Loading your course quizzes…</p>;
+  if (needsSignIn) return <p><UiText value="Sign in with an active student account."/> <Link className="underline" href="/account"><UiText value="Sign in"/></Link></p>;
+  if (!quizzes) return error ? <p role="alert">{error}</p> : <p role="status"><UiText value={"Loading your course quizzes…"}/></p>;
   if (!quizzes.length) return <p>No practice quizzes are available for your enrolled courses yet.</p>;
 
   return (
     <div className="space-y-4">
-      <label className="block">Course
+      <label className="block"><UiText value="Course"/>
         <select value={selected} disabled={busy} onChange={(event) => {
           setSelected(event.target.value);
           setResult(null);
           setError("");
         }} className="block w-full rounded border border-[#789181] bg-white p-2">
-          <option value="" disabled>Choose a course quiz</option>
+          <option value="" disabled><UiText value={"Choose a course quiz"}/></option>
           {quizzes.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.semester}</option>)}
         </select>
       </label>
@@ -103,7 +105,7 @@ export function QuizWorkspace() {
         <form className="space-y-3" key={`${quiz.id}-${attempt}`} onSubmit={submit}>
           {quiz.questions.map((question, index) => (
             <fieldset key={question.id} className={card} disabled={busy}>
-              <legend className="px-1 font-semibold">Question {index + 1} · {question.topic}</legend>
+              <legend className="px-1 font-semibold">{"Question"} {index + 1} · {question.topic}</legend>
               <p>{question.prompt}</p>
               {question.options.map((option, choice) => (
                 <label key={option} className="flex items-start gap-2">
@@ -112,17 +114,17 @@ export function QuizWorkspace() {
               ))}
             </fieldset>
           ))}
-          <button className={button} disabled={busy}>{busy ? "Checking…" : "Check answers"}</button>
+          <button className={button} disabled={busy}><UiText value={busy ? "Checking…" : "Check answers"}/></button>
         </form>
       )}
       {result && (
         <section className={card} aria-label="Quiz feedback">
-          <h2 className="text-xl font-semibold" role="status">Score {result.score} / {result.feedback.length}</h2>
+          <h2 className="text-xl font-semibold" role="status">{"Score"} {result.score} / {result.feedback.length}</h2>
           <ul className="space-y-3">
             {result.feedback.map((item) => (
               <li key={item.id}>
-                <strong>{item.topic} · {item.correct ? "Correct" : "Needs practice"}</strong>
-                <p>Answer: {item.correctAnswer}. {item.explanation}</p>
+                <strong>{item.topic} · <UiText value={item.correct ? "Correct" : "Needs practice"}/></strong>
+                <p>{"Answer:"} {item.correctAnswer}. {item.explanation}</p>
               </li>
             ))}
           </ul>
@@ -131,7 +133,7 @@ export function QuizWorkspace() {
             setResult(null);
             setError("");
             setAttempt((value) => value + 1);
-          }}>Try again</button>
+          }}><UiText value="Try again"/></button>
         </section>
       )}
       {error && <p role="alert">{error}</p>}

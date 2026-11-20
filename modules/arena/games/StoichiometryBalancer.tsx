@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Minus, Plus } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -96,7 +98,7 @@ export const StoichiometryBalancer: React.FC<ActiveGameRenderProps> = ({
     <div className="space-y-6">
       <div>
         <div className="text-xs font-mono text-emerald-400">
-          REACTION {idx + 1} OF {equations.length}
+          {"REACTION"} {idx + 1} {"OF"} {equations.length}
         </div>
         <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
           {equation.title}
@@ -200,11 +202,11 @@ export const StoichiometryBalancer: React.FC<ActiveGameRenderProps> = ({
                       row.balanced ? 'text-emerald-400' : 'text-amber-400'
                     }`}
                   >
-                    {row.balanced ? 'EQUAL' : 'UNBALANCED'}
+                    <UiText value={row.balanced ? 'EQUAL' : 'UNBALANCED'}/>
                   </span>
                 </div>
                 <div className="font-mono text-xs text-slate-300 tabular-nums mt-1.5">
-                  L: {row.left} · R: {row.right}
+                  {"L:"} {row.left} {"· R:"} {row.right}
                 </div>
               </div>
             ))}
@@ -231,9 +233,9 @@ export const StoichiometryBalancer: React.FC<ActiveGameRenderProps> = ({
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>
-              {idx + 1 === equations.length
+              <UiText value={idx + 1 === equations.length
                 ? 'Verify & Finish Lab'
-                : 'Verify Balanced Equation'}
+                : 'Verify Balanced Equation'}/>
             </span>
           </button>
         </div>

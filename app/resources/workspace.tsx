@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -126,29 +128,29 @@ export function CourseResources({ offeringId, canPublish = false }: { offeringId
 
   return (
     <section className="space-y-3 rounded-xl border border-[#afbeb3] bg-white p-4" aria-label="Course resources">
-      <h2 className="text-xl font-semibold">Course resources</h2>
+      <h2 className="text-xl font-semibold"><UiText value="Course resources"/></h2>
       {canPublish && (
         <form onSubmit={publish} onChange={() => { pending.current = null; }}>
           <fieldset className="space-y-2" disabled={uploading || resources === null}>
-            <legend className="font-semibold">Publish a PDF</legend>
-            <label>Resource title<input className={field} name="title" maxLength={120} required /></label>
-            <label>PDF file (up to 4 MB)<input className={field} name="pdf" type="file" accept=".pdf,application/pdf" required /></label>
-            <button className={button}>{uploading ? "Publishing…" : "Publish PDF"}</button>
+            <legend className="font-semibold"><UiText value={"Publish a PDF"}/></legend>
+            <label><UiText value={"Resource title"}/><input className={field} name="title" maxLength={120} required /></label>
+            <label><UiText value={"PDF file (up to 4 MB)"}/><input className={field} name="pdf" type="file" accept=".pdf,application/pdf" required /></label>
+            <button className={button}><UiText value={uploading ? "Publishing…" : "Publish PDF"}/></button>
           </fieldset>
         </form>
       )}
       {message && <p role="status">{message}</p>}
       {error && <p role="alert">{error}</p>}
       {loadError && <p role="alert">{loadError}</p>}
-      {resources === null ? !loadError && <p role="status">Loading PDFs…</p> : (
+      {resources === null ? !loadError && <p role="status"><UiText value={"Loading PDFs…"}/></p> : (
         <>
-          <label>Search PDFs<input className={field} type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
+          <label><UiText value={"Search PDFs"}/><input className={field} type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
           {visible?.length ? (
             <ul className="space-y-2">
               {visible.map((item) => (
                 <li key={item.id} className="space-y-1 rounded bg-[#eef3ee] p-3">
                   <strong className="break-words">{item.title}</strong>
-                  <p className="break-words text-sm">{item.filename} · {Math.ceil(item.size_bytes / 1024)} KB</p>
+                  <p className="break-words text-sm">{item.filename} · {Math.ceil(item.size_bytes / 1024)} {"KB"}</p>
                   <p className="text-sm">{indexLabels[item.index_status]}</p>
                   {canPublish && item.index_status !== "indexed" && (
                     <button type="button" className="mr-3 underline" disabled={indexing !== null}
@@ -158,15 +160,15 @@ export function CourseResources({ offeringId, canPublish = false }: { offeringId
                   )}
                   {opened?.id === item.id ? (
                     <div className="flex flex-wrap gap-3">
-                      <a className="font-semibold underline" href={opened.url} target="_blank" rel="noopener noreferrer">View PDF</a>
-                      <a className="underline" href={opened.url} download={item.filename}>Download PDF</a>
+                      <a className="font-semibold underline" href={opened.url} target="_blank" rel="noopener noreferrer"><UiText value={"View PDF"}/></a>
+                      <a className="underline" href={opened.url} download={item.filename}><UiText value={"Download PDF"}/></a>
                     </div>
                   ) : <button type="button" disabled={opening !== null} className="font-semibold underline disabled:opacity-50"
-                    aria-label={`Open PDF: ${item.title}`} onClick={() => void openPdf(item)}>{opening === item.id ? "Opening…" : "Open PDF"}</button>}
+                    aria-label={`Open PDF: ${item.title}`} onClick={() => void openPdf(item)}><UiText value={opening === item.id ? "Opening…" : "Open PDF"}/></button>}
                 </li>
               ))}
             </ul>
-          ) : <p>{filter ? "No PDFs match your search." : "No PDFs published for this course yet."}</p>}
+          ) : <p><UiText value={filter ? "No PDFs match your search." : "No PDFs published for this course yet."}/></p>}
         </>
       )}
     </section>
@@ -199,15 +201,15 @@ export function ResourceWorkspace() {
     return () => controller.abort();
   }, []);
 
-  if (needsSignIn) return <p>Sign in with an active student or lecturer account. <Link href="/account" className="underline">Sign in</Link></p>;
+  if (needsSignIn) return <p>Sign in with an active student or lecturer account. <Link href="/account" className="underline"><UiText value="Sign in"/></Link></p>;
   if (error) return <p role="alert">{error}</p>;
-  if (!courses) return <p role="status">Loading your courses…</p>;
+  if (!courses) return <p role="status"><UiText value={"Loading your courses…"}/></p>;
   if (!courses.length) return <p>No courses available.</p>;
   return (
     <div className="space-y-3">
-      <label>Course
+      <label><UiText value="Course"/>
         <select className={field} value={selected} onChange={(event) => setSelected(event.target.value)}>
-          <option value="" disabled>Choose a course</option>
+          <option value="" disabled><UiText value={"Choose a course"}/></option>
           {courses.map((item) => <option value={item.id} key={item.id}>{item.course.name} · {item.group.name} · {item.semester.name}</option>)}
         </select>
       </label>

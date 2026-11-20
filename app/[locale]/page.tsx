@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 /* eslint-disable @next/next/no-html-link-for-pages -- Locale changes must reload the root document to update its lang attribute. */
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -15,11 +17,11 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
         <a href="/hy" hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</a>
         <a href="/en" hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</a>
       </nav>
-      <p className="mb-5 text-sm font-semibold tracking-widest uppercase">{copy.pilot}</p>
-      <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl">{copy.brand}</h1>
-      <p className="mt-5 max-w-xl text-xl sm:text-2xl">{copy.description}</p>
-      <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4">{copy.invitation}</p>
-      <a href={`/account?lang=${locale}`} className="mt-5 w-fit font-semibold underline">{copy.signIn}</a>
+      <p className="mb-5 text-sm font-semibold tracking-widest uppercase"><UiText value={copy.pilot}/></p>
+      <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl"><UiText value={copy.brand}/></h1>
+      <p className="mt-5 max-w-xl text-xl sm:text-2xl"><UiText value={copy.description}/></p>
+      <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4"><UiText value={copy.invitation}/></p>
+      <a href={`/account?lang=${locale}`} className="mt-5 w-fit font-semibold underline"><UiText value={copy.signIn}/></a>
       <Link href={locale === "hy" ? "/arena" : "/arena?lang=en"} className="mt-4 w-fit font-semibold underline">{arena[locale].title}</Link>
     </main>
   );

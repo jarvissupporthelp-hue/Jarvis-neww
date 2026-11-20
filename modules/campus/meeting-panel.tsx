@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -76,11 +78,11 @@ export function MeetingPanel() {
   const name = (id: string, fallback: string) => data?.people.find((person) => person.id === id)?.name ?? fallback;
   return <section className="space-y-5">
     <div><h2 className="text-xl font-semibold">Academic meetings</h2><p className="text-slate-600">Request 30 minutes with a lecturer to ask a question, discuss coursework, or get project feedback.</p></div>
-    {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message} {message.startsWith("Sign in") && <Link href="/account" className="underline">Open account</Link>}</p>}
+    {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message} {message.startsWith("Sign in") && <Link href="/account" className="underline"><UiText value="Open account"/></Link>}</p>}
     {!data && !message && <p>Loading meeting requests…</p>}
     {data?.role !== "lecturer" && <form className="grid gap-4 rounded-xl border bg-white p-5 sm:grid-cols-2" onSubmit={submit}>
       <h3 className="text-lg font-semibold sm:col-span-2">Request a meeting</h3>
-      <label>Lecturer <select required name="lecturerId" className={field}>
+      <label><UiText value="Lecturer"/> <select required name="lecturerId" className={field}>
         <option value="">Choose a lecturer</option>
         <optgroup label="From your timetable">
           {[...timetableLecturers].map(([name, course]) => {
@@ -95,22 +97,22 @@ export function MeetingPanel() {
         </optgroup>}
       </select></label>
       <label>Preferred time (Yerevan) <input required name="start" type="datetime-local" className={field} /></label>
-      <label className="sm:col-span-2">Topic <input required maxLength={100} name="topic" className={field} placeholder="e.g. Questions about the Networks assignment" /></label>
+      <label className="sm:col-span-2"><UiText value="Topic"/> <input required maxLength={100} name="topic" className={field} placeholder="e.g. Questions about the Networks assignment" /></label>
       <label className="sm:col-span-2">Question or agenda <textarea required maxLength={700} name="agenda" className={field} rows={3} placeholder="What would you like to discuss?" /></label>
       <label className="sm:col-span-2">Additional context (optional) <textarea maxLength={275} name="context" className={field} rows={2} placeholder="Course, assignment, deadline, or what you have already tried" /></label>
       {students.length > 0 && <fieldset className="space-y-2 sm:col-span-2"><legend>Invite classmates (optional)</legend>
         {students.map((person) => <label key={person.id} className="mr-4 inline-flex items-center gap-2"><input type="checkbox" name="participants" value={person.id} />{person.name}</label>)}
       </fieldset>}
-      <button className={`${button} w-fit`} disabled={pending || !lecturers.length}>{pending ? "Sending…" : "Send request"}</button>
+      <button className={`${button} w-fit`} disabled={pending || !lecturers.length}><UiText value={pending ? "Sending…" : "Send request"}/></button>
       {data && !lecturers.length && <p>No active lecturers are available in the directory.</p>}
     </form>}
-    {data && <div className="space-y-3"><h3 className="font-semibold">{data.role === "lecturer" ? "Incoming requests" : "My meetings"}</h3>
+    {data && <div className="space-y-3"><h3 className="font-semibold"><UiText value={data.role === "lecturer" ? "Incoming requests" : "My meetings"}/></h3>
       {!data.meetings.length && <p>No meetings yet.</p>}
       {data.meetings.map((meeting) => <article key={meeting.id} className="space-y-2 rounded-xl border bg-white p-4">
         <h4 className="font-semibold">{meeting.topic} <span className="rounded bg-slate-100 px-2 py-1 text-sm capitalize">{meeting.status}</span></h4>
         <p className="text-sm">{displayTime.format(new Date(meeting.startAt))} · {data.role === "lecturer" ? name(meeting.studentId, "Student") : name(meeting.lecturerId, "Lecturer")}</p>
         <p className="whitespace-pre-wrap break-words">{meeting.agenda}</p>
-        {meeting.response && <p className="whitespace-pre-wrap break-words text-sm">Lecturer reply: {meeting.response}</p>}
+        {meeting.response && <p className="whitespace-pre-wrap break-words text-sm">{"Lecturer reply:"} {meeting.response}</p>}
         {data.role === "lecturer" && meeting.status === "pending" && <form className="space-y-2" onSubmit={(event) => {
           event.preventDefault();
           const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;

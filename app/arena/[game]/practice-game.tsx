@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -53,7 +55,7 @@ export function PracticeGame({ gameId, locale }: { gameId: ArenaGameId; locale: 
     <>
       <div className={styles.gameControls}>
         <label>
-          {copy.difficulty}
+          <UiText value={copy.difficulty}/>
           <select value={difficulty} disabled={starting} onChange={(event) => {
             const selected = gameDifficulties.find((tier) => tier === event.target.value);
             if (selected) { setDifficulty(selected); reset(); }
@@ -61,7 +63,7 @@ export function PracticeGame({ gameId, locale }: { gameId: ArenaGameId; locale: 
             {gameDifficulties.map((tier) => <option key={tier} value={tier}>{copy.levels[tier]}</option>)}
           </select>
         </label>
-        <button type="button" aria-pressed={audio} onClick={toggleAudio}>{copy.sound}</button>
+        <button type="button" aria-pressed={audio} onClick={toggleAudio}><UiText value={copy.sound}/></button>
         <button type="button" disabled={starting} onClick={reset}>{sessionId ? copy.practice : copy.restart}</button>
         <button type="button" disabled={starting} onClick={startRanked}>{starting ? ranked.waiting : ranked.start}</button>
       </div>
@@ -117,16 +119,16 @@ function PracticeRun({ Game, difficulty, locale, sessionId }: {
   return (
     <>
       <p className={styles.status}>{sessionId ? copyRanked.activeNote : copy.practiceNote}</p>
-      <p className={styles.status}>{copy.time} <time dateTime={`PT${timer.seconds}S`}>{timer.formatted}</time></p>
+      <p className={styles.status}><UiText value={copy.time}/> <time dateTime={`PT${timer.seconds}S`}>{timer.formatted}</time></p>
       {outcome ? (
         <section aria-live="polite" className={styles.card}>
           <h2>{verified ? copyRanked.verified : sessionId ? copyRanked.complete : copy.complete}</h2>
           <dl className={styles.result}>
             {!sessionId && <>
-              <div><dt>{copy.score}</dt><dd>{outcome.score} / {outcome.maxScore}</dd></div>
-              <div><dt>{copy.accuracy}</dt><dd>{outcome.accuracy}%</dd></div>
+              <div><dt><UiText value={copy.score}/></dt><dd>{outcome.score} / {outcome.maxScore}</dd></div>
+              <div><dt><UiText value={copy.accuracy}/></dt><dd>{outcome.accuracy}%</dd></div>
             </>}
-            <div><dt>{copy.rounds}</dt><dd>{outcome.roundsCompleted} / {outcome.totalRounds}</dd></div>
+            <div><dt><UiText value={copy.rounds}/></dt><dd>{outcome.roundsCompleted} / {outcome.totalRounds}</dd></div>
             {verified && <>
               <div><dt>{copyRanked.score}</dt><dd>{verified.score} / 1000</dd></div>
               <div><dt>{copyRanked.earned}</dt><dd>{verified.xp}</dd></div>

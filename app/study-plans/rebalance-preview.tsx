@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { useState } from "react";
 import { getAccessToken } from "@/lib/browser-supabase";
@@ -60,17 +62,17 @@ export function RebalancePreview({ planId, practiceTopics, onApplied }: {
       {preview && (
         <div className="space-y-2" aria-live="polite">
           {preview.unplaced.length > 0 ? (
-            <p>No changes can be applied because these sessions don’t fit before the exam: {preview.unplaced.join(", ")}.</p>
+            <p>{"No changes can be applied because these sessions don’t fit before the exam:"} {preview.unplaced.join(", ")}.</p>
           ) : changed.length ? (
             <ul className="list-disc space-y-1 pl-5">
               {changed.map((move) => (
                 <li key={move.id}>
                   <strong>{move.title}</strong><br />
-                  <span className="text-sm">From {slot(move.oldDate, move.oldStart, move.oldEnd)} to {slot(move.date, move.start, move.end)}</span>
+                  <span className="text-sm">{"From"} {slot(move.oldDate, move.oldStart, move.oldEnd)} {"to"} {slot(move.date, move.start, move.end)}</span>
                 </li>
               ))}
             </ul>
-          ) : <p>{preview.moves.length ? "Your current schedule already fits." : "No unfinished sessions are eligible to move."}</p>}
+          ) : <p><UiText value={preview.moves.length ? "Your current schedule already fits." : "No unfinished sessions are eligible to move."}/></p>}
           {canApply && (
             <button type="button" disabled={busy} onClick={() => void submit(true)}
               className="rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">Apply rebalance</button>

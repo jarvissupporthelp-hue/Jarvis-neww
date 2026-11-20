@@ -1,3 +1,4 @@
+
 import sections from "../../data/ufar/reference.json";
 
 export default function UfarReference() {

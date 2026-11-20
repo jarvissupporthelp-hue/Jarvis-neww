@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/browser-supabase";
@@ -33,7 +35,7 @@ export function StudyContextSummary() {
       {!context && !failed && <p>Loading study context…</p>}
       {context && (
         <div className="mt-2 space-y-2">
-          <p>{context.from} to {context.through} · {context.timeZone}</p>
+          <p>{context.from} {"to"} {context.through} · {context.timeZone}</p>
           <p><strong>Courses:</strong> {context.courses.map((course) => course.name).join(", ") || "No current courses"}</p>
           {context.classes.length ? (
             <ul className="list-disc pl-5">{context.classes.map((lesson, index) => (
@@ -46,7 +48,7 @@ export function StudyContextSummary() {
           ))}</ul>
           <p><strong>Personal task due dates:</strong> {context.taskDueDates.length}</p>
           <ul className="list-disc pl-5">{context.taskDueDates.map((due) => (
-            <li key={due.date}>{due.date} · {due.count} open {due.count === 1 ? "task" : "tasks"}</li>
+            <li key={due.date}>{due.date} · {due.count} {"open"} <UiText value={due.count === 1 ? "task" : "tasks"}/></li>
           ))}</ul>
           {!context.officialExamDatesAvailable && <p>Verified exam dates aren’t available yet.</p>}
         </div>

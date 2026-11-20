@@ -6,6 +6,7 @@ export type ActiveFocusTimer = {
   state: "running" | "paused";
   label: string;
   ends_at: string | null;
+  duration_minutes?: number;
   remaining_seconds: number | null;
 };
 

@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Cpu, Zap } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -99,7 +100,7 @@ export const LogicCircuitLab: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-sky-400">
-            CIRCUIT STAGE {stageIndex + 1} OF {stages.length}
+            {"CIRCUIT STAGE"} {stageIndex + 1} {"OF"} {stages.length}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
             {stage.title}
@@ -109,7 +110,7 @@ export const LogicCircuitLab: React.FC<ActiveGameRenderProps> = ({
           </p>
         </div>
         <div className="text-xs text-slate-400 bg-slate-900/90 border border-slate-800 rounded-lg px-3 py-2 shrink-0">
-          Hint: {stage.hint}
+          {"Hint:"} {stage.hint}
         </div>
       </div>
 
@@ -123,7 +124,7 @@ export const LogicCircuitLab: React.FC<ActiveGameRenderProps> = ({
               Interactive Wire Schematic (tap inputs A, B, C to probe)
             </span>
             <span className="font-mono tabular-nums">
-              OUT = {liveSignals.out}
+              {"OUT ="} {liveSignals.out}
             </span>
           </div>
 
@@ -374,7 +375,7 @@ export const LogicCircuitLab: React.FC<ActiveGameRenderProps> = ({
               Target Truth Vector Check
             </h3>
             <span className="text-xs font-mono tabular-nums text-slate-400">
-              {vectorResults.filter((v) => v.pass).length}/{vectorResults.length} Passing
+              {vectorResults.filter((v) => v.pass).length}/{vectorResults.length} {"Passing"}
             </span>
           </div>
 

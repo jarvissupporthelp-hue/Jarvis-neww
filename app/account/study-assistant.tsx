@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { ChatAnswer } from "./chat-answer";
@@ -227,7 +229,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
     <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#e5f2e3] text-2xl text-[#214b36]">✦</div>
     <h2 className="text-2xl font-semibold">Your study space is ready</h2>
     <p className="mt-2 text-[#536a59]">Sign in with an active student account to see your conversations and ask JARVIS a question.</p>
-    <Link className={button + " mt-6 inline-flex items-center"} href="/account">Sign in to JARVIS</Link>
+    <Link className={button + " mt-6 inline-flex items-center"} href="/account"><UiText value={"Sign in to JARVIS"}/></Link>
   </div>;
   if (!threads) return error ? (
     <div className="rounded-2xl border border-[#e8c8bb] bg-white p-6">
@@ -242,22 +244,22 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
   const navigation = <div className="flex h-full min-h-0 flex-col gap-4">
     <div>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#69836d]">Your workspace</p>
-      <h2 className="mt-1 text-xl font-semibold">Conversations</h2>
+      <h2 className="mt-1 text-xl font-semibold"><UiText value={"Conversations"}/></h2>
     </div>
     <button type="button" className={button + " w-full"} disabled={busy} onClick={() => void manage("create")}>+ New conversation</button>
     <div aria-label="Daily AI usage" className="rounded-2xl border border-[#d9e7d7] bg-[#edf5e9] p-4">
       <p className="text-sm font-semibold text-[#294b32]">Daily AI messages</p>
       {usage ? <>
-        <p className="mt-1 text-2xl font-bold text-[#183d2b]">{usage.remaining} <span className="text-sm font-normal text-[#55705a]">/ {usage.limit} left</span></p>
+        <p className="mt-1 text-2xl font-bold text-[#183d2b]">{usage.remaining} <span className="text-sm font-normal text-[#55705a]">/ {usage.limit} {"left"}</span></p>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#d3e4d2]">
           <div className="h-full rounded-full bg-[#4c8a5a]" style={{ width: String((usage.remaining / usage.limit) * 100) + "%" }} />
         </div>
-        <p className="mt-2 text-xs text-[#55705a]">Resets at 00:00 UTC · {usage.used} used</p>
+        <p className="mt-2 text-xs text-[#55705a]">{"Resets at 00:00 UTC ·"} {usage.used} {"used"}</p>
         <p className="mt-3 border-t border-[#d3e4d2] pt-2 text-xs text-[#4c6653]">
-          {usage.inputTokens + usage.outputTokens} tokens reported ({usage.inputTokens} in · {usage.outputTokens} out)
+          {usage.inputTokens + usage.outputTokens} {"tokens reported ("}{usage.inputTokens} {"in ·"} {usage.outputTokens} {"out)"}
         </p>
         {usage.tokenReportedAttempts < usage.used && <p className="mt-1 text-xs text-[#6d7158]">Some replies have no token report.</p>}
-      </> : <p className="mt-2 text-sm text-[#536a59]">{usageError ? "Usage is unavailable. Try reloading." : "Checking usage…"}</p>}
+      </> : <p className="mt-2 text-sm text-[#536a59]"><UiText value={usageError ? "Usage is unavailable. Try reloading." : "Checking usage…"}/></p>}
     </div>
     <nav aria-label="Saved conversations" className="min-h-0 flex-1 overflow-y-auto">
       {threads.length === 0 ? <p className="rounded-xl border border-dashed border-[#ccd9ca] p-3 text-sm text-[#6a7c6d]">No conversations yet. Start one above.</p>
@@ -302,7 +304,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
             <h2 className="mt-1 truncate text-lg font-semibold sm:text-xl">{selected?.title ?? "Your new conversation"}</h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {usage && <span className="hidden rounded-full bg-[#e7f1e4] px-3 py-1 text-xs font-semibold text-[#315b3a] sm:block">{usage.remaining} messages left</span>}
+            {usage && <span className="hidden rounded-full bg-[#e7f1e4] px-3 py-1 text-xs font-semibold text-[#315b3a] sm:block">{usage.remaining} {"messages left"}</span>}
             <button type="button" className="rounded-xl border border-[#b7ceb7] px-3 py-2 text-xs font-semibold text-[#214b36] hover:bg-[#eaf4e8] disabled:opacity-50" disabled={busy} onClick={() => void manage("create")}>+ New chat</button>
           </div>
         </header>
@@ -341,7 +343,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           </li>}
           {turns?.map((turn) => <li key={turn.id} className="space-y-4">
             <div className="ml-auto w-fit max-w-[92%] rounded-2xl rounded-br-md bg-[#214b36] px-4 py-3 text-[15px] leading-6 text-white shadow-sm sm:max-w-[78%]">
-              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]">You</p>
+              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]"><UiText value="You"/></p>
               <p className="whitespace-pre-wrap break-words">{turn.prompt}</p>
             </div>
             <div ref={newTurnId === turn.id ? newAnswer : undefined} tabIndex={newTurnId === turn.id ? -1 : undefined}
@@ -352,16 +354,16 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           </li>)}
           {pendingPrompt && <li className="space-y-4">
             <div className="ml-auto w-fit max-w-[92%] rounded-2xl rounded-br-md bg-[#214b36] px-4 py-3 text-[15px] text-white sm:max-w-[78%]">
-              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]">You</p>
+              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]"><UiText value="You"/></p>
               <p className="whitespace-pre-wrap break-words">{pendingPrompt}</p>
             </div>
             <div role="status" className="mr-auto w-fit rounded-2xl border border-[#dbe7da] bg-white px-5 py-4 text-sm text-[#52715a] shadow-sm">
-              <span className="mr-2 inline-block size-2 animate-pulse rounded-full bg-[#6cab76]" />{coursePdfSearch ? "Searching your course PDFs…" : "JARVIS is preparing your answer…"}
+              <span className="mr-2 inline-block size-2 animate-pulse rounded-full bg-[#6cab76]" /><UiText value={coursePdfSearch ? "Searching your course PDFs…" : "JARVIS is preparing your answer…"}/>
             </div>
           </li>}
           {failedPrompt && !pendingPrompt && <li className="space-y-4">
             <div className="ml-auto w-fit max-w-[92%] rounded-2xl rounded-br-md bg-[#214b36] px-4 py-3 text-[15px] text-white sm:max-w-[78%]">
-              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]">You</p>
+              <p className="mb-1 text-xs font-semibold text-[#b9d8bd]"><UiText value="You"/></p>
               <p className="whitespace-pre-wrap break-words">{failedPrompt}</p>
             </div>
             <div role="alert" className="mr-auto max-w-full rounded-2xl border border-[#ebc5b9] bg-[#fff2ed] px-5 py-4 text-sm text-[#803c32] shadow-sm">
@@ -377,7 +379,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
               <input className="sr-only" type="checkbox" checked={coursePdfSearch} disabled={busy}
                 onChange={(event) => setCoursePdfSearch(event.target.checked)} />
               <span className="jarvis-pdf-icon" aria-hidden="true">PDF</span>
-              <span><strong>Course sources</strong><small>{coursePdfSearch ? "Search PDFs only" : "Use general AI"}</small></span>
+              <span><strong><UiText value={"Course sources"}/></strong><small><UiText value={coursePdfSearch ? "Search PDFs only" : "Use general AI"}/></small></span>
               <span className="jarvis-mode-switch" aria-hidden="true"><i /></span>
             </label>
             <span className="text-xs text-[#708473]">{coursePdfSearch ? "Cited pages · no AI message used" : usage ? usage.remaining + " AI messages left today" : "AI study mode"}</span>
@@ -395,7 +397,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
             }} />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="min-w-0 flex-1 text-xs text-[#637766]">
-              {coursePdfSearch ? <>Answers include source pages. <Link href="/resources" className="underline">View course resources</Link></>
+              {coursePdfSearch ? <>Answers include source pages. <Link href="/resources" className="underline"><UiText value={"View course resources"}/></Link></>
                 : <>Enter to send · Shift + Enter for a new line</>}
             </p>
             <button className={button + " jarvis-chat-send min-w-28"} disabled={busy || !turns || !draft.trim()}>

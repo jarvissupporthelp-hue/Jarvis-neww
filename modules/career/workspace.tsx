@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -56,8 +58,8 @@ function WorkSample({ project }: { project: Project }) {
   }
   return <div className="flex flex-wrap items-center gap-2 text-sm">
     {project.link && <a className="underline" href={project.link} target="_blank" rel="noreferrer">Open work sample ↗</a>}
-    {project.file && <button type="button" className="underline" onClick={download}>Download {project.file.name}</button>}
-    <span className="text-slate-600">{project.verified ? "Verified" : "Unverified"}</span>
+    {project.file && <button type="button" className="underline" onClick={download}><UiText value="Download"/> {project.file.name}</button>}
+    <span className="text-slate-600"><UiText value={project.verified ? "Verified" : "Unverified"}/></span>
   </div>;
 }
 
@@ -72,20 +74,20 @@ function Opportunities({ profile, save, pending }: { profile: Profile; save: Sav
     && `${job.title} ${job.employer}`.toLowerCase().includes(query.trim().toLowerCase()));
   return <section className="space-y-4">
     <div className={`${panel} grid gap-3 sm:grid-cols-2 lg:grid-cols-5`}>
-      <label>Search<input type="search" className={field} value={query} onChange={(e) => setQuery(e.target.value)} /></label>
-      <label>Type<select className={field} value={type} onChange={(e) => setType(e.target.value)}><option value="">All types</option><option>Job</option><option>Internship</option></select></label>
+      <label><UiText value="Search"/><input type="search" className={field} value={query} onChange={(e) => setQuery(e.target.value)} /></label>
+      <label><UiText value="Type"/><select className={field} value={type} onChange={(e) => setType(e.target.value)}><option value="">All types</option><option>Job</option><option>Internship</option></select></label>
       <label>Location<select className={field} value={location} onChange={(e) => setLocation(e.target.value)}><option value="">All locations</option>{["Yerevan", "Remote", "Hybrid"].map((item) => <option key={item}>{item}</option>)}</select></label>
       <label>Deadline by<input type="date" className={field} value={deadline} onChange={(e) => setDeadline(e.target.value)} /></label>
       <label>Skill<select className={field} value={skill} onChange={(e) => setSkill(e.target.value)}><option value="">All skills</option>{skills.map(([name]) => <option key={name}>{name}</option>)}</select></label>
     </div>
-    <p role="status" className="text-sm text-slate-600">{items.length} sample opportunities</p>
+    <p role="status" className="text-sm text-slate-600">{items.length} {"sample opportunities"}</p>
     <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((job) => <li className={`${panel} flex flex-col gap-3`} key={job.id}>
       <p className="text-xs font-semibold uppercase tracking-wide text-[#305f4a]">{job.type} · {job.location}</p>
       <div><h2 className="text-lg font-semibold"><Link href={`/career/${job.id}`} className="hover:underline">{job.title}</Link></h2>
-      <p className="text-sm text-slate-600">{job.employer} · Due {date(job.deadline)}</p></div>
+      <p className="text-sm text-slate-600">{job.employer} {"· Due"} {date(job.deadline)}</p></div>
       <div className="flex flex-wrap gap-2">{job.requirements.map((item) => <span key={item} className="rounded-full bg-slate-100 px-2 py-1 text-xs">{item}</span>)}</div>
       <button className={`${secondary} mt-auto w-fit`} disabled={pending || !!profile.applications[job.id]} onClick={() => void save({ action: "application", id: job.id, stage: "saved" })}>
-        {profile.applications[job.id] ? "On your board" : "Save opportunity"}
+        <UiText value={profile.applications[job.id] ? "On your board" : "Save opportunity"}/>
       </button>
     </li>)}</ul>
     {!items.length && <p>No opportunities match your filters.</p>}
@@ -97,12 +99,12 @@ function Job({ job, profile, save, pending }: { job: Posting; profile: Profile; 
   return <section className="space-y-4">
     <Link className={secondary} href="/career">All opportunities</Link>
     <article className={panel}>
-      <p className="text-sm font-semibold text-[#305f4a]">{job.type} · {job.location} · Sample posting</p>
-      <h2 className="mt-2 text-3xl font-semibold">{job.title}</h2><p>{job.employer} · Due {date(job.deadline)}</p>
+      <p className="text-sm font-semibold text-[#305f4a]">{job.type} · {job.location} {"· Sample posting"}</p>
+      <h2 className="mt-2 text-3xl font-semibold">{job.title}</h2><p>{job.employer} {"· Due"} {date(job.deadline)}</p>
       <p className="my-4">{job.description}</p>
       <h3 className="font-semibold">Requirements</h3><ul className="my-2 list-disc pl-5">{job.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
       <div className="mt-4 flex flex-wrap gap-2"><button className={primary} disabled={pending || !!profile.applications[job.id]} onClick={() => void save({ action: "application", id: job.id, stage: "saved" })}>
-        {profile.applications[job.id] ? "On your board" : "Save opportunity"}</button></div>
+        <UiText value={profile.applications[job.id] ? "On your board" : "Save opportunity"}/></button></div>
     </article>
     {job.type === "Internship" && <form className={`${panel} space-y-3`} key={job.id} onSubmit={(event) => {
       event.preventDefault(); const form = new FormData(event.currentTarget);
@@ -126,7 +128,7 @@ function Board({ profile, save, pending }: { profile: Profile; save: Save; pendi
       {Object.entries(profile.applications).filter(([, value]) => value.stage === stage).map(([id, value]) => <form key={id} className={`${panel} mb-3 space-y-2 !p-3`} onSubmit={(event) => void save({ ...formValues(event), action: "application", id })}>
         <Link href={`/career/${id}`} className="font-semibold underline">{postings.find((job) => job.id === id)?.title}</Link>
         <label className="block">Stage<select name="stage" className={field} defaultValue={value.stage}>{stages.map((item) => <option key={item}>{item}</option>)}</select></label>
-        <label className="block">Notes<textarea name="notes" className={field} rows={2} maxLength={2500} defaultValue={value.notes} /></label>
+        <label className="block"><UiText value="Notes"/><textarea name="notes" className={field} rows={2} maxLength={2500} defaultValue={value.notes} /></label>
         <button className={secondary} disabled={pending}>Save update</button>
         <details><summary className="cursor-pointer text-sm">Stage history</summary><ul className="text-sm">{value.history.map(({ stage, at }, index) => <li key={index} className="capitalize">{stage} · {date(at)}</li>)}</ul></details>
       </form>)}
@@ -184,10 +186,10 @@ function CvBuilder({ initial, uploaded, save, pending }: { initial: Cv; uploaded
     <form className={`${panel} space-y-3`} onSubmit={(event) => void upload(event)}>
       <h2 className="text-xl font-semibold">Upload an existing CV</h2>
       <label className="block max-w-md">CV PDF (up to 1 MB)<input required name="cv" type="file" accept=".pdf,application/pdf" className={field} /></label>
-      <button className={primary} disabled={pending}>{uploaded ? "Replace PDF" : "Upload PDF"}</button>
+      <button className={primary} disabled={pending}><UiText value={uploaded ? "Replace PDF" : "Upload PDF"}/></button>
       {uploaded && <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="break-all">{uploaded.name}</span>
-        <button type="button" className={secondary} onClick={downloadUpload}>Download</button>
+        <button type="button" className={secondary} onClick={downloadUpload}><UiText value="Download"/></button>
         <button type="button" className={secondary} disabled={pending} onClick={() => void save({ action: "remove-cv" })}>Remove PDF</button>
       </div>}
     </form>
@@ -198,7 +200,7 @@ function CvBuilder({ initial, uploaded, save, pending }: { initial: Cv; uploaded
       <h2 className="text-xl font-semibold">CV builder</h2>
       {cvFields.map((name) => <label key={name} className="block capitalize">{name}<textarea className={field} maxLength={2200} rows={2} value={cv[name]} onChange={(e) => setCv({ ...cv, [name]: e.target.value })} /></label>)}
       <div className="flex flex-wrap gap-2"><button className={primary} disabled={pending}>Save CV</button><button type="button" className={secondary} onClick={() => setCv(sampleCv)}>Use sample</button>
-      <button type="button" className={secondary} disabled={exporting} onClick={() => void exportPdf()}>{exporting ? "Exporting…" : "Export PDF"}</button>
+      <button type="button" className={secondary} disabled={exporting} onClick={() => void exportPdf()}><UiText value={exporting ? "Exporting…" : "Export PDF"}/></button>
       <Link className={secondary} href="/api/career/pdf" prefetch={false}>Sample PDF</Link></div>
     </form>
     <article className={`${panel} space-y-4`}><h2 className="text-xl font-semibold">Live preview</h2>
@@ -264,28 +266,28 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
     <section className={`${panel} space-y-4`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div><h3 className="text-xl font-semibold">{pathway.title}</h3><p className="text-sm text-slate-600">{pathway.description}</p></div>
-        <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">{count} of {requirements.length} complete · {evidenced} with evidence</p>
+        <p className="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-900">{count} {"of"} {requirements.length} {"complete ·"} {evidenced} {"with evidence"}</p>
       </div>
       {"qualifications" in pathway && <p className="rounded-xl bg-slate-50 p-3 text-sm">{pathway.qualifications}</p>}
       {demo && <p className="text-sm text-slate-600">Your checklist is saved in this browser. Sign in to track skills in your Career profile.</p>}
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {requirements.map(({ name, description, priority, evidence }) => <li key={name} className={`rounded-xl border p-4 ${skill === name ? "border-emerald-700 bg-emerald-50" : "border-slate-200"}`}>
-          <p className="text-xs font-semibold text-slate-600">{priority} · {evidence.score}% evidence</p>
+          <p className="text-xs font-semibold text-slate-600">{priority} · {evidence.score}{"% evidence"}</p>
           <h4 className="mt-1 font-semibold">{name}</h4><p className="mt-1 text-sm">{description}</p>
-          <label className="mt-3 flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={tracked.has(name)} disabled={pending} onChange={(event) => toggleSkill(name, event.target.checked)} />{tracked.has(name) ? "Complete" : "Mark complete"}</label>
+          <label className="mt-3 flex items-center gap-2 text-sm font-semibold"><input type="checkbox" checked={tracked.has(name)} disabled={pending} onChange={(event) => toggleSkill(name, event.target.checked)} /><UiText value={tracked.has(name) ? "Complete" : "Mark complete"}/></label>
           <button type="button" aria-pressed={skill === name} className={`${secondary} mt-3`} onClick={() => { setSelectedSkill(name); setMessage(""); }}>View evidence</button>
         </li>)}
       </ul>
       <div className="rounded-xl bg-slate-100 p-4"><h4 className="font-semibold">Suggested portfolio project</h4><p className="mt-1 text-sm">{pathway.project}</p></div>
     </section>
     <div className={`${panel} space-y-3`}>
-      <h3 className="text-xl font-semibold">{skill} evidence</h3>
-      <label className="flex items-center gap-2 font-semibold"><input type="checkbox" checked={tracked.has(skill)} disabled={pending} onChange={(event) => toggleSkill(skill, event.target.checked)} />{tracked.has(skill) ? "Complete" : "Mark skill complete"}</label>
-      <p className="text-sm text-slate-600">Completion is self-reported. Evidence score: {result.score}%.</p>
+      <h3 className="text-xl font-semibold">{skill} {"evidence"}</h3>
+      <label className="flex items-center gap-2 font-semibold"><input type="checkbox" checked={tracked.has(skill)} disabled={pending} onChange={(event) => toggleSkill(skill, event.target.checked)} /><UiText value={tracked.has(skill) ? "Complete" : "Mark skill complete"}/></label>
+      <p className="text-sm text-slate-600">{"Completion is self-reported. Evidence score:"} {result.score}%.</p>
       <p className="text-sm text-slate-600">Course evidence 40% · Project 30% · Verified sample 30%</p>
       <div className="grid gap-3 md:grid-cols-3">
         <div><h3 className="font-semibold">Course → Skill</h3><p>{result.courses.join(", ") || "No completed course evidence"}</p><p>{skill}</p></div>
-        <div><h3 className="font-semibold">Skill → Project</h3>{result.work.map((project) => <p key={project.id}>{project.title} · Level {project.level}</p>)}</div>
+        <div><h3 className="font-semibold">Skill → Project</h3>{result.work.map((project) => <p key={project.id}>{project.title} {"· Level"} {project.level}</p>)}</div>
         <div><h3 className="font-semibold">Project → Work sample</h3>{result.work.map((project) => <WorkSample key={project.id} project={project} />)}</div>
       </div>
       {result.missing.length > 0 && <ul className="list-disc pl-5 text-sm">{result.missing.map((item) => <li key={item}>{item}</li>)}</ul>}
@@ -294,13 +296,13 @@ function Portfolio({ profile, completed, save, pending, demo }: { profile: Profi
       <h3 className="text-lg font-semibold">Related professions</h3>
       {!recommendations.length && <p className="text-sm text-slate-600">Mark a skill complete to see professions that use it.</p>}
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{recommendations.map(({ item, shared }) => <li className="rounded-xl border p-4" key={item.title}>
-        <h4 className="font-semibold">{item.title}</h4><p className="text-sm">{shared.length} of {item.requirements.length} skills complete</p>
+        <h4 className="font-semibold">{item.title}</h4><p className="text-sm">{shared.length} {"of"} {item.requirements.length} {"skills complete"}</p>
         <p className="mt-1 text-sm text-slate-600">{shared.join(", ")}</p>
-        <button type="button" className={`${secondary} mt-3`} onClick={() => chooseProfession(item.title)}>Explore {item.title}</button>
+        <button type="button" className={`${secondary} mt-3`} onClick={() => chooseProfession(item.title)}>{"Explore"} {item.title}</button>
       </li>)}</ul>
     </section>
     <form key={skill} className={`${panel} grid gap-3 sm:grid-cols-2`} onSubmit={(event) => void submit(event)}>
-      <h3 className="font-semibold sm:col-span-2">Add a project using {skill}</h3>
+      <h3 className="font-semibold sm:col-span-2">{"Add a project using"} {skill}</h3>
       <label>Project title<input className={field} required name="title" maxLength={120} /></label>
       <label>Skill level<select className={field} name="level" defaultValue="2"><option value="1">1 · Learning</option><option value="2">2 · Can apply</option><option value="3">3 · Can work independently</option></select></label>
       <label>Work sample or repository URL<input className={field} name="link" type="url" maxLength={500} /></label>
@@ -350,7 +352,7 @@ export function CareerWorkspace({ initialJob }: { initialJob?: string }) {
     <nav aria-label="Career tools" className="flex flex-wrap gap-2">{[...sections, ...(review ? ["Review" as const] : [])].map((tab) =>
       <button key={tab} aria-pressed={section === tab} className={section === tab ? primary : secondary} onClick={() => { setSection(tab); if (tab === "Opportunities") setSelected(""); }}>{tab}</button>
     )}</nav>
-    {notice && <p role="status" className="rounded-lg bg-slate-100 p-3">{notice} {notice.startsWith("Sign in") && <Link href="/account" className="underline">Open account</Link>}</p>}
+    {notice && <p role="status" className="rounded-lg bg-slate-100 p-3">{notice} {notice.startsWith("Sign in") && <Link href="/account" className="underline"><UiText value="Open account"/></Link>}</p>}
     {!loading && !snapshot && !notice && <p className="text-sm text-slate-600">Browse sample opportunities, or <Link href="/account" className="underline">sign in</Link> to save your work.</p>}
     {section === "Opportunities" && (job ? <Job key={job.id} job={job} profile={profile} save={save} pending={pending} /> :
       <Opportunities profile={profile} save={save} pending={pending} />)}
@@ -364,7 +366,7 @@ export function CareerWorkspace({ initialJob }: { initialJob?: string }) {
           <WorkSample project={project} /><button className={primary} disabled={pending} onClick={() => void save({ action: "verify", userId, id: project.id })}>Verify sample</button>
         </article>)}
         {requests.map((item) => <article key={item.id} className="space-y-2"><h3 className="font-semibold">{mentors.find(({ id }) => id === item.mentorId)?.name} · {item.status}</h3><p className="whitespace-pre-wrap break-words">{item.message}</p>
-          {item.status === "pending" && <div className="flex gap-2">{(["accepted", "declined"] as const).map((status) => <button key={status} className={secondary} disabled={pending} onClick={() => void save({ action: "respond", userId, id: item.id, status })}>{status === "accepted" ? "Accept" : "Decline"}</button>)}</div>}
+          {item.status === "pending" && <div className="flex gap-2">{(["accepted", "declined"] as const).map((status) => <button key={status} className={secondary} disabled={pending} onClick={() => void save({ action: "respond", userId, id: item.id, status })}><UiText value={status === "accepted" ? "Accept" : "Decline"}/></button>)}</div>}
         </article>)}
       </div>)}
     </section>}

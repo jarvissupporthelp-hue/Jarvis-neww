@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -57,61 +59,61 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
       {(offering || page === "overview") && <p className="mt-2 text-[var(--muted)]">{offering
         ? [offering.course.code, offering.group?.name, offering.semester.name].filter(Boolean).join(" · ") : copy.description}</p>}
     </header>
-    {!response && <p role="status">{copy.loading}</p>}
-    {response?.status === 401 && <div className={tile}><p>{copy.signedOut}</p><Link href={`/account?${lang}`} className={link}>{copy.signIn}</Link></div>}
-    {response?.status === 403 && <p role="status">{copy.denied}</p>}
-    {response?.status === 404 && <p role="status">{copy.missing}</p>}
+    {!response && <p role="status"><UiText value={copy.loading}/></p>}
+    {response?.status === 401 && <div className={tile}><p><UiText value={copy.signedOut}/></p><Link href={`/account?${lang}`} className={link}><UiText value={copy.signIn}/></Link></div>}
+    {response?.status === 403 && <p role="status"><UiText value={copy.denied}/></p>}
+    {response?.status === 404 && <p role="status"><UiText value={copy.missing}/></p>}
     {response && response.status >= 500 && <div role="status">
-      <p>{copy.failed}</p><button type="button" className={link} onClick={() => { setResponse(undefined); setAttempt((n) => n + 1); }}>{copy.retry}</button>
+      <p><UiText value={copy.failed}/></p><button type="button" className={link} onClick={() => { setResponse(undefined); setAttempt((n) => n + 1); }}><UiText value={copy.retry}/></button>
     </div>}
     {data && !offering && <>
       <nav className={tile + " flex flex-wrap gap-x-6 gap-y-3"} aria-label={copy.title}>
-        <Link className={tab} href={`/academics?${lang}`} aria-current={page === "overview" ? "page" : undefined}>{copy.overview}</Link>
-        <Link className={tab} href={`/academics/courses?${lang}`} aria-current={page === "courses" ? "page" : undefined}>{copy.courses}</Link>
-        {data.role !== "admin" && <Link className={tab} href={`/academics/assignments?${lang}`} aria-current={page === "assignments" ? "page" : undefined}>{copy.assignments}</Link>}
-        <Link className={link} href={`/account/calendar?${lang}`}>{copy.calendar}</Link>
+        <Link className={tab} href={`/academics?${lang}`} aria-current={page === "overview" ? "page" : undefined}><UiText value={copy.overview}/></Link>
+        <Link className={tab} href={`/academics/courses?${lang}`} aria-current={page === "courses" ? "page" : undefined}><UiText value={copy.courses}/></Link>
+        {data.role !== "admin" && <Link className={tab} href={`/academics/assignments?${lang}`} aria-current={page === "assignments" ? "page" : undefined}><UiText value={copy.assignments}/></Link>}
+        <Link className={link} href={`/account/calendar?${lang}`}><UiText value={copy.calendar}/></Link>
         {data.role === "student" && <>
-          <Link className={link} href={`/account?${lang}`}>{copy.dashboard}</Link>
-          <Link className={link} href={`/chat?${lang}`}>{copy.chat}</Link>
-          <Link className={link} href="/study-plans">{copy.plans}</Link>
+          <Link className={link} href={`/account?${lang}`}><UiText value={copy.dashboard}/></Link>
+          <Link className={link} href={`/chat?${lang}`}><UiText value={copy.chat}/></Link>
+          <Link className={link} href="/study-plans"><UiText value={copy.plans}/></Link>
         </>}
-        {data.role === "lecturer" && <Link className={link} href="/lecturer">{copy.lecturer}</Link>}
-        {data.role === "admin" && <Link className={link} href={`/account/admin/group?${lang}`}>{copy.admin}</Link>}
+        {data.role === "lecturer" && <Link className={link} href="/lecturer"><UiText value={copy.lecturer}/></Link>}
+        {data.role === "admin" && <Link className={link} href={`/account/admin/group?${lang}`}><UiText value={copy.admin}/></Link>}
       </nav>
       {page !== "assignments" && <section aria-labelledby="portal-courses">
-        <h2 id="portal-courses" className="mb-3 text-xl font-semibold">{copy.courses}</h2>
-        {!data.courses.length ? <p>{copy.empty}</p> : <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 id="portal-courses" className="mb-3 text-xl font-semibold"><UiText value={copy.courses}/></h2>
+        {!data.courses.length ? <p><UiText value={copy.empty}/></p> : <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[...data.courses].sort((a, b) => a.course.name.localeCompare(b.course.name, locale)).map((item) => (
             <li key={item.id} className={tile}>
               <h3 className="text-lg font-semibold">{item.course.name}</h3>
               <p className="mb-2 text-sm text-[var(--muted)]">{[item.course.code, item.group?.name, item.semester.name].filter(Boolean).join(" · ")}</p>
-              <Link aria-label={[copy.open, item.course.name, item.group?.name, item.semester.name].filter(Boolean).join(" · ")} className={link} href={`/academics/courses/${item.id}?${lang}`}>{copy.open} →</Link>
+              <Link aria-label={[copy.open, item.course.name, item.group?.name, item.semester.name].filter(Boolean).join(" · ")} className={link} href={`/academics/courses/${item.id}?${lang}`}><UiText value={copy.open}/> →</Link>
             </li>
           ))}
         </ul>}
       </section>}
     </>}
     {data && (page === "assignments" || (offering && data.role !== "admin")) && <section className={tile} aria-labelledby="portal-assignments">
-        <h2 id="portal-assignments" className="mb-2 text-xl font-semibold">{copy.assignments}</h2>
-        {data.assignments === null ? <p>{copy.failed}</p> : !data.assignments.length ? <p>{copy.noAssignments}</p> :
+        <h2 id="portal-assignments" className="mb-2 text-xl font-semibold"><UiText value={copy.assignments}/></h2>
+        {data.assignments === null ? <p><UiText value={copy.failed}/></p> : !data.assignments.length ? <p><UiText value={copy.noAssignments}/></p> :
           <ul className="space-y-3">{data.assignments.map((item) => <li key={item.id}>
             <h3 className="font-semibold">{item.title}</h3>
             {!offering && <p>{data.courses.find(({ id }) => id === item.offering_id)?.course.name}</p>}
-            <time dateTime={`${item.due_on}T${item.due_at}+04:00`}>{item.due_on} · {item.due_at.slice(0, 5)} · Asia/Yerevan</time>
+            <time dateTime={`${item.due_on}T${item.due_at}+04:00`}>{item.due_on} · {item.due_at.slice(0, 5)} {"· Asia/Yerevan"}</time>
             <p className="whitespace-pre-wrap break-words">{item.brief}</p>
           </li>)}</ul>}
     </section>}
     {offering && data && data.role !== "admin" && <>
       {data.role === "student" && <div className={tile + " flex flex-wrap gap-x-6 gap-y-3"}>
-        <Link className={link} href={`/chat?${lang}&offering=${offering.id}`}>{copy.ask} →</Link>
-        <Link className={link} href={`/chat?${lang}&offering=${offering.id}&mode=course-pdfs`}>{copy.search} →</Link>
+        <Link className={link} href={`/chat?${lang}&offering=${offering.id}`}><UiText value={copy.ask}/> →</Link>
+        <Link className={link} href={`/chat?${lang}&offering=${offering.id}&mode=course-pdfs`}><UiText value={copy.search}/> →</Link>
       </div>}
-      {data.role === "lecturer" && <Link className={link} href={`/lecturer/${offering.id}`}>{copy.lecturer} →</Link>}
+      {data.role === "lecturer" && <Link className={link} href={`/lecturer/${offering.id}`}><UiText value={copy.lecturer}/> →</Link>}
       <section className={tile} aria-labelledby="portal-resources">
-        <h2 id="portal-resources" className="mb-2 text-xl font-semibold">{copy.resources}</h2>
+        <h2 id="portal-resources" className="mb-2 text-xl font-semibold"><UiText value={copy.resources}/></h2>
         <div lang="en"><CourseResources offeringId={offering.id} /></div>
       </section>
     </>}
-    <Link href="/academics/demo" className={link}>{copy.demo}</Link>
+    <Link href="/academics/demo" className={link}><UiText value={copy.demo}/></Link>
   </main>;
 }

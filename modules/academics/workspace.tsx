@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
@@ -61,7 +63,7 @@ function Events({ items }: { items: Event[] }) {
       </div>
       <p className="text-sm">{dateLabel(item.start)} – {dateLabel(item.end, "time")}</p>
       {item.lecturer && <p className="text-sm">{item.lecturer}</p>}
-      {item.room && <p className="text-sm">Room {item.room}</p>}
+      {item.room && <p className="text-sm"><UiText value="Room"/> {item.room}</p>}
       {item.reason && <p className="text-sm">{item.reason}</p>}
     </li>;
   })}</ul> : <p>No scheduled events.</p>;
@@ -87,12 +89,12 @@ function Timetable({ items, day }: { items: Event[]; day: string }) {
 
   return <Card title={daily ? "Daily timetable" : "Weekly timetable"}>
     <p className="font-semibold">ՀԱՄԱԿԱՐԳՉԱՅԻՆ ԳԻՏՈՒԹՅՈՒՆ (ինֆորմատիկա) / Computer Science</p>
-    <p className="text-sm">Year 3 · 2026–2027 · Semester 1 · {computerScienceWeekLabel} · Asia/Yerevan</p>
+    <p className="text-sm">{"Year 3 · 2026–2027 · Semester 1 ·"} {computerScienceWeekLabel} {"· Asia/Yerevan"}</p>
     <div className="flex flex-wrap items-center gap-3">
       <button className={button} type="button" aria-pressed={!daily} onClick={() => setDaily(false)}>Week</button>
-      <button className={button} type="button" aria-pressed={daily} onClick={() => setDaily(true)}>Day</button>
+      <button className={button} type="button" aria-pressed={daily} onClick={() => setDaily(true)}><UiText value="Day"/></button>
       <button type="button" className="underline" onClick={() => setDate(computerScienceDays[0])}>Open timetable week</button>
-      <label>Date <input className={field} type="date" value={date} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
+      <label><UiText value="Date"/> <input className={field} type="date" value={date} onChange={(event) => { if (event.target.value) setDate(event.target.value); }} /></label>
     </div>
     {days.length ? days.map((value) => (
       <div key={value} className="overflow-x-auto">
@@ -112,9 +114,9 @@ function Timetable({ items, day }: { items: Event[]; day: string }) {
                 <Link className="font-semibold underline" href={`/academics/demo/courses/${item.course}`}>{item.title}</Link>
                 {item.lecturer && <p>{item.lecturer}</p>}
                 {item.status !== "Scheduled" && <Badge warning>{item.status}</Badge>}
-                {item.room && <p className="text-sm">Room {item.room}</p>}
+                {item.room && <p className="text-sm"><UiText value="Room"/> {item.room}</p>}
       {item.reason && <p>{item.reason}</p>}
-              </td> : breakTime ? <td colSpan={4} className="border border-[#a6b8aa] bg-[#ebeee9] p-2">Break</td>
+              </td> : breakTime ? <td colSpan={4} className="border border-[#a6b8aa] bg-[#ebeee9] p-2"><UiText value="Break"/></td>
                 : [1, 2, 3, 4].map((group) => <td key={group} className="h-9 border border-[#a6b8aa]" />)}
             </tr>;
           })}</tbody>
@@ -167,7 +169,7 @@ function GradeSheet({ official, calculator }: { official: GradeModule[]; calcula
           const result = report.results[moduleIndex];
           const incomplete = result.missing && gradingMode !== "zero";
           return <tbody key={module.name}>
-            <tr className="border-t bg-[#f1f5f0] font-semibold"><th className="p-3">{module.name}</th><td>{formatGrade(result.coefficient, decimal("1"))}</td><td /><td>{incomplete ? "Not graded yet" : result.grade}</td><td>{!incomplete && <Badge warning={!result.validated}>{result.validated ? "VALIDATED" : "NOT VALIDATED"}</Badge>}</td></tr>
+            <tr className="border-t bg-[#f1f5f0] font-semibold"><th className="p-3">{module.name}</th><td>{formatGrade(result.coefficient, decimal("1"))}</td><td /><td>{incomplete ? "Not graded yet" : result.grade}</td><td>{!incomplete && <Badge warning={!result.validated}><UiText value={result.validated ? "VALIDATED" : "NOT VALIDATED"}/></Badge>}</td></tr>
             {module.courses.map((course, courseIndex) => <tr key={course.code} className="border-b border-[#e3e9e3]">
               <th className="p-3 font-normal">{course.title}</th><td>{course.ects}</td>
               <td className="py-2"><ul className="space-y-2">{course.components.map((component, componentIndex) => {
@@ -192,8 +194,8 @@ function GradeSheet({ official, calculator }: { official: GradeModule[]; calcula
       </table>
     </div>
     <div className="flex flex-wrap gap-5 rounded-lg bg-[#eaf2ea] p-4" aria-live="polite">
-      <strong>Semester GPA: {report.gpa ?? "Incomplete"}</strong><strong>ECTS earned: {report.earned}</strong><strong>Annual GPA: {annual ?? "Incomplete"}</strong>
-      {conversion && <span>4.0 conversion (not official): {report.conversion ?? "Incomplete"}</span>}
+      <strong>{"Semester GPA:"} {report.gpa ?? "Incomplete"}</strong><strong>{"ECTS earned:"} {report.earned}</strong><strong>{"Annual GPA:"} {annual ?? "Incomplete"}</strong>
+      {conversion && <span>{"4.0 conversion (not official):"} {report.conversion ?? "Incomplete"}</span>}
     </div>
   </Card>;
 }
@@ -207,10 +209,10 @@ function Assignments({ role, schedule }: { role: Role; schedule: ReturnType<type
     const near = schedule.assignments.some((other) => other.id !== item.id && Math.abs(Date.parse(other.due) - Date.parse(item.due)) <= 86_400_000);
     const examPeriod = item.due.slice(0, 10) >= schedule.exams[0].start.slice(0, 10) && item.due.slice(0, 10) <= schedule.exams.at(-1)!.end.slice(0, 10);
     return <Card title={item.title} key={item.id}>
-      <p>{item.course} · Due {dateLabel(item.due)}</p>
+      <p>{item.course} {"· Due"} {dateLabel(item.due)}</p>
       <div className="flex flex-wrap gap-2"><Badge>{submission?.score ? "Graded" : submission ? "Submitted" : "Open"}</Badge>
         {near && <Badge warning>Another deadline within 24 hours</Badge>}{examPeriod && <Badge warning>During exam period</Badge>}</div>
-      {submission && <div className="space-y-1"><p>{submission.text}</p>{submission.file && <p>File selected: {submission.file}</p>}{submission.score && <p>Score: {submission.score}/20 · {submission.feedback}</p>}</div>}
+      {submission && <div className="space-y-1"><p>{submission.text}</p>{submission.file && <p>{"File selected:"} {submission.file}</p>}{submission.score && <p>{"Score:"} {submission.score}/20 · {submission.feedback}</p>}</div>}
       {role === "student" && <form className="grid gap-3" onSubmit={(event) => {
         event.preventDefault();
         const fields = new FormData(event.currentTarget);
@@ -241,7 +243,7 @@ function Gradebook({ published, publish }: { published: Published; publish: (val
   const [selected, setSelected] = useState(courses[0].code);
   const course = courses.find((item) => item.code === selected)!;
   return <Card title="Lecturer gradebook">
-    <label>Course <select className={field} value={selected} onChange={(event) => setSelected(event.target.value)}>
+    <label><UiText value="Course"/> <select className={field} value={selected} onChange={(event) => setSelected(event.target.value)}>
       {courses.filter((item) => courseLecturer(item.code) === lecturers[0]).map((item) => <option key={item.code} value={item.code}>{item.title}</option>)}
     </select></label>
     <form onSubmit={(event) => {
@@ -271,7 +273,7 @@ function Gradebook({ published, publish }: { published: Published; publish: (val
       }
       publish(updates); setAudit(history); setDrafts(next); setNotice("Scores published to the student view.");
     }} className="space-y-4" key={selected}>
-      <div className="overflow-x-auto"><table className="min-w-max text-left"><thead><tr><th className="pr-4">Student</th>{course.components.map((component) => <th key={component.name} className="p-2">{component.name}</th>)}</tr></thead>
+      <div className="overflow-x-auto"><table className="min-w-max text-left"><thead><tr><th className="pr-4"><UiText value="Student"/></th>{course.components.map((component) => <th key={component.name} className="p-2">{component.name}</th>)}</tr></thead>
       <tbody><tr><th>Demo Student</th>{course.components.map((component, index) => {
         const key = `${course.code}:${index}`;
         return <td className="p-2" key={key}><input className={`w-24 ${field}`} aria-label={component.name} name={key} type="number" min="0" max="20" step="0.01" defaultValue={drafts[key]?.value ?? published[key] ?? component.score ?? ""} /></td>;
@@ -306,9 +308,9 @@ function Management() {
       const list = [...records[category]];
       if (editing === null) list.push(value); else list[editing] = value;
       setRecords({ ...records, [category]: list }); setName(""); setEditing(null);
-    }}><label>Record name <input className={field} value={name} onChange={(event) => setName(event.target.value)} required /></label><button className={button}>{editing === null ? "Add record" : "Save changes"}</button></form>
+    }}><label>Record name <input className={field} value={name} onChange={(event) => setName(event.target.value)} required /></label><button className={button}><UiText value={editing === null ? "Add record" : "Save changes"}/></button></form>
     <ul className="space-y-2">{records[category].map((item, index) => <li className="flex flex-wrap items-center gap-4" key={index}>
-      <span>{item}</span><button className="underline" onClick={() => { setEditing(index); setName(item); }}>Edit</button>
+      <span>{item}</span><button className="underline" onClick={() => { setEditing(index); setName(item); }}><UiText value="Edit"/></button>
       <button className="underline" onClick={() => { setRecords({ ...records, [category]: records[category].filter((_, position) => position !== index) }); setEditing(null); setName(""); }}>Remove</button>
     </li>)}</ul>
   </Card>;
@@ -334,7 +336,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
   const schedule = demoSchedule();
   const [selectedDate, setSelectedDate] = useState(initialDate ?? schedule.day);
   if (!role) return <main className="mx-auto max-w-lg space-y-5 px-5 py-12">
-    <Link href="/" className="underline">JARVIS home</Link><h1 className="text-4xl font-semibold">Academics</h1>
+    <Link href="/" className="underline"><UiText value="JARVIS home"/></Link><h1 className="text-4xl font-semibold"><UiText value="Academics"/></h1>
     <Card title="Sign in to the demo">
       <p>Use <strong>student@example.com</strong>, <strong>lecturer@example.com</strong>, <strong>staff@example.com</strong>, or <strong>admin@example.com</strong>. The demo password is <strong>JarvisDemo2026</strong>.</p>
       <form className="grid gap-3" onSubmit={(event: FormEvent<HTMLFormElement>) => {
@@ -343,9 +345,9 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
         if (!selected || fields.get("password") !== "JarvisDemo2026") { setLoginError(true); return; }
         setLoginError(false); setRole(selected);
       }}>
-        <label>Email <input name="email" type="email" autoComplete="username" required className={`block w-full ${field}`} /></label>
-        <label>Password <input name="password" type="password" autoComplete="current-password" required className={`block w-full ${field}`} /></label>
-        <button className={button}>Sign in</button>{loginError && <p role="alert">The demo email or password is incorrect.</p>}
+        <label><UiText value="Email"/> <input name="email" type="email" autoComplete="username" required className={`block w-full ${field}`} /></label>
+        <label><UiText value={"Password"}/> <input name="password" type="password" autoComplete="current-password" required className={`block w-full ${field}`} /></label>
+        <button className={button}><UiText value="Sign in"/></button>{loginError && <p role="alert">The demo email or password is incorrect.</p>}
       </form>
     </Card>
   </main>;
@@ -366,7 +368,7 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
     switch (page) {
       case "courses": return course ? <Card title={course.title}>
         <p>{course.code} · {course.ects && `${course.ects} ECTS · `}{courseLecturer(course.code)}</p>
-        <p>Develop practical and theoretical skills in {course.title.toLowerCase()} through lectures and assessed coursework.</p>
+        <p>{"Develop practical and theoretical skills in"} {course.title.toLowerCase()} {"through lectures and assessed coursework."}</p>
         <h3 className="font-semibold">Syllabus</h3><ul>{course.components.map((item) => <li key={item.name}>{item.name} · {formatGrade(decimal(item.weight) * 100n, decimal("1"))}%</li>)}</ul>
         <h3 className="font-semibold">Schedule</h3><Events items={schedule.timetable.filter((item) => item.course === code)} />
       </Card> : <div className="grid gap-3 sm:grid-cols-2">{visibleCourses.map((item) => <Card key={item.code} title={item.title}>
@@ -387,27 +389,27 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
         <ul className="space-y-3">{[...courses, { code: "SYS201", title: "Systems 1" }].map((item) => {
           const missing = (prerequisites[item.code] ?? []).filter((entry) => !completed.has(entry));
           return <li key={item.code}><strong>{item.title}</strong> <Badge>{completed.has(item.code) ? "Completed" : missing.length || item.code === "SYS201" ? "Remaining" : "In progress"}</Badge>
-            {!!missing.length && <p>Missing prerequisites: {missing.map((entry) => courses.find((candidate) => candidate.code === entry)?.title ?? entry).join(", ")}</p>}</li>;
+            {!!missing.length && <p>{"Missing prerequisites:"} {missing.map((entry) => courses.find((candidate) => candidate.code === entry)?.title ?? entry).join(", ")}</p>}</li>;
         })}</ul>
       </Card>;
       default: return role === "student" ? <div className="grid gap-4 lg:grid-cols-3">
         <Card title="My Day">
           <p className="font-semibold">Computer Science</p>
-          <p className="text-sm">Year 3 · Semester 1 · {computerScienceWeekLabel}</p>
-          <p className="text-sm">Selected date: {selectedDate}</p>
+          <p className="text-sm">{"Year 3 · Semester 1 ·"} {computerScienceWeekLabel}</p>
+          <p className="text-sm">{"Selected date:"} {selectedDate}</p>
           <Events items={schedule.timetable.filter((item) => item.start.startsWith(selectedDate))} />
         </Card>
         <SubjectsForDay timetable={schedule.timetable} today={schedule.day} date={selectedDate} onDateChange={setSelectedDate} />
         <Card title="Exams today"><Events items={schedule.exams.filter((item) => item.start.startsWith(schedule.day))} /></Card>
       </div> : <Card title={role === "lecturer" ? "Teaching workspace" : "Academic administration"}>
-        <Link className="underline" href={role === "lecturer" ? "/academics/demo/gradebook" : "/academics/demo/manage"}>{role === "lecturer" ? "Open gradebook" : "Manage Academics"}</Link>
+        <Link className="underline" href={role === "lecturer" ? "/academics/demo/gradebook" : "/academics/demo/manage"}><UiText value={role === "lecturer" ? "Open gradebook" : "Manage Academics"}/></Link>
       </Card>;
     }
   };
   return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-8">
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div><Link href="/" className="text-sm font-semibold underline">JARVIS home</Link><h1 className="mt-2 text-4xl font-semibold">Academics</h1><p className="mt-1">Demo {role} · Asia/Yerevan</p></div>
-      <button className="underline" onClick={() => setRole(null)}>Sign out</button>
+      <div><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link><h1 className="mt-2 text-4xl font-semibold"><UiText value="Academics"/></h1><p className="mt-1">{"Demo"} {role} {"· Asia/Yerevan"}</p></div>
+      <button className="underline" onClick={() => setRole(null)}><UiText value="Sign out"/></button>
     </header>
     <nav aria-label="Academics" className="flex flex-wrap gap-2 border-b border-[#c5d0c6] pb-4">
       {allowed.map((entry) => <Link key={entry.key} aria-current={page === entry.key ? "page" : undefined}

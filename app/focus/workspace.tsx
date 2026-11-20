@@ -1,5 +1,9 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
 
+
+import {Countdown} from "../components/countdown";
+import {useInterfaceCopy} from "../components/interface-language";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { getClient } from "@/lib/browser-supabase";
@@ -21,6 +25,7 @@ const historyDate = new Intl.DateTimeFormat("en-GB", {
 });
 
 export function FocusWorkspace() {
+  const t=useInterfaceCopy();
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [mode, setMode] = useState<FocusMode>("focus");
   const [minutes, setMinutes] = useState({ focus: 25, break: 5 });
@@ -91,60 +96,58 @@ export function FocusWorkspace() {
     });
   }
 
-  if (signIn) return <p>Sign in with an active student account. <Link href="/account" className="underline">Sign in</Link></p>;
-  if (!snapshot && !error) return <p role="status">Loading your focus timer…</p>;
-  const time = [Math.floor(seconds / 60), seconds % 60].map((part) => String(part).padStart(2, "0")).join(":");
-
   return (
     <>
-      {error && <p role="alert">{error}</p>}
+      {error && <p role="alert">{t(error)}</p>}
       <section className={card} aria-label="Focus timer">
+        <Countdown seconds={active ? seconds : Math.max(0,minutes[mode])*60} total={active ? Math.max(seconds, (active.duration_minutes ?? minutes[mode])*60) : minutes[mode]*60} label={mode==="focus"?"Focus":"Break"} running={active?.state==="running"}/>
+        {signIn && <p><UiText value="Sign in with an active student account."/> <Link href="/account" className="underline"><UiText value="Sign in"/></Link></p>}
+        {!signIn && !snapshot && !error && <p role="status"><UiText value="Loading your focus timer…"/></p>}
         {active ? (
           <>
-            <p className="font-semibold">{active.mode === "focus" ? "Focus" : "Break"} · {active.state === "paused" ? "Paused" : "Running"}</p>
+            <p className="font-semibold">{active.mode === "focus" ? t("Focus") : t("Break")} · {active.state === "paused" ? t("Paused") : t("Running")}</p>
             {active.label && <p className="break-words">{active.label}</p>}
-            <p role="timer" className="text-5xl font-semibold tabular-nums" aria-label={`${time} remaining`}>{time}</p>
             <div className="flex flex-wrap gap-3">
               <button type="button" className={button} disabled={busy || seconds === 0}
                 onClick={() => void update(active.state === "paused" ? "resume" : "pause", { p_id: active.id })}>
-                {active.state === "paused" ? "Resume" : "Pause"}
+                {active.state === "paused" ? t("Resume") : t("Pause")}
               </button>
               <button type="button" className="underline disabled:opacity-50" disabled={busy || seconds === 0}
-                onClick={() => void update("reset", { p_id: active.id })}>Reset timer</button>
+                onClick={() => void update("reset", { p_id: active.id })}><UiText value="Reset timer"/></button>
             </div>
           </>
         ) : snapshot && (
           <form className="space-y-3" onSubmit={start} onChange={() => { pendingStart.current = null; }}>
-            <label>Timer type
+            <label><UiText value="Timer type"/>
               <select className={field} value={mode} disabled={busy}
                 onChange={(event) => setMode(event.target.value as FocusMode)}>
-                <option value="focus">Focus</option><option value="break">Break</option>
+                <option value="focus"><UiText value="Focus"/></option><option value="break"><UiText value="Break"/></option>
               </select>
             </label>
-            <label>Duration in minutes
+            <label><UiText value="Duration in minutes"/>
               <input className={field} type="number" min={1} max={90} required value={minutes[mode] || ""} disabled={busy}
                 onChange={(event) => setMinutes({ ...minutes, [mode]: Number(event.target.value) })} />
             </label>
-            {mode === "focus" && <label>Task or study topic (optional)
+            {mode === "focus" && <label><UiText value="Task or study topic (optional)"/>
               <input className={field} name="label" maxLength={120} disabled={busy} />
             </label>}
-            <button className={button} disabled={busy}>{mode === "focus" ? "Start focus session" : "Start break"}</button>
+            <button className={button} disabled={busy}>{mode === "focus" ? t("Start focus session") : t("Start break")}</button>
           </form>
         )}
         <button type="button" className="text-sm underline disabled:opacity-50" disabled={busy}
-          onClick={() => void update("read")}>Refresh timer and history</button>
+          onClick={() => void update("read")}><UiText value="Refresh timer and history"/></button>
       </section>
       {snapshot && <section className={card}>
-        <h2 className="text-xl font-semibold">Focus history</h2>
-        <p role="status">{snapshot.today_minutes} min today · {snapshot.week_minutes} min this week</p>
+        <h2 className="text-xl font-semibold"><UiText value="Focus history"/></h2>
+        <p role="status">{snapshot.today_minutes} {t("min today")} · {snapshot.week_minutes} {t("min this week")}</p>
         {snapshot.history.length ? (
           <ul className="space-y-2">{snapshot.history.map((item) => (
             <li key={item.id} className="break-words">
-              <strong>{item.label || "Focus session"}</strong>
-              <p className="text-sm">{item.duration_minutes} min · {historyDate.format(new Date(item.completed_at))} Yerevan</p>
+              <strong>{item.label || t("Focus session")}</strong>
+              <p className="text-sm">{item.duration_minutes} {"min ·"} {historyDate.format(new Date(item.completed_at))} {"Yerevan"}</p>
             </li>
           ))}</ul>
-        ) : <p>No completed focus sessions yet.</p>}
+        ) : <p><UiText value="No completed focus sessions yet."/></p>}
       </section>}
     </>
   );

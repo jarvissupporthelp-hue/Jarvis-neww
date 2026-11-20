@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -89,13 +91,13 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
       {rebalanceSaved && <p role="status">Rebalance saved to your calendar.</p>}
       {schedule && (
         <div className="space-y-2">
-          <h3 ref={resultHeading} tabIndex={-1} className="font-semibold">{confirmed ? "Confirmed sessions" : "Proposed sessions"} · Yerevan time</h3>
+          <h3 ref={resultHeading} tabIndex={-1} className="font-semibold"><UiText value={confirmed ? "Confirmed sessions" : "Proposed sessions"}/> {"· Yerevan time"}</h3>
           {schedule.sessions.length ? (
             <ol className="list-decimal space-y-1 pl-5">{schedule.sessions.map((session) => (
               <li key={session.id ?? session.topicPosition ?? "review"} className="break-words">
                 <strong>{session.title}</strong> · {session.date} · {session.start}–{session.end}
                 {session.completedAt && (
-                  <p className="text-sm font-semibold">Completed{session.confidenceAfter ? ` · Confidence ${session.confidenceAfter}/5` : ""}</p>
+                  <p className="text-sm font-semibold"><UiText value="Completed"/>{session.confidenceAfter ? ` · Confidence ${session.confidenceAfter}/5` : ""}</p>
                 )}
                 {confirmed && session.id && !session.completedAt && (
                   <SessionCompletion sessionId={session.id} topic={session.topicPosition === null ? null : session.title}
@@ -110,11 +112,11 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
           ) : <p>No sessions fit before the exam.</p>}
           {schedule.unscheduled.length > 0 && (
             <p><strong>Topics that didn’t fit:</strong> {schedule.unscheduled.map((topic) => topic.name).join(", ")}.
-              {" "}Try widening your availability or shortening sessions.</p>
+              {" "}{"Try widening your availability or shortening sessions."}</p>
           )}
           {confirmed ? (
             <>
-              <p className="text-sm">Saved to your calendar. <Link href="/account#student-timetable" className="underline">Open calendar</Link></p>
+              <p className="text-sm">Saved to your calendar. <Link href="/account#student-timetable" className="underline"><UiText value="Open calendar"/></Link></p>
               <RebalancePreview planId={planId} practiceTopics={practiceTopics} onApplied={async () => {
                 setRebalanceSaved(true);
                 await generate();
@@ -125,7 +127,7 @@ export function SchedulePreview({ planId, hasSessions, practiceTopics, refreshPl
               <p className="text-sm">Preview only. Sessions haven’t been saved to your calendar.</p>
               {schedule.sessions.length > 0 && (
                 <button type="button" disabled={busy} onClick={() => void confirm()}
-                  className="min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">{busy ? "Confirming…" : "Confirm schedule"}</button>
+                  className="min-h-11 rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50"><UiText value={busy ? "Confirming…" : "Confirm schedule"}/></button>
               )}
             </>
           )}

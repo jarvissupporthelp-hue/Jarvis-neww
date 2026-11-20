@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import type { AssignmentDeadline } from "@/lib/course-assignments";
 import Link from "next/link";
@@ -49,9 +51,9 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
   }, [getToken, retry]);
 
   if (!data) return <section className="ui-empty-block" role={error ? "alert" : "status"}>
-    <strong>{error ? "Dashboard unavailable" : "Getting your dashboard ready…"}</strong>
+    <strong><UiText value={error ? "Dashboard unavailable" : "Getting your dashboard ready…"}/></strong>
     <p>{error || "Loading classes, deadlines, and courses."}</p>
-    {error && <button type="button" className="ui-action-secondary" onClick={() => { setError(""); setRetry((n) => n + 1); }}>Try again</button>}
+    {error && <button type="button" className="ui-action-secondary" onClick={() => { setError(""); setRetry((n) => n + 1); }}><UiText value="Try again"/></button>}
   </section>;
 
   const plans = data.studyProgress ?? [];
@@ -65,27 +67,27 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
     <header className="ui-overview-header">
       <div>
         <span className="ui-kicker">YOUR WORKSPACE <span className="ui-kicker-dot">·</span> {dateLabel(data.date)}</span>
-        <h2 id="student-dashboard-heading">Good to see you, {firstName}<span className="ui-title-dot">.</span></h2>
+        <h2 id="student-dashboard-heading">{"Good to see you,"} {firstName}<span className="ui-title-dot">.</span></h2>
         <p>Here is what is happening across your studies.</p>
       </div>
       <nav aria-label="Quick actions" className="ui-overview-actions">
-        <Link href="/account/tasks" className="ui-action-secondary">My tasks</Link>
-        <Link href="/account/calendar" className="ui-action-primary">Open calendar <span aria-hidden="true">↗</span></Link>
+        <Link href="/account/tasks" className="ui-action-secondary"><UiText value="My tasks"/></Link>
+        <Link href="/account/calendar" className="ui-action-primary"><UiText value="Open calendar"/> <span aria-hidden="true">↗</span></Link>
       </nav>
     </header>
 
     <div className="ui-overview-metrics" aria-label="Academic snapshot">
-      <div><span>Classes today</span><strong>{data.today.length.toString().padStart(2, "0")}</strong><small>Your schedule</small></div>
+      <div><span><UiText value="Classes today"/></span><strong>{data.today.length.toString().padStart(2, "0")}</strong><small>Your schedule</small></div>
       <div><span>Current courses</span><strong>{data.courses.length.toString().padStart(2, "0")}</strong><small>Enrolled subjects</small></div>
-      <div><span>Deadlines</span><strong>{deadlines === null ? "—" : (deadlines?.length ?? 0).toString().padStart(2, "0")}</strong><small>Upcoming work</small></div>
-      <div><span>Study sessions</span><strong>{doneSessions}<em> / {totalSessions}</em></strong><small>Completed</small></div>
+      <div><span><UiText value="Deadlines"/></span><strong>{deadlines === null ? "—" : (deadlines?.length ?? 0).toString().padStart(2, "0")}</strong><small>Upcoming work</small></div>
+      <div><span><UiText value="Study sessions"/></span><strong>{doneSessions}<em> / {totalSessions}</em></strong><small><UiText value="Completed"/></small></div>
     </div>
 
     <div className="ui-overview-primary">
       <section className="ui-focus-card" aria-labelledby="ui-today-title">
         <div className="ui-focus-card-header">
           <div><span className="ui-kicker">DAILY AGENDA</span><h3 id="ui-today-title">Today&apos;s schedule</h3></div>
-          <span className="ui-soft-pill">{data.today.length} {data.today.length === 1 ? "class" : "classes"}</span>
+          <span className="ui-soft-pill">{data.today.length} <UiText value={data.today.length === 1 ? "class" : "classes"}/></span>
         </div>
         {data.today.length ? <ol className="ui-timeline">
           {data.today.map((lesson) => <li key={lesson.id}>
@@ -117,7 +119,7 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
           <strong>Nothing scheduled yet</strong>
           <span>Your upcoming classes will appear here.</span>
         </div>}
-        {firstClass && <div className="ui-next-note"><span aria-hidden="true">✦</span><span>{data.today.length === 1 ? "One class on your schedule today." : "Your full schedule is ready in the calendar."}</span></div>}
+        {firstClass && <div className="ui-next-note"><span aria-hidden="true">✦</span><span><UiText value={data.today.length === 1 ? "One class on your schedule today." : "Your full schedule is ready in the calendar."}/></span></div>}
         <Link href="/focus" className="ui-action-secondary">Start a focus session <span aria-hidden="true">↗</span></Link>
       </aside>
     </div>
@@ -147,18 +149,18 @@ export function StudentDashboard({ getToken }: { getToken: () => Promise<string 
         {plans.length ? <ul className="ui-overview-plans">{plans.map((plan) => {
           const percentage = plan.scheduled ? Math.min(100, Math.max(0, Math.round(plan.completed / plan.scheduled * 100))) : 0;
           return <li key={plan.id}>
-            <div><strong>{plan.course_name}</strong><span>{plan.completed} of {plan.scheduled} sessions</span></div>
+            <div><strong>{plan.course_name}</strong><span>{plan.completed} {"of"} {plan.scheduled} {"sessions"}</span></div>
             <div className="ui-progress-meter" role="progressbar" aria-label={plan.course_name + " completed"} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percentage}>
               <span style={{width: percentage + "%"}} />
             </div>
-            <small>Exam {dateLabel(plan.exam_date, false)}</small>
+            <small>{"Exam"} {dateLabel(plan.exam_date, false)}</small>
           </li>;
         })}</ul> : <div className="ui-empty-block"><strong>No plans yet</strong><p>Plan your revision and track your study sessions.</p><Link href="/study-plans" className="ui-action-secondary">Create study plan</Link></div>}
       </section>
     </div>
 
     <section id="student-courses" className="ui-overview-panel" aria-labelledby="ui-courses-title">
-      <div className="ui-overview-panel-head"><div><span className="ui-kicker">MY UNIVERSITY</span><h3 id="ui-courses-title">Courses</h3></div>
+      <div className="ui-overview-panel-head"><div><span className="ui-kicker">MY UNIVERSITY</span><h3 id="ui-courses-title"><UiText value={"Courses"}/></h3></div>
         <Link href="/resources">Open library ↗</Link></div>
       {data.courses.length ? <ul className="ui-course-tiles">
         {data.courses.map((course) => <li key={course.id}>

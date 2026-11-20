@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Minus, Plus } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -92,7 +94,7 @@ export const EquilibriumMarketSim: React.FC<ActiveGameRenderProps> = ({
     <div className="space-y-6">
       <div>
         <div className="text-xs font-mono text-amber-400">
-          SCENARIO {idx + 1} OF {scenarios.length}
+          {"SCENARIO"} {idx + 1} {"OF"} {scenarios.length}
         </div>
         <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
           {sc.title}
@@ -174,7 +176,7 @@ export const EquilibriumMarketSim: React.FC<ActiveGameRenderProps> = ({
               fontSize="11"
               fontFamily="IBM Plex Mono, monospace"
             >
-              P = ${price}
+              {"P = $"}{price}
             </text>
 
             {/* Qd & Qs markers */}
@@ -268,9 +270,9 @@ export const EquilibriumMarketSim: React.FC<ActiveGameRenderProps> = ({
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>
-              {idx + 1 === scenarios.length
+              <UiText value={idx + 1 === scenarios.length
                 ? 'Lock Equilibrium & Finish'
-                : 'Lock Market Equilibrium'}
+                : 'Lock Market Equilibrium'}/>
             </span>
           </button>
         </div>

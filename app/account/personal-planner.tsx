@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { useEffect, useState, type FormEvent } from "react";
@@ -91,18 +93,18 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
       <div className="ui-task-heading">
         <div>
           <span className="ui-kicker">YOUR PRODUCTIVITY</span>
-          <h2 id="ui-task-title">My tasks</h2>
+          <h2 id="ui-task-title"><UiText value="My tasks"/></h2>
           <p>Plan what matters, then check it off as you go.</p>
         </div>
         <button className="ui-action-primary" type="button" onClick={() => { setSelected(null); setEditing(true); setMessage(""); }}>
-          <span aria-hidden="true">＋</span> New task
+          <span aria-hidden="true">＋</span> <UiText value={"New task"}/>
         </button>
       </div>
 
       <div className="ui-task-summary" aria-label="Task progress">
         <div className="ui-task-summary-copy"><strong>{open}</strong><span>tasks remaining</span></div>
         <div className="ui-task-summary-progress">
-          <div className="ui-task-summary-line"><span>Completed</span><strong>{completePercent}%</strong></div>
+          <div className="ui-task-summary-line"><span><UiText value="Completed"/></span><strong>{completePercent}%</strong></div>
           <div className="ui-progress-meter" role="progressbar" aria-label="Tasks completed" aria-valuenow={completePercent} aria-valuemin={0} aria-valuemax={100}>
             <span style={{width: completePercent + "%"}} />
           </div>
@@ -124,21 +126,21 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
             ))}
           </div>
           <label className="ui-search">
-            <span className="sr-only">Search your tasks</span>
+            <span className="sr-only"><UiText value="Search your tasks"/></span>
             <span aria-hidden="true">⌕</span>
             <input type="search" placeholder="Search tasks" value={query} onChange={(event) => setQuery(event.target.value)} />
           </label>
         </div>
 
         {loadError && <div className="ui-task-notice" role="alert">{loadError}
-          <button type="button" className="ui-text-action" onClick={() => { setLoadError(""); setRevision((value) => value + 1); }}>Retry</button>
+          <button type="button" className="ui-text-action" onClick={() => { setLoadError(""); setRevision((value) => value + 1); }}><UiText value="Retry"/></button>
         </div>}
-        {!tasks && !loadError && <div className="ui-task-loading" role="status">Loading your tasks…</div>}
+        {!tasks && !loadError && <div className="ui-task-loading" role="status"><UiText value={"Loading your tasks…"}/></div>}
         {tasks && visible.length === 0 && <div className="ui-task-empty">
           <span className="ui-empty-symbol" aria-hidden="true">✓</span>
           <strong>{query ? "No matching tasks" : filter === "done" ? "Nothing completed yet" : filter === "open" ? "You're all caught up" : "No tasks yet"}</strong>
-          <p>{query ? "Try a different search." : "Add a task to get started or choose another filter."}</p>
-          {query && <button type="button" className="ui-text-action" onClick={() => setQuery("")}>Clear search</button>}
+          <p><UiText value={query ? "Try a different search." : "Add a task to get started or choose another filter."}/></p>
+          {query && <button type="button" className="ui-text-action" onClick={() => setQuery("")}><UiText value="Clear search"/></button>}
         </div>}
         {tasks && visible.length > 0 && <ul className="ui-task-items">
           {visible.map((task) => {
@@ -146,18 +148,18 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
             return <li key={task.id} className={"ui-task-item" + (task.completed ? " is-complete" : "")}>
               <label className="ui-task-check">
                 <input type="checkbox" checked={task.completed} disabled={busy} onChange={(event) => void save({ completed: event.target.checked }, task.id)} />
-                <span className="sr-only">{task.completed ? "Mark incomplete: " : "Mark complete: "}{task.title}</span>
+                <span className="sr-only"><UiText value={task.completed ? "Mark incomplete: " : "Mark complete: "}/>{task.title}</span>
               </label>
               <div className="ui-task-item-main">
                 <strong>{task.title}</strong>
                 <div className="ui-task-meta">
                   <span className={"ui-task-tag" + (overdue ? " is-overdue" : "")}>{task.completed ? "Completed" : overdue ? "Overdue" : "To do"}</span>
-                  {task.due_on && <time dateTime={task.due_on}>Due {new Intl.DateTimeFormat("en-GB", {day: "numeric", month: "short", timeZone: "UTC"}).format(new Date(task.due_on + "T00:00:00Z"))}</time>}
+                  {task.due_on && <time dateTime={task.due_on}>{"Due"} {new Intl.DateTimeFormat("en-GB", {day: "numeric", month: "short", timeZone: "UTC"}).format(new Date(task.due_on + "T00:00:00Z"))}</time>}
                 </div>
               </div>
               <div className="ui-task-item-actions">
-                <button type="button" disabled={busy} onClick={() => beginEdit(task)}>Edit</button>
-                <button type="button" disabled={busy} onClick={() => { if (window.confirm("Delete this task?")) void save({}, task.id, true); }}>Delete</button>
+                <button type="button" disabled={busy} onClick={() => beginEdit(task)}><UiText value="Edit"/></button>
+                <button type="button" disabled={busy} onClick={() => { if (window.confirm("Delete this task?")) void save({}, task.id, true); }}><UiText value="Delete"/></button>
               </div>
             </li>;
           })}
@@ -166,15 +168,15 @@ export function PersonalTasks({ client }: { client: SupabaseClient }) {
 
       {editing && <form key={selected?.id ?? "new"} onSubmit={submit} className="ui-task-editor">
         <div className="ui-task-editor-head">
-          <div><span className="ui-kicker">TASK DETAILS</span><h3>{selected ? "Edit task" : "Create task"}</h3></div>
+          <div><span className="ui-kicker">TASK DETAILS</span><h3><UiText value={selected ? "Edit task" : "Create task"}/></h3></div>
           <button type="button" className="ui-icon-close" aria-label="Close task editor" disabled={busy} onClick={() => {setEditing(false); setSelected(null);}}>×</button>
         </div>
         <fieldset disabled={busy} className="ui-task-fields">
-          <label>Title <input className={field} name="title" defaultValue={selected?.title ?? ""} maxLength={120} placeholder="What needs to get done?" required /></label>
-          <label>Due date <span className="ui-optional">(optional)</span><input className={field} name="due" type="date" defaultValue={selected?.due_on ?? ""} /></label>
+          <label><UiText value="Title"/> <input className={field} name="title" defaultValue={selected?.title ?? ""} maxLength={120} placeholder="What needs to get done?" required /></label>
+          <label><UiText value="Due date"/> <span className="ui-optional">(optional)</span><input className={field} name="due" type="date" defaultValue={selected?.due_on ?? ""} /></label>
           <div className="ui-task-editor-buttons">
             <button type="submit" className="ui-action-primary">{busy ? "Saving…" : selected ? "Save changes" : "Add task"}</button>
-            <button type="button" className="ui-action-secondary" disabled={busy} onClick={() => {setEditing(false); setSelected(null);}}>Cancel</button>
+            <button type="button" className="ui-action-secondary" disabled={busy} onClick={() => {setEditing(false); setSelected(null);}}><UiText value="Cancel"/></button>
           </div>
         </fieldset>
       </form>}
@@ -222,18 +224,18 @@ export function PersonalEventEditor({ client, event, from, to, initialDate, onSa
   return (
     <form onSubmit={submit} className="space-y-3">
       <fieldset disabled={busy} className="space-y-2">
-        <h3 className="font-semibold">{event ? "Edit personal event" : "Add personal event"}</h3>
-        <label className="block">Event title<input className={field} name="title" maxLength={120} defaultValue={event?.title} required /></label>
-        <label className="block">Date<input className={field} name="date" type="date" min={from} max={to} defaultValue={event?.event_date ?? initialDate ?? from} required /></label>
-        <label className="block">Starts<input className={field} name="start" type="time" defaultValue={event?.starts_at.slice(0, 5)} required /></label>
-        <label className="block">Ends<input className={field} name="end" type="time" defaultValue={event?.ends_at.slice(0, 5)} required /></label>
+        <h3 className="font-semibold"><UiText value={event ? "Edit personal event" : "Add personal event"}/></h3>
+        <label className="block"><UiText value={"Event title"}/><input className={field} name="title" maxLength={120} defaultValue={event?.title} required /></label>
+        <label className="block"><UiText value="Date"/><input className={field} name="date" type="date" min={from} max={to} defaultValue={event?.event_date ?? initialDate ?? from} required /></label>
+        <label className="block"><UiText value="Starts"/><input className={field} name="start" type="time" defaultValue={event?.starts_at.slice(0, 5)} required /></label>
+        <label className="block"><UiText value="Ends"/><input className={field} name="end" type="time" defaultValue={event?.ends_at.slice(0, 5)} required /></label>
         <div className="flex flex-wrap gap-3">
-          <button className={button}>Save event</button>
+          <button className={button}><UiText value={"Save event"}/></button>
           {event && <>
-            <button type="button" className="underline" onClick={onCancel}>Cancel edit</button>
+            <button type="button" className="underline" onClick={onCancel}><UiText value="Cancel edit"/></button>
             <button type="button" className="underline" onClick={() => {
               if (window.confirm("Delete this personal event?")) void change(null);
-            }}>Delete event</button>
+            }}><UiText value={"Delete event"}/></button>
           </>}
         </div>
       </fieldset>

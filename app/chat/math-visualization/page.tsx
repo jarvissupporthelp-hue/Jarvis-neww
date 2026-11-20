@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { mathVisualization } from "@/lib/locales";
@@ -21,9 +23,9 @@ export default async function MathVisualizationPage({ searchParams }: PageProps<
   return <main className="math-page">
     <div className="math-page-header">
       <div>
-        <p className="math-page-kicker">{copy.eyebrow}</p>
-        <h1>{copy.title}<span aria-hidden="true">.</span></h1>
-        <p className="math-page-description">{copy.description}</p>
+        <p className="math-page-kicker"><UiText value={copy.eyebrow}/></p>
+        <h1><UiText value={copy.title}/><span aria-hidden="true">.</span></h1>
+        <p className="math-page-description"><UiText value={copy.description}/></p>
       </div>
       <nav className="math-page-language" aria-label={copy.language}>
         <Link href={href(selected?.id, "hy")} hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
@@ -32,15 +34,15 @@ export default async function MathVisualizationPage({ searchParams }: PageProps<
     </div>
 
     <div className="math-page-topics">
-      <div className="math-page-topics-heading"><h2>{copy.topics}</h2><Link href="/chat">← {copy.back}</Link></div>
+      <div className="math-page-topics-heading"><h2><UiText value={copy.topics}/></h2><Link href="/chat">← <UiText value={copy.back}/></Link></div>
       <nav aria-label={copy.topics} className="math-topic-list">
-        <Link className={!selected ? "is-selected" : ""} aria-current={!selected ? "page" : undefined} href={href()}>{copy.all}</Link>
+        <Link className={!selected ? "is-selected" : ""} aria-current={!selected ? "page" : undefined} href={href()}><UiText value={copy.all}/></Link>
         {mathTopics.map((topic) => <Link key={topic.id} href={href(topic.id)} aria-current={selected?.id === topic.id ? "page" : undefined} className={selected?.id === topic.id ? "is-selected" : ""}>
           <span aria-hidden="true">{topic.symbol}</span>{topic[locale]}
         </Link>)}
       </nav>
     </div>
     <MathLabFrame labUrl={labUrl} locale={locale} copy={copy} />
-    <p className="math-page-note">{copy.note}</p>
+    <p className="math-page-note"><UiText value={copy.note}/></p>
   </main>;
 }

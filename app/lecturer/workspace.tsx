@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -107,7 +109,7 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
   return (
     <div className="jarvis-lecturer-workspace">
       <header className="jarvis-role-hero">
-        <span className="jarvis-eyebrow">COURSE WORKSPACE · {offering.group.name}</span>
+        <span className="jarvis-eyebrow">{"COURSE WORKSPACE ·"} {offering.group.name}</span>
         <h1>{offering.course.name}</h1>
         <p>{offering.course.code} · {offering.semester.name}</p>
         <div className="jarvis-role-hero-links"><a href="#publish-assignment">Publish assignment ↓</a><a href="#course-pdf-resources">Course PDFs ↓</a></div>
@@ -121,35 +123,35 @@ function CoursePage({ offering, initialAssignments }: { offering: Offering; init
         <label className="block">How to explain and solve exercises<textarea className={field} rows={3} maxLength={2000} value={profile.explanation_preferences} onChange={(event) => setProfile({ ...profile, explanation_preferences: event.target.value })} placeholder="Preferred steps, notation, examples, and common mistakes to point out." /></label>
         <label className="block">Assessment expectations<textarea className={field} rows={3} maxLength={2000} value={profile.assessment_style} onChange={(event) => setProfile({ ...profile, assessment_style: event.target.value })} placeholder="Question types, expected answer format, and what earns credit." /></label>
         <label className="block">Course-specific rules<textarea className={field} rows={3} maxLength={2000} value={profile.course_rules} onChange={(event) => setProfile({ ...profile, course_rules: event.target.value })} placeholder="Verified course rules JARVIS should follow. Avoid private student information." /></label>
-        <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={profileBusy}>{profileBusy ? "Saving…" : "Save teaching profile"}</button>
+        <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={profileBusy}><UiText value={profileBusy ? "Saving…" : "Save teaching profile"}/></button>
         {profileError && <p role="alert">{profileError}</p>}{profileMessage && <p role="status">{profileMessage}</p>}
       </form>
       <LecturerPrivateVault offeringId={offering.id} />
       <form id="publish-assignment" className={card} onSubmit={publish}>
-        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">PUBLISH TO STUDENTS</span><h2 className="text-xl font-semibold">Create an assignment</h2></div></div>
-        <p>Enrolled students in {offering.group.name} can read the brief and see the deadline on their dashboard and calendar.</p>
+        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">PUBLISH TO STUDENTS</span><h2 className="text-xl font-semibold"><UiText value={"Create an assignment"}/></h2></div></div>
+        <p>{"Enrolled students in"} {offering.group.name} {"can read the brief and see the deadline on their dashboard and calendar."}</p>
         <fieldset className="space-y-3" disabled={busy}>
-          <label className="block">Title<input className={field} name="title" maxLength={120} required /></label>
-          <label className="block">Brief and submission instructions<textarea className={field} name="brief" rows={4} maxLength={4000} required /></label>
+          <label className="block"><UiText value="Title"/><input className={field} name="title" maxLength={120} required /></label>
+          <label className="block"><UiText value={"Brief and submission instructions"}/><textarea className={field} name="brief" rows={4} maxLength={4000} required /></label>
           <div className="grid gap-2 sm:grid-cols-2">
-            <label>Due date<input className={field} type="date" name="dueOn" min={today} required /></label>
+            <label><UiText value="Due date"/><input className={field} type="date" name="dueOn" min={today} required /></label>
             <label>Due time (Yerevan)<input className={field} type="time" name="dueAt" defaultValue="23:59" required /></label>
           </div>
           <button className="rounded jarvis-primary-button px-4 py-2 text-white disabled:opacity-50">
-            {busy ? "Publishing…" : "Publish assignment"}
+            <UiText value={busy ? "Publishing…" : "Publish assignment"}/>
           </button>
         </fieldset>
         {error && <p role="alert">{error}</p>}
         {message && <p role="status">{message}</p>}
       </form>
       <section className={card}>
-        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">COURSEWORK</span><h2 className="text-xl font-semibold">Published assignments</h2></div><span className="jarvis-counter">{assignments.length}</span></div>
+        <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">COURSEWORK</span><h2 className="text-xl font-semibold"><UiText value={"Published assignments"}/></h2></div><span className="jarvis-counter">{assignments.length}</span></div>
         {assignments.length ? (
           <ul className="space-y-2">
             {assignments.map((item) => (
               <li key={item.id} className="jarvis-muted-panel p-3">
                 <strong className="break-words">{item.title}</strong>
-                <p className="text-sm">Due {item.due_on} · {item.due_at.slice(0, 5)} Yerevan</p>
+                <p className="text-sm">{"Due"} {item.due_on} · {item.due_at.slice(0, 5)} {"Yerevan"}</p>
                 <p className="whitespace-pre-wrap break-words">{item.brief}</p>
               </li>
             ))}
@@ -190,8 +192,8 @@ export function LecturerWorkspace({ offeringId }: { offeringId?: string }) {
     return () => controller.abort();
   }, [offeringId, retry]);
 
-  if (needsSignIn) return <p>Sign in with an active lecturer account. <Link href="/account" className="underline">Sign in</Link></p>;
-  if (error) return <div className="jarvis-empty-state" role="alert"><strong>Couldn&apos;t load your courses</strong><p>{error}</p><button className="jarvis-secondary-button" type="button" onClick={() => {setError(""); setRetry(n => n+1);}}>Try again</button></div>;
+  if (needsSignIn) return <p>Sign in with an active lecturer account. <Link href="/account" className="underline"><UiText value="Sign in"/></Link></p>;
+  if (error) return <div className="jarvis-empty-state" role="alert"><strong>Couldn&apos;t load your courses</strong><p>{error}</p><button className="jarvis-secondary-button" type="button" onClick={() => {setError(""); setRetry(n => n+1);}}><UiText value="Try again"/></button></div>;
   if (!data) return <p role="status">Loading lecturer workspace…</p>;
   if ("course" in data) return <CoursePage offering={data.course} initialAssignments={data.assignments} />;
 
@@ -203,8 +205,8 @@ export function LecturerWorkspace({ offeringId }: { offeringId?: string }) {
         <p>Your courses, student groups, and teaching schedule in one place.</p>
       </header>
       <div className="jarvis-stats" aria-label="Teaching summary">
-        <div className="jarvis-stat"><span>Assigned courses</span><strong>{data.courses.length}</strong><small>Your teaching responsibilities</small></div>
-        <div className="jarvis-stat"><span>Student groups</span><strong>{new Set(data.courses.map(item => item.group.name)).size}</strong><small>Across course offerings</small></div>
+        <div className="jarvis-stat"><span><UiText value="Assigned courses"/></span><strong>{data.courses.length}</strong><small>Your teaching responsibilities</small></div>
+        <div className="jarvis-stat"><span><UiText value="Student groups"/></span><strong>{new Set(data.courses.map(item => item.group.name)).size}</strong><small>Across course offerings</small></div>
       </div>
       <section className={card}>
         <div className="jarvis-section-heading"><div><span className="jarvis-eyebrow">YOUR COURSES</span><h2 className="text-xl font-semibold">Assigned course groups</h2></div></div>

@@ -19,7 +19,7 @@ export function CodeTrace() {
   const [correct, setCorrect] = useState<boolean | null>(null);
   const challenge = challenges[index];
   return <div className="space-y-4">
-    <p>Predict the console output before running the code. {solved.length}/{challenges.length} solved.</p>
+    <p>{"Predict the console output before running the code."} {solved.length}/{challenges.length} {"solved."}</p>
     <label>Challenge <select className={field} value={index} onChange={(event) => {
       setIndex(Number(event.target.value)); setAnswer(""); setCorrect(null);
     }}>{challenges.map(({ title }, position) => <option key={title} value={position}>{title}</option>)}</select></label>

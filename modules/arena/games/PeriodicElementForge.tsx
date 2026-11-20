@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Atom, CheckCircle2, Minus, Plus } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -106,15 +107,15 @@ export const PeriodicElementForge: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-sky-400">
-            ATOM {idx + 1} OF {targets.length}
+            {"ATOM"} {idx + 1} {"OF"} {targets.length}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
-            Synthesize {target.name} ({target.symbol})
+            {"Synthesize"} {target.name} ({target.symbol})
           </h2>
           <p className="text-sm text-slate-300 mt-1">{target.clue}</p>
         </div>
         <div className="font-mono text-xs bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2 text-amber-300 shrink-0">
-          Target Charge: {target.chargeLabel}
+          {"Target Charge:"} {target.chargeLabel}
         </div>
       </div>
 
@@ -150,7 +151,7 @@ export const PeriodicElementForge: React.FC<ActiveGameRenderProps> = ({
               fontWeight="700"
               fontFamily="IBM Plex Mono, monospace"
             >
-              {protons}p⁺
+              {protons}{"p⁺"}
             </text>
             <text
               x="140"
@@ -160,7 +161,7 @@ export const PeriodicElementForge: React.FC<ActiveGameRenderProps> = ({
               fontSize="10"
               fontFamily="IBM Plex Mono, monospace"
             >
-              {neutrons}n⁰
+              {neutrons}{"n⁰"}
             </text>
 
             {/* Electrons */}
@@ -170,7 +171,7 @@ export const PeriodicElementForge: React.FC<ActiveGameRenderProps> = ({
           </svg>
 
           <div className="text-xs font-mono text-slate-400 tabular-nums mt-2">
-            Shells: K={kShell}/2 · L={lShell}/8 · M={mShell}/8
+            {"Shells: K="}{kShell}/2 · L={lShell}/8 · M={mShell}/8
           </div>
         </div>
 

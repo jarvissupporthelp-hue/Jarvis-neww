@@ -761,3 +761,7 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
 .math-lab-gate h2 { margin: 0 0 .5rem; font-size: 1.25rem; font-weight: 600; }
 .math-lab-gate p { margin: 0 0 1rem; color: var(--muted); }
 .math-page-note a { text-decoration: underline; }
+
+.jarvis-countdown { display:grid; justify-items:center; gap:.6rem; padding:clamp(1.5rem,5vw,3.5rem) 1rem; background:#132f34; color:#dcfff2; border-radius:1.25rem; }
+.jarvis-countdown strong { font:650 clamp(3.5rem,14vw,7rem)/1.05 system-ui,sans-serif; font-variant-numeric:tabular-nums; letter-spacing:-.045em; }
+.jarvis-countdown progress { width:min(17rem,78%); height:.45rem; accent-color:#6be6bd; }

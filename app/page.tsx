@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import Link from "next/link";
 
 export default function Home() {
@@ -22,29 +24,29 @@ export default function Home() {
             <div className="jarvis-preview-nav"><span>◈ Dashboard</span><span>▣ Calendar</span><span>☷ Courses</span><span>✓ Tasks</span><span>◷ Focus</span></div>
             <div className="jarvis-preview-main">
               <h2>Good morning.</h2>
-              <p>Your academic week, organized.</p>
+              <p><UiText value={"Your academic week, organized."}/></p>
               <div className="jarvis-preview-banner"><span>YOUR WORKSPACE</span><strong>Make today count.</strong></div>
               <div className="jarvis-preview-stats">
-                <div className="jarvis-preview-stat"><strong>03</strong><span>Classes today</span></div>
-                <div className="jarvis-preview-stat"><strong>05</strong><span>Tasks to do</span></div>
+                <div className="jarvis-preview-stat"><strong>03</strong><span><UiText value="Classes today"/></span></div>
+                <div className="jarvis-preview-stat"><strong>05</strong><span><UiText value={"Tasks to do"}/></span></div>
               </div>
             </div>
           </div>
         </div>
       </div>
       <nav className="jarvis-integrated-tools" aria-label="Explore JARVIS modules">
-        <Link href="/academics">Academic records <span aria-hidden="true">↗</span></Link>
-        <Link href="/arena?lang=en">Arena <span aria-hidden="true">→</span></Link>
-        <Link href="/learning">Learning tools <span aria-hidden="true">↗</span></Link>
-        <Link href="/campus">Campus resources <span aria-hidden="true">→</span></Link>
-        <Link href="/career">Career <span aria-hidden="true">→</span></Link>
-        <Link href="/chat">AI Agent <span aria-hidden="true">↗</span></Link>
-        <Link href="/dashboard">University hub <span aria-hidden="true">↗</span></Link>
+        <Link href="/academics"><UiText value={"Academic records"}/> <span aria-hidden="true">↗</span></Link>
+        <Link href="/arena?lang=en"><UiText value={"Arena"}/> <span aria-hidden="true">→</span></Link>
+        <Link href="/learning"><UiText value={"Learning tools"}/> <span aria-hidden="true">↗</span></Link>
+        <Link href="/campus"><UiText value={"Campus resources"}/> <span aria-hidden="true">→</span></Link>
+        <Link href="/career"><UiText value={"Career"}/> <span aria-hidden="true">→</span></Link>
+        <Link href="/chat"><UiText value={"AI Agent"}/> <span aria-hidden="true">↗</span></Link>
+        <Link href="/dashboard"><UiText value={"University hub"}/> <span aria-hidden="true">↗</span></Link>
         <Link href="/hy" lang="hy">Հայերեն</Link>
       </nav>
       <div className="jarvis-landing-features">
-        <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong>Academic calendar</strong><p>See classes, assignments, study sessions, and your personal time in one place.</p></article>
-        <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong>Course resources</strong><p>Find your lecturer&apos;s materials, assignment details, and study resources.</p></article>
+        <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong><UiText value={"Academic calendar"}/></strong><p>See classes, assignments, study sessions, and your personal time in one place.</p></article>
+        <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong><UiText value="Course resources"/></strong><p>Find your lecturer&apos;s materials, assignment details, and study resources.</p></article>
         <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong>Role-based workspace</strong><p>A focused experience for students, lecturers, and university administrators.</p></article>
       </div>
     </main>

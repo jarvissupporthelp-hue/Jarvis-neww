@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -34,7 +36,7 @@ export function ChatPlanStarter() {
       <p className="mt-2 text-sm">Use a topic or session length suggested in chat, or enter your own. Review the full plan on the next page.</p>
       <form className="mt-2 space-y-2" onSubmit={start}>
         <label className="block">First topic<input name="topic" className="w-full rounded border p-2" maxLength={120} required /></label>
-        <label className="block">Exam date<input name="examDate" type="date" className="w-full rounded border p-2" /></label>
+        <label className="block"><UiText value="Exam date"/><input name="examDate" type="date" className="w-full rounded border p-2" /></label>
         <label className="block">Minutes per session<input name="minutes" type="number" min={15} max={180} defaultValue={45} className="w-full rounded border p-2" required /></label>
         <button className="rounded jarvis-primary-button px-4 py-2 text-white">Continue to Study Plans</button>
         {error && <p role="alert">{error}</p>}

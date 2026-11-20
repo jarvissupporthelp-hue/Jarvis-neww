@@ -1,5 +1,8 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
 
+
+import { InterfaceLanguage } from "./interface-language";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
@@ -113,7 +116,7 @@ function subscribeTheme(callback: () => void) {
   };
 }
 
-export function WorkspaceShell({ children }: { children: ReactNode }) {
+export function WorkspaceShell({ children, initialLanguage="en" }: { children: ReactNode; initialLanguage?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [preferences, setPreferences] = useState<{ language: WorkspaceLanguage; avatar: string }>({language:"en",avatar:""});
@@ -202,8 +205,9 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
   const workspace = !isLanding && role !== null;
   const roleName = role === "admin" ? "Administration" : role === "lecturer" ? "Lecturer workspace" : "Student workspace";
   return (
+    <InterfaceLanguage.Provider value={role ? preferences.language : initialLanguage}>
     <div className="jarvis-app">
-      <a className="jarvis-skip-link" href="#jarvis-main-content">Skip to main content</a>
+      <a className="jarvis-skip-link" href="#jarvis-main-content"><UiText value={"Skip to main content"}/></a>
       <header className="jarvis-topbar">
         <div className="jarvis-topbar-start">
           {workspace && <button ref={menuButton} className="jarvis-mobile-menu" aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
@@ -219,7 +223,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         <div className="jarvis-topbar-actions">
           <span className="jarvis-university-chip">UFAR · Pilot</span>
           <ThemeSelector theme={theme} onChange={changeTheme}/>
-          {!role && <Link className="jarvis-header-signin" href="/account">Sign in <Icon name="arrow" size={15}/></Link>}
+          {!role && <Link className="jarvis-header-signin" href="/account"><UiText value="Sign in"/> <Icon name="arrow" size={15}/></Link>}
           {role && <Link href="/account/profile" className="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full" aria-label={tr("Profile")} title={tr("Profile")}><Avatar value={preferences.avatar || "👤"}/></Link>}
         </div>
       </header>
@@ -248,6 +252,7 @@ export function WorkspaceShell({ children }: { children: ReactNode }) {
         <div id="jarvis-main-content" tabIndex={-1} className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>{children}</div>
       </div>
     </div>
+    </InterfaceLanguage.Provider>
   );
 }
 

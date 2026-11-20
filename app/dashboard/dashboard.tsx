@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -70,19 +72,19 @@ function Notifications({ copy }: { copy: Copy }) {
 
   if (failed) return (
     <div>
-      <p role="alert">{copy.error}</p>
-      <button className="underline" onClick={() => { setFailed(false); setAttempt((count) => count + 1); }}>{copy.retry}</button>
+      <p role="alert"><UiText value={copy.error}/></p>
+      <button className="underline" onClick={() => { setFailed(false); setAttempt((count) => count + 1); }}><UiText value={copy.retry}/></button>
     </div>
   );
-  if (!items) return <p role="status">{copy.loading}</p>;
-  if (!items.length) return <p>{copy.empty}</p>;
+  if (!items) return <p role="status"><UiText value={copy.loading}/></p>;
+  if (!items.length) return <p><UiText value={copy.empty}/></p>;
   return (
     <ul className="space-y-2">
       {items.map((item) => (
         <li key={item.id} className="flex flex-wrap justify-between gap-2">
           <span>{item.type === "welcome" ? copy.welcome : item.type === "reminder" ? copy.reminder : copy.notification}</span>
-          {item.readAt ? <span>{copy.read}</span> : (
-            <button className="underline" disabled={pending !== null} onClick={() => void read(item.id)}>{copy.markRead}</button>
+          {item.readAt ? <span><UiText value={copy.read}/></span> : (
+            <button className="underline" disabled={pending !== null} onClick={() => void read(item.id)}><UiText value={copy.markRead}/></button>
           )}
         </li>
       ))}
@@ -156,14 +158,14 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
     }
   }
 
-  if (status === "loading") return <main className="p-8"><p role="status">{copy.loading}</p></main>;
-  if (status === "denied") return <main className="space-y-3 p-8"><p>{copy.denied}</p><Link className="underline" href="/account">{copy.signIn}</Link></main>;
-  if (status === "error" || !role) return <main className="space-y-3 p-8"><p role="alert">{copy.error}</p><button className="underline" onClick={() => { setStatus("loading"); setAttempt((count) => count + 1); }}>{copy.retry}</button></main>;
+  if (status === "loading") return <main className="p-8"><p role="status"><UiText value={copy.loading}/></p></main>;
+  if (status === "denied") return <main className="space-y-3 p-8"><p><UiText value={copy.denied}/></p><Link className="underline" href="/account"><UiText value={copy.signIn}/></Link></main>;
+  if (status === "error" || !role) return <main className="space-y-3 p-8"><p role="alert"><UiText value={copy.error}/></p><button className="underline" onClick={() => { setStatus("loading"); setAttempt((count) => count + 1); }}><UiText value={copy.retry}/></button></main>;
 
   const permitted = registrations.filter((entry) => entry.permissions.includes(role));
   const selected = permitted.find((entry) => entry.key === moduleKey);
   const ModulePage = selected?.Page;
-  if (moduleKey && !ModulePage) return <main className="p-8"><p>{copy.denied}</p></main>;
+  if (moduleKey && !ModulePage) return <main className="p-8"><p><UiText value={copy.denied}/></p></main>;
 
   const title = (entry: ModuleRegistration) => entry.titles[locale][entry.titleKey];
   const matches = permitted.filter((entry) => title(entry).toLocaleLowerCase(locale).includes(query.trim().toLocaleLowerCase(locale)));
@@ -172,31 +174,31 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
     if (slot === "notifications") return <Notifications copy={copy} />;
     if (slot === "search") return (
       <div className="space-y-2">
-        <label className="block">{copy.searchLabel}<input type="search" className="mt-1 w-full rounded border p-2" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-        {matches.length ? <ul>{matches.map((entry) => <li key={entry.key}><Link className="underline" href={entry.navItem}>{title(entry)}</Link></li>)}</ul> : <p>{copy.noResults}</p>}
+        <label className="block"><UiText value={copy.searchLabel}/><input type="search" className="mt-1 w-full rounded border p-2" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+        {matches.length ? <ul>{matches.map((entry) => <li key={entry.key}><Link className="underline" href={entry.navItem}>{title(entry)}</Link></li>)}</ul> : <p><UiText value={copy.noResults}/></p>}
       </div>
     );
     const contributions = permitted.flatMap((entry) => entry.dashboardWidgets
       .filter((item) => item.slot === slot).map((item) => ({ ...item, entry })));
-    if (slot === "quick") return <Link className="underline" href={role === "staff" ? "/lecturer" : "/account"}>{copy.workspace}</Link>;
-    return contributions.length ? <ul>{contributions.map(({ href, entry }) => <li key={`${entry.key}:${href}`}><Link className="underline" href={href}>{title(entry)}</Link></li>)}</ul> : <p>{copy.empty}</p>;
+    if (slot === "quick") return <Link className="underline" href={role === "staff" ? "/lecturer" : "/account"}><UiText value={copy.workspace}/></Link>;
+    return contributions.length ? <ul>{contributions.map(({ href, entry }) => <li key={`${entry.key}:${href}`}><Link className="underline" href={href}>{title(entry)}</Link></li>)}</ul> : <p><UiText value={copy.empty}/></p>;
   }
 
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
-        <div><h1 className="text-3xl font-semibold">{copy.heading}</h1><p>{copy[role]}</p></div>
+        <div><h1 className="text-3xl font-semibold"><UiText value={copy.heading}/></h1><p>{copy[role]}</p></div>
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2">{copy.language}
+          <label className="flex items-center gap-2"><UiText value={copy.language}/>
             <select className="rounded border bg-white p-2" value={locale} disabled={saving}
               onChange={(event) => void changeLocale(event.target.value === "en" ? "en" : "hy")}>
               <option value="hy" lang="hy">Հայերեն</option>
               <option value="en" lang="en">English</option>
             </select>
           </label>
-          <button className="underline" onClick={() => void signOut()}>{copy.signOut}</button>
+          <button className="underline" onClick={() => void signOut()}><UiText value={copy.signOut}/></button>
         </div>
-        {saveFailed && <p role="alert">{copy.saveError}</p>}
+        {saveFailed && <p role="alert"><UiText value={copy.saveError}/></p>}
       </header>
       {permitted.length > 0 && <nav aria-label={copy.navigation} className="flex flex-wrap gap-4">
         {permitted.map((entry) => <Link className="underline" href={entry.navItem} key={entry.key}>{title(entry)}</Link>)}

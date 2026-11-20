@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Minus, Plus, RotateCw } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -104,7 +106,7 @@ export const MatrixTransformArena: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-sky-400">
-            TRANSFORM {roundIdx + 1} OF {challenges.length}
+            {"TRANSFORM"} {roundIdx + 1} {"OF"} {challenges.length}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
             {challenge.title}
@@ -112,7 +114,7 @@ export const MatrixTransformArena: React.FC<ActiveGameRenderProps> = ({
           <p className="text-sm text-slate-300 mt-1">{challenge.description}</p>
         </div>
         <div className="font-mono text-xs bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2 text-slate-200 tabular-nums shrink-0">
-          det(M) = {determinant}
+          {"det(M) ="} {determinant}
         </div>
       </div>
 
@@ -281,9 +283,9 @@ export const MatrixTransformArena: React.FC<ActiveGameRenderProps> = ({
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>
-              {roundIdx + 1 === challenges.length
+              <UiText value={roundIdx + 1 === challenges.length
                 ? 'Verify & Finish Arena'
-                : 'Verify Transform'}
+                : 'Verify Transform'}/>
             </span>
           </button>
         </div>

@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { CodeTrace } from "./code-trace";
@@ -74,34 +76,34 @@ function Materials({ course }: { course: Course }) {
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h3 className="text-lg font-semibold">Course materials</h3>
+        <h3 className="text-lg font-semibold"><UiText value={"Course materials"}/></h3>
         <p className="text-sm text-slate-600">Study resources and your saved materials.</p>
       </div>
       <button type="button" className={button} aria-expanded={showForm} aria-controls={showForm ? "add-learning-material" : undefined} onClick={() => setShowForm(!showForm)}>
-        {showForm ? "Close form" : "Add material"}
+        <UiText value={showForm ? "Close form" : "Add material"}/>
       </button>
     </div>
     {showForm && <form id="add-learning-material" className="grid gap-3 rounded-xl border bg-slate-50 p-4 sm:grid-cols-2" onSubmit={add}>
-      <label>Title <input className={`block w-full ${field}`} name="title" required maxLength={100} /></label>
-      <label>Type <select className={`block w-full ${field}`} value={kind} onChange={(event) => setKind(event.target.value)}>
-        <option value="note">Note</option><option value="link">Link</option><option value="file">File</option>
+      <label><UiText value="Title"/> <input className={`block w-full ${field}`} name="title" required maxLength={100} /></label>
+      <label><UiText value="Type"/> <select className={`block w-full ${field}`} value={kind} onChange={(event) => setKind(event.target.value)}>
+        <option value="note"><UiText value="Note"/></option><option value="link"><UiText value="Link"/></option><option value="file"><UiText value="File"/></option>
       </select></label>
-      {kind === "file" ? <label>File <input name="file" type="file" required /></label> : <label>{kind === "link" ? "URL" : "Note"}
+      {kind === "file" ? <label><UiText value="File"/> <input name="file" type="file" required /></label> : <label><UiText value={kind === "link" ? "URL" : "Note"}/>
         <textarea className={`block w-full ${field}`} name="content" required maxLength={10000} /></label>}
       <label>Tags (comma-separated) <input className={`block w-full ${field}`} name="tags" maxLength={250} /></label>
-      <button className={`w-fit ${button}`} disabled={busy}>Add material</button>
+      <button className={`w-fit ${button}`} disabled={busy}><UiText value={"Add material"}/></button>
       {message && <p role="alert">{message}</p>}
     </form>}
     <div className="flex flex-wrap gap-3">
-      <label>Search <input className={field} type="search" placeholder="Find a resource or topic" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-      <label>Type <select className={field} value={filter} onChange={(event) => setFilter(event.target.value)}>
-        <option value="all">All</option><option value="note">Note</option><option value="link">Link</option><option value="file">File</option>
+      <label><UiText value="Search"/> <input className={field} type="search" placeholder="Find a resource or topic" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+      <label><UiText value="Type"/> <select className={field} value={filter} onChange={(event) => setFilter(event.target.value)}>
+        <option value="all">All</option><option value="note"><UiText value="Note"/></option><option value="link"><UiText value="Link"/></option><option value="file"><UiText value="File"/></option>
       </select></label>
       <label>Tag <select className={field} value={tag} onChange={(event) => setTag(event.target.value)}>
         <option value="all">All tags</option>{tags.map((item) => <option key={item}>{item}</option>)}
       </select></label>
     </div>
-    <p className="text-sm text-slate-600" aria-live="polite">{found.length} {found.length === 1 ? "material" : "materials"}</p>
+    <p className="text-sm text-slate-600" aria-live="polite">{found.length} <UiText value={found.length === 1 ? "material" : "materials"}/></p>
     {found.length ? <ul className="grid gap-3 lg:grid-cols-2">{found.map((item) => <li key={item.id} className="min-w-0 rounded-xl border border-slate-200 bg-white p-4">
       <p className="mb-1 text-xs font-medium text-slate-600">{item.description ? "Recommended resource" : item.type === "note" ? "Note" : item.type === "file" ? "File" : "Link"}</p>
       <h4 className="font-semibold text-slate-900">{item.title}</h4>
@@ -109,7 +111,7 @@ function Materials({ course }: { course: Course }) {
       <div className="my-2 flex flex-wrap gap-1.5">{item.tags.map((label, index) => <span key={index} className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{label}</span>)}</div>
       {item.type === "note" ? <p className="whitespace-pre-wrap break-words">{item.content}</p>
         : item.type === "link" ? <a className="inline-block font-medium text-blue-700 underline underline-offset-4" href={item.content} target="_blank" rel="noreferrer" aria-label={`Open ${item.title} (new tab)`}>Open resource ↗</a>
-          : <a className="underline" href={item.content} download={item.fileName}>Download {item.fileName}</a>}
+          : <a className="underline" href={item.content} download={item.fileName}><UiText value="Download"/> {item.fileName}</a>}
     </li>)}</ul> : <p className="rounded-xl border border-dashed p-4 text-sm text-slate-600">No materials match. Try a different search or clear the filters.</p>}
   </div>;
 }
@@ -138,10 +140,10 @@ function Quiz({ course }: { course: Course }) {
       {[...new Set(course.questions.map(({ topic }) => topic))].map((name) => <option key={name}>{name}</option>)}
     </select></label>
     <button className={button} onClick={() => start()}>Start quiz</button>
-    <button className={field} disabled={!mistakes.length} onClick={() => start(true)}>Retry mistakes ({mistakes.length})</button>
+    <button className={field} disabled={!mistakes.length} onClick={() => start(true)}>{"Retry mistakes ("}{mistakes.length})</button>
   </div>;
   if (question && current !== undefined) return <div className="space-y-3">
-    <p>Question {answers.length + 1} of {order.length} · {question.topic}</p>
+    <p>{"Question"} {answers.length + 1} {"of"} {order.length} · {question.topic}</p>
     <fieldset className="space-y-2"><legend className="font-semibold">{question.text}</legend>{question.choices.map((option, index) => (
       <label className="block" key={option}><input type="radio" name="answer" checked={choice === index} onChange={() => setChoice(index)} /> {option}</label>
     ))}</fieldset>
@@ -152,17 +154,17 @@ function Quiz({ course }: { course: Course }) {
         if (!mistakes.includes(question.id)) setMistakes([...mistakes, question.id]);
       } else if (mistakes.includes(question.id)) setMistakes(mistakes.filter((id) => id !== question.id));
       setAnswers([...answers, choice]); setChoice(null);
-    }}>{answers.length + 1 === order.length ? "See results" : "Next question"}</button>
+    }}><UiText value={answers.length + 1 === order.length ? "See results" : "Next question"}/></button>
   </div>;
   const score = order.filter((index, position) => course.questions[index].answer === answers[position]).length;
-  return <div className="space-y-4"><p className="text-lg font-semibold">Result · {score}/{order.length}</p>
+  return <div className="space-y-4"><p className="text-lg font-semibold">{"Result ·"} {score}/{order.length}</p>
     {order.map((index, position) => {
       const entry = course.questions[index];
       return <article className="rounded border p-3" key={index}><h3 className="font-semibold">{entry.text}</h3>
-        <p>Your answer: {entry.choices[answers[position]]} · {answers[position] === entry.answer ? "Correct" : "Incorrect"}</p>
-        <p>Correct answer: {entry.choices[entry.answer]}</p><p className="text-sm">Source: {entry.source}</p>
+        <p>{"Your answer:"} {entry.choices[answers[position]]} · <UiText value={answers[position] === entry.answer ? "Correct" : "Incorrect"}/></p>
+        <p>{"Correct answer:"} {entry.choices[entry.answer]}</p><p className="text-sm">{"Source:"} {entry.source}</p>
       </article>;
-    })}<button className={button} onClick={() => start()}>Try again</button> <button className={field} onClick={() => setOrder(null)}>Choose another topic</button>
+    })}<button className={button} onClick={() => start()}><UiText value="Try again"/></button> <button className={field} onClick={() => setOrder(null)}>Choose another topic</button>
   </div>;
 }
 
@@ -178,21 +180,21 @@ function Flashcards({ course }: { course: Course }) {
   const card = mode === "due" ? due[0] : deck[index % deck.length];
   return <div className="space-y-4">
     <div className="flex flex-wrap items-center gap-3">
-      <label>Topic <select className={field} value={topic} onChange={(event) => { setTopic(event.target.value); setIndex(0); setRevealed(false); }}>
-        <option value="">All topics</option>{[...new Set(course.questions.map(({ topic }) => topic))].map((name) => <option key={name}>{name}</option>)}
+      <label><UiText value="Topic"/> <select className={field} value={topic} onChange={(event) => { setTopic(event.target.value); setIndex(0); setRevealed(false); }}>
+        <option value=""><UiText value={"All topics"}/></option>{[...new Set(course.questions.map(({ topic }) => topic))].map((name) => <option key={name}>{name}</option>)}
       </select></label>
       <button className={mode === "due" ? button : field} onClick={() => { setMode("due"); setRevealed(false); }}>Due review</button>
       <button className={mode === "browse" ? button : field} onClick={() => { setMode("browse"); setRevealed(false); }}>Browse deck</button>
     </div>
-    <p>{deck.length} cards · {due.length} due</p>
+    <p>{deck.length} {"cards ·"} {due.length} {"due"}</p>
     {card ? <div className="space-y-3 rounded-xl border bg-[#f6f9f5] p-5">
-      <p className="text-sm">{card.topic} · Box {reviews[card.id]?.box ?? 1} of 5{mode === "browse" ? ` · ${index % deck.length + 1}/${deck.length}` : ""}</p>
+      <p className="text-sm">{card.topic} {"· Box"} {reviews[card.id]?.box ?? 1} {"of 5"}{mode === "browse" ? ` · ${index % deck.length + 1}/${deck.length}` : ""}</p>
       <p className="text-lg font-semibold">{card.text}</p>
       {revealed ? <><p>{card.choices[card.answer]}</p>
         {mode === "due" && <div className="flex gap-3">{[false, true].map((correct) => (
           <button className={correct ? button : field} key={String(correct)} onClick={() => {
             setReviews({ ...reviews, [card.id]: reviewFlashcard(reviews[card.id]?.box ?? 1, correct, Date.now()) }); setRevealed(false);
-          }}>{correct ? "Got it" : "Review again"}</button>
+          }}><UiText value={correct ? "Got it" : "Review again"}/></button>
         ))}</div>}
       </> : <button className={button} onClick={() => setRevealed(true)}>Flip card</button>}
       {mode === "browse" && <button className={field} onClick={() => { setIndex(index + 1); setRevealed(false); }}>Next card</button>}
@@ -232,11 +234,11 @@ function ExamPlan({ exams, slots }: { exams: Exam[]; slots: Slot[] }) {
     </fieldset>)}
     <button className={button} disabled={!inputs.length} onClick={() => setPlan(buildExamPlan(inputs, slots))}>Build study plan</button>
     {plan && <div className="space-y-3" aria-live="polite">
-      {plan.warnings.map((warning) => <p className="rounded bg-[#fce6ce] p-2" key={warning.examId}>Short by {duration(warning.minutes)} for {warning.title}.</p>)}
+      {plan.warnings.map((warning) => <p className="rounded bg-[#fce6ce] p-2" key={warning.examId}>{"Short by"} {duration(warning.minutes)} {"for"} {warning.title}.</p>)}
       {!dates.length && <p>No study blocks fit the available time.</p>}
       {dates.map((date) => <section key={date} className="rounded border p-3"><h3 className="font-semibold">{date}</h3>
         <ul>{plan.blocks.filter((block) => day.format(block.start) === date).map((block) => <li key={block.start} className="mt-2">
-          <strong>{block.kind === "revision" ? "Revision · " : ""}{block.title}</strong>
+          <strong><UiText value={block.kind === "revision" ? "Revision · " : ""}/>{block.title}</strong>
           <p>{time.format(block.start)} – {time.format(block.end)}</p><p className="text-sm">{block.why}</p>
         </li>)}</ul>
       </section>)}
@@ -257,8 +259,8 @@ function DailyStudy({ lessons, date }: { lessons: TimetableLesson[]; date: strin
       <li key={code} className="flex flex-wrap items-center gap-3">
         <strong>{title}</strong>
         <Link className="underline" href={`/learning/quizzes?course=${code}`}>Topic quizzes</Link>
-        <Link className="underline" href={`/learning/flashcards?course=${code}`}>Flashcards</Link>
-        <Link className="underline" href={`/learning/pomodoro?course=${code}`}>Focus session</Link>
+        <Link className="underline" href={`/learning/flashcards?course=${code}`}><UiText value={"Flashcards"}/></Link>
+        <Link className="underline" href={`/learning/pomodoro?course=${code}`}><UiText value="Focus session"/></Link>
       </li>
     ))}</ul> : <p>No subjects with practice decks on this date. Choose a course below to practice anytime.</p>}
   </section>;
@@ -283,7 +285,7 @@ export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
     "exam-plan": <ExamPlan exams={exams} slots={slots} />,
   }[page];
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-8">
-    <header><Link href="/" className="text-sm font-semibold underline">JARVIS home</Link>
+    <header><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link>
       <h1 className="mt-2 text-4xl font-semibold">Learning</h1>
     </header>
     <nav aria-label="Learning" className="flex flex-wrap gap-2">

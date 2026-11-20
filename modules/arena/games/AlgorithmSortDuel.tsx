@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useMemo, useRef, useState } from 'react';
 import { ArrowLeftRight, CheckCircle2 } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -170,7 +172,7 @@ export const AlgorithmSortDuel: React.FC<ActiveGameRenderProps> = ({
         >
           <CheckCircle2 className="w-4 h-4" />
           <span>
-            {roundIdx + 1 === puzzles.length ? 'Finish Sorting Duel' : 'Next Array'}
+            <UiText value={roundIdx + 1 === puzzles.length ? 'Finish Sorting Duel' : 'Next Array'}/>
           </span>
         </button>
       </div>

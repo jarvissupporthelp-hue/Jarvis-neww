@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { arena, arenaRanked } from "@/lib/locales";
@@ -24,16 +26,16 @@ export default async function ArenaPage({ searchParams }: PageProps<"/arena">) {
           <Link href={arenaHref("hy", subject)} hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
           <Link href={arenaHref("en", subject)} hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</Link>
         </nav>
-        <h1>{copy.title}</h1>
-        <p>{copy.description}</p>
+        <h1><UiText value={copy.title}/></h1>
+        <p><UiText value={copy.description}/></p>
         <Link className={styles.heroAction} href={`/arena/leaderboard?lang=${locale}`}>{arenaRanked[locale].leaderboard} →</Link>
       </header>
 
       <section aria-labelledby="arena-catalogue">
-        <h2 id="arena-catalogue">{copy.catalogue}</h2>
-        <p className={styles.status}>{copy.practiceNote}</p>
+        <h2 id="arena-catalogue"><UiText value={copy.catalogue}/></h2>
+        <p className={styles.status}><UiText value={copy.practiceNote}/></p>
         <nav className={styles.filters} aria-label={copy.subjects}>
-          <Link href={arenaHref(locale)} aria-current={subject === undefined ? "page" : undefined}>{copy.all}</Link>
+          <Link href={arenaHref(locale)} aria-current={subject === undefined ? "page" : undefined}><UiText value={copy.all}/></Link>
           {arenaDisciplines.map((discipline) => (
             <Link key={discipline} href={arenaHref(locale, discipline)} aria-current={subject === discipline ? "page" : undefined}>
               {copy.disciplines[discipline]}
@@ -47,12 +49,12 @@ export default async function ArenaPage({ searchParams }: PageProps<"/arena">) {
               <li className={styles.card} key={game.id}>
                 <div className={styles.cardMeta}>
                   <span>{copy.disciplines[game.discipline]}</span>
-                  <span>{game.minutes} {copy.minutes}</span>
+                  <span>{game.minutes} <UiText value={copy.minutes}/></span>
                 </div>
                 <h3>{title}</h3>
                 <p>{description}</p>
                 <Link className={styles.play} href={arenaHref(locale, subject, game.id)} aria-label={`${copy.play} · ${title}`}>
-                  {copy.play} <span aria-hidden="true">→</span>
+                  <UiText value={copy.play}/> <span aria-hidden="true">→</span>
                 </Link>
               </li>
             );

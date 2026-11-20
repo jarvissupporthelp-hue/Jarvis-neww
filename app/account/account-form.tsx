@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { accountCopy } from "@/lib/foundation/copy";
@@ -220,7 +222,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
 
   if (!ready) return <div className="jarvis-view-loading" role="status">
     <span className="jarvis-view-loading-spinner" aria-hidden="true"/>
-    <span>{copy.checking}</span>
+    <span><UiText value={copy.checking}/></span>
   </div>;
 
   const callback = flow === "invite" || flow === "recovery";
@@ -236,18 +238,18 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
             <>
             <form onSubmit={invite} className="jarvis-invite-form space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>
               <div className="jarvis-section-heading">
-                <div><h2 className="text-xl font-semibold">{workspace.inviteTitle}</h2><p>{workspace.inviteHelp}</p></div>
+                <div><h2 className="text-xl font-semibold"><UiText value={workspace.inviteTitle}/></h2><p><UiText value={workspace.inviteHelp}/></p></div>
               </div>
-              <label className="block">{copy.email}<input ref={inviteEmailField} className={inputClass} name="email" type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} required /></label>
-              <label className="block">{workspace.role}
+              <label className="block"><UiText value={copy.email}/><input ref={inviteEmailField} className={inputClass} name="email" type="email" value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} required /></label>
+              <label className="block"><UiText value={workspace.role}/>
                 <select className={inputClass} value={inviteRole} onChange={(event) => setInviteRole(event.target.value === "lecturer" ? "lecturer" : "student")}>
-                  <option value="student">{workspace.student}</option><option value="lecturer">{workspace.lecturer}</option>
+                  <option value="student"><UiText value={workspace.student}/></option><option value="lecturer"><UiText value={workspace.lecturer}/></option>
                 </select>
               </label>
               {inviteRole === "student" && (
-                <label className="block">{workspace.group}
+                <label className="block"><UiText value={workspace.group}/>
                   <select className={inputClass} name="groupId" required value={inviteGroup} onChange={(event) => setInviteGroup(event.target.value)}>
-                    <option value="" disabled>{workspace.chooseGroup}</option>
+                    <option value="" disabled><UiText value={workspace.chooseGroup}/></option>
                     {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
                   </select>
                 </label>
@@ -256,11 +258,11 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
             </form>
             <section className="space-y-3 rounded-xl border border-[var(--stroke)] bg-[var(--panel)] p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-xl font-semibold">{workspace.pending}</h2>
+                <h2 className="text-xl font-semibold"><UiText value={workspace.pending}/></h2>
                 <button type="button" className="underline" onClick={() => setInvitationRevision((value) => value + 1)}>{workspace.retry}</button>
               </div>
-              {pendingError ? <p role="status">{workspace.pendingError}</p> : !pending ? <p role="status">{copy.checking}</p>
-                : !pending.length ? <p>{workspace.pendingEmpty}</p> : <ul className="divide-y divide-[var(--stroke)]">
+              {pendingError ? <p role="status"><UiText value={workspace.pendingError}/></p> : !pending ? <p role="status"><UiText value={copy.checking}/></p>
+                : !pending.length ? <p><UiText value={workspace.pendingEmpty}/></p> : <ul className="divide-y divide-[var(--stroke)]">
                   {pending.map((item) => <li key={item.email} className="flex flex-wrap items-center justify-between gap-2 py-2">
                     <div className="min-w-0"><strong className="break-all">{item.email}</strong>
                       <p className="text-sm text-[var(--muted)]">{workspace[item.role]}{item.group_name && ` · ${item.group_name}`}</p>
@@ -268,15 +270,15 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
                     <button type="button" className="underline disabled:opacity-50" disabled={busy} onClick={() => {
                       setInviteEmail(item.email); setInviteGroup(item.student_group_id ?? ""); setInviteRole(item.role);
                       inviteEmailField.current?.focus();
-                    }}>{workspace.reuse}</button>
+                    }}><UiText value={workspace.reuse}/></button>
                   </li>)}
                 </ul>}
             </section>
             </>
           )}
           {(adminSection && role !== "admin") || (view === "tasks" && role !== "student") ? (
-            <div className="jarvis-empty-state"><p role="status">{workspace.denied}</p>
-              <Link href={`/account${lang}`} className="underline">{workspace.back}</Link>
+            <div className="jarvis-empty-state"><p role="status"><UiText value={workspace.denied}/></p>
+              <Link href={`/account${lang}`} className="underline"><UiText value={workspace.back}/></Link>
             </div>
           ) : role === "admin" ? <div className="jarvis-view-enter" key={adminSection ?? view}>
             <AdminWorkspace getToken={getAccessToken} section={adminSection ?? (view === "calendar" ? "timetable" : "users")} locale={locale} />
@@ -287,22 +289,22 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
               {role === "student" && view === "tasks" && <PersonalTasks client={getClient()} />}
               {role === "lecturer" && view === "dashboard" && (
                 <div className="jarvis-empty-state">
-                  <strong>{tools.lecturer}</strong>
+                  <strong><UiText value={tools.lecturer}/></strong>
                   <div className="flex flex-wrap gap-3">
-                    <Link href={`/account/calendar${lang}`} className="jarvis-secondary-button">{tools.calendar}</Link>
-                    <Link href="/lecturer" className="jarvis-secondary-button">{tools.lecturer}</Link>
-                    <Link href={`/academics${lang}`} className="jarvis-secondary-button">{tools.title}</Link>
+                    <Link href={`/account/calendar${lang}`} className="jarvis-secondary-button"><UiText value={tools.calendar}/></Link>
+                    <Link href="/lecturer" className="jarvis-secondary-button"><UiText value={tools.lecturer}/></Link>
+                    <Link href={`/academics${lang}`} className="jarvis-secondary-button"><UiText value={tools.title}/></Link>
                   </div>
                 </div>
               )}
             </div>
           )}
-          <Link href="/account/profile" className="mr-4 underline">{locale === "hy" ? "Անձնական էջ" : "Profile"}</Link>
+          <Link href="/account/profile" className="mr-4 underline"><UiText value={locale === "hy" ? "Անձնական էջ" : "Profile"}/></Link>
           <button type="button" className="underline" onClick={async () => {
             const { error } = await getClient().auth.signOut({ scope: "local" });
             if (error) setError("Could not sign out. Try again.");
             else { setRole(null); setPending(undefined); setGroups([]); setInviteEmail(""); setInviteGroup(""); setMessage(""); }
-          }}>Sign out</button>
+          }}><UiText value="Sign out"/></button>
         </div>
       ) : (
         <>
@@ -313,14 +315,14 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
                 <p>{flow === "signin" ? (locale === "hy" ? "Մուտք գործիր հրավերով ակտիվացված համալսարանական հաշվով։" : "Use your invited university account to continue.") : flow === "forgot" ? copy.resetSent : copy.length}</p>
               </div>
               {callback && <h2 className="text-xl font-semibold">{flow === "invite" ? copy.invite : copy.recovery}</h2>}
-              {!callback && <label className="block">Email<input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
-              {(flow === "invite" || (flow === "recovery" && finishActivation)) && <label className="block">{copy.name}<input className={inputClass} name="displayName" maxLength={100} required /></label>}
+              {!callback && <label className="block"><UiText value="Email"/><input className={inputClass} name="email" type="email" autoComplete="email" required /></label>}
+              {(flow === "invite" || (flow === "recovery" && finishActivation)) && <label className="block"><UiText value={copy.name}/><input className={inputClass} name="displayName" maxLength={100} required /></label>}
               {flow !== "forgot" && (
                 <div>
-                  <label className="block">{copy.password}<input className={inputClass} name="password" type={showPassword ? "text" : "password"} minLength={callback ? 8 : undefined} autoComplete={callback ? "new-password" : "current-password"} required /></label>
-                  {callback && <p className="mt-1 text-sm">{copy.length}</p>}
+                  <label className="block"><UiText value={copy.password}/><input className={inputClass} name="password" type={showPassword ? "text" : "password"} minLength={callback ? 8 : undefined} autoComplete={callback ? "new-password" : "current-password"} required /></label>
+                  {callback && <p className="mt-1 text-sm"><UiText value={copy.length}/></p>}
                   <button type="button" className="mt-1 min-h-11 underline" aria-pressed={showPassword}
-                    onClick={() => setShowPassword((value) => !value)}>{copy.show}</button>
+                    onClick={() => setShowPassword((value) => !value)}><UiText value={copy.show}/></button>
                 </div>
               )}
               <button className={buttonClass} disabled={busy}>{busy ? copy.working : flow === "signin" ? copy.signin : flow === "forgot" ? copy.reset : flow === "invite" ? copy.activate : copy.save}</button>

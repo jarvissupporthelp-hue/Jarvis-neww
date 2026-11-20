@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { Circle, Minus, Plus } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -116,16 +117,16 @@ export const ProjectileMotionLab: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-amber-400">
-            ZONE {roundIdx + 1} OF {targets.length} · {target.planetLabel}
+            {"ZONE"} {roundIdx + 1} {"OF"} {targets.length} · {target.planetLabel}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
             {target.name}
           </h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Landing zone: <span className="font-mono text-slate-100">{target.targetX} m</span>{' '}
-            (±{target.tolerance} m) · Wind Acceleration:{' '}
+            Landing zone: <span className="font-mono text-slate-100">{target.targetX} {"m"}</span>{' '}
+            (±{target.tolerance} {"m) · Wind Acceleration:"}{' '}
             <span className="font-mono text-sky-300">
-              {target.windAccel >= 0 ? `+${target.windAccel}` : target.windAccel} m/s²
+              {target.windAccel >= 0 ? `+${target.windAccel}` : target.windAccel} {"m/s²"}
             </span>
           </p>
         </div>
@@ -161,7 +162,7 @@ export const ProjectileMotionLab: React.FC<ActiveGameRenderProps> = ({
                 fontSize="10"
                 fontFamily="IBM Plex Mono, monospace"
               >
-                {m}m
+                {m}{"m"}
               </text>
             </g>
           ))}
@@ -211,7 +212,7 @@ export const ProjectileMotionLab: React.FC<ActiveGameRenderProps> = ({
             fontWeight="600"
             fontFamily="IBM Plex Mono, monospace"
           >
-            ZONE {target.targetX}m
+            {"ZONE"} {target.targetX}{"m"}
           </text>
 
           {/* Initial velocity indicator */}
@@ -293,7 +294,7 @@ export const ProjectileMotionLab: React.FC<ActiveGameRenderProps> = ({
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-400">Initial Velocity (v₀)</span>
             <span className="font-mono font-bold text-sky-400 text-sm tabular-nums">
-              {velocity} m/s
+              {velocity} {"m/s"}
             </span>
           </div>
           <input
@@ -332,13 +333,13 @@ export const ProjectileMotionLab: React.FC<ActiveGameRenderProps> = ({
             <div className="flex justify-between text-slate-400">
               <span>Predicted Apex</span>
               <span className="font-mono text-slate-200 tabular-nums">
-                {preview.maxHeight.toFixed(1)} m
+                {preview.maxHeight.toFixed(1)} {"m"}
               </span>
             </div>
             <div className="flex justify-between text-slate-400">
               <span>Flight Time</span>
               <span className="font-mono text-slate-200 tabular-nums">
-                {preview.flightTime.toFixed(2)} s
+                {preview.flightTime.toFixed(2)} {"s"}
               </span>
             </div>
             <div className="text-slate-300 pt-1">{statusMessage}</div>

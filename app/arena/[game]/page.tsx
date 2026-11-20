@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -28,7 +30,7 @@ export default async function ArenaGamePage(props: PageProps<"/arena/[game]">) {
   return (
     <main className={styles.hub} lang={locale}>
       <div className={styles.gameNav}>
-        <Link href={arenaHref(locale, subject)}>← {copy.back}</Link>
+        <Link href={arenaHref(locale, subject)}>← <UiText value={copy.back}/></Link>
         <nav className={styles.filters} aria-label={copy.language}>
           <Link href={arenaHref("hy", subject, game.id)} hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
           <Link href={arenaHref("en", subject, game.id)} hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</Link>

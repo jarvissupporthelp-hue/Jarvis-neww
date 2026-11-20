@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
@@ -66,7 +68,7 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
   }
   const resource = resources.find(({ id }) => id === selected);
   const dateInputs = <div className="grid gap-3 sm:grid-cols-2">
-    <label>Start <input className={input} type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); }} /></label>
+    <label><UiText value="Start"/> <input className={input} type="datetime-local" value={start} onChange={(e) => { setStart(e.target.value); }} /></label>
     <label>End <input className={input} type="datetime-local" value={end} onChange={(e) => { setEnd(e.target.value); }} /></label>
   </div>;
   const reserveForm = resource && <form className={`${panel} mt-4 grid gap-3`} onSubmit={(event) => {
@@ -75,7 +77,7 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
     if (!start || !end) { setMessage("Choose a start and end time."); return; }
     void act({ action: "reserve", id: resource.id, start: dateTime(start), end: dateTime(end), purpose });
   }}>
-    <h2 className="font-semibold">Reserve {resource.title}</h2>
+    <h2 className="font-semibold">{"Reserve"} {resource.title}</h2>
     <label>Purpose <input name="purpose" required maxLength={250} className={input} /></label>
     <button className={`${button} w-fit`} disabled={pending}>Create pending booking</button>
   </form>;
@@ -91,13 +93,13 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
     {tab === "Library" && <DigitalLibrary locale={locale} />}
     {tab === "Team booking" && <MeetingPanel />}
     {(tab === "Library" || tab === "Staff") && data && message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
-    {tab === "Library" && !data && <p className="text-sm text-slate-600"><Link href="/account" className="underline">Sign in</Link> to access campus loans and equipment when available.</p>}
+    {tab === "Library" && !data && <p className="text-sm text-slate-600"><Link href="/account" className="underline"><UiText value="Sign in"/></Link> to access campus loans and equipment when available.</p>}
     {data && tab === "Library" && <>
-      <div className={`${panel} space-y-3`}><h2 className="font-semibold">Campus loans &amp; equipment</h2><label>Search by title <input className={input} type="search" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
+      <div className={`${panel} space-y-3`}><h2 className="font-semibold">{"Campus loans & equipment"}</h2><label>Search by title <input className={input} type="search" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
         <p className="text-sm text-slate-600">Select dates to reserve equipment. Times are Asia/Yerevan.</p>{dateInputs}{reserveForm}
         <ul className="grid gap-3 sm:grid-cols-2">{resources.filter((item) => item.kind !== "room" && item.title.toLowerCase().includes(query.trim().toLowerCase())).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3" key={item.id}>
-          <div><p className="font-medium">{item.title}</p><p className="text-sm text-slate-600">{item.kind === "book" ? "Library book" : "Equipment"} · {item.capacity} total</p></div>
-          <button className={button} disabled={pending} onClick={() => item.kind === "book" ? void act({ action: "borrow", id: item.id }) : setSelected(item.id)}>{item.kind === "book" ? "Borrow" : "Reserve"}</button>
+          <div><p className="font-medium">{item.title}</p><p className="text-sm text-slate-600"><UiText value={item.kind === "book" ? "Library book" : "Equipment"}/> · {item.capacity} {"total"}</p></div>
+          <button className={button} disabled={pending} onClick={() => item.kind === "book" ? void act({ action: "borrow", id: item.id }) : setSelected(item.id)}><UiText value={item.kind === "book" ? "Borrow" : "Reserve"}/></button>
         </li>)}</ul>
       </div>
       <div className={panel}><h2 className="font-semibold">My equipment reservations</h2>
@@ -105,7 +107,7 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
           <div><strong>{title(item.resourceId)}</strong><p>{format.format(new Date(item.startAt))} · {item.status}</p></div>
           {["pending", "confirmed"].includes(item.status) && <div className="flex gap-2">
             {item.status === "pending" && <button className={button} disabled={pending} onClick={() => void act({ action: "confirm", id: item.id })}>Confirm</button>}
-            <button className="rounded-lg border px-4 py-2 text-sm" disabled={pending} onClick={() => void act({ action: "cancel", id: item.id })}>Cancel</button>
+            <button className="rounded-lg border px-4 py-2 text-sm" disabled={pending} onClick={() => void act({ action: "cancel", id: item.id })}><UiText value="Cancel"/></button>
           </div>}
         </article>)}
       </div>
@@ -122,9 +124,9 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
         </select></label>
         <form key={editing?.id ?? "new"} className="mt-3 grid gap-3 sm:grid-cols-2" onSubmit={(event) => submit(event, "resource")}>
           <label>ID <input className={input} required name="id" defaultValue={editing?.id} readOnly={!!editing} /></label>
-          <label>Title <input className={input} required name="title" defaultValue={editing?.title} /></label>
-          <label>Type <select className={input} name="kind" defaultValue={editing?.kind ?? "room"}><option value="room">Room</option><option value="book">Book</option><option value="equipment">Equipment</option></select></label>
-          <label>Building <input className={input} name="building" defaultValue={editing?.building} /></label>
+          <label><UiText value="Title"/> <input className={input} required name="title" defaultValue={editing?.title} /></label>
+          <label><UiText value="Type"/> <select className={input} name="kind" defaultValue={editing?.kind ?? "room"}><option value="room"><UiText value="Room"/></option><option value="book"><UiText value="Book"/></option><option value="equipment">Equipment</option></select></label>
+          <label><UiText value="Building"/> <input className={input} name="building" defaultValue={editing?.building} /></label>
           {(["capacity", "floor", "position", "opens", "closes"] as const).map((name, index) => <label key={name}>{["Seats / copies / units", "Floor", "Map position", "Opens (minutes after midnight)", "Closes (minutes after midnight)"][index]} <input required type="number" className={input} name={name} defaultValue={editing?.[name] ?? [1, 1, 0, 480, 1200][index]} /></label>)}
           <label>Features <input className={input} name="features" defaultValue={editing?.features.join(", ")} /></label>
           <label><input type="checkbox" name="accessible" defaultChecked={editing?.accessible} /> Accessible</label>
@@ -133,7 +135,7 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
       </div>
       <div className={panel}><h2 className="font-semibold">Manage loans</h2>
         <form className="my-3 grid gap-3 sm:grid-cols-2" onSubmit={(event) => submit(event, "staff-borrow")}>
-          <label>Book <select className={input} name="id">{resources.filter(({ kind }) => kind === "book").map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
+          <label><UiText value="Book"/> <select className={input} name="id">{resources.filter(({ kind }) => kind === "book").map((item) => <option value={item.id} key={item.id}>{item.title}</option>)}</select></label>
           <label>Student account ID <input required className={input} name="borrower" /></label>
           <button className={`${button} w-fit`} disabled={pending}>Record loan</button>
         </form>

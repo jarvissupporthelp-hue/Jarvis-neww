@@ -1,3 +1,5 @@
+
+import {UiText} from "@/app/components/interface-language";
 import React, { useState } from 'react';
 import { CheckCircle2, Minus, Plus } from 'lucide-react';
 import { soundFx } from '../sound';
@@ -85,13 +87,13 @@ export const CalculusIntegralEstimator: React.FC<ActiveGameRenderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="text-xs font-mono text-amber-400">
-            INTEGRAL {idx + 1} OF {problems.length}
+            {"INTEGRAL"} {idx + 1} {"OF"} {problems.length}
           </div>
           <h2 className="font-display text-lg sm:text-xl font-bold text-slate-50 mt-0.5">
             {prob.title}
           </h2>
           <p className="text-sm text-slate-300 mt-1">
-            Select quadrature rule and partition count n ≤ {prob.maxPartitionsAllowed} to achieve approximation error ≤ {prob.tolerance}.
+            {"Select quadrature rule and partition count n ≤"} {prob.maxPartitionsAllowed} {"to achieve approximation error ≤"} {prob.tolerance}.
           </p>
         </div>
         <div className="font-mono text-xs bg-slate-900 border border-slate-800 rounded-lg px-3.5 py-2 text-sky-300 shrink-0">
@@ -175,7 +177,7 @@ export const CalculusIntegralEstimator: React.FC<ActiveGameRenderProps> = ({
                         : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-slate-500'
                     }`}
                   >
-                    {m} Rule
+                    {m} {"Rule"}
                   </button>
                 )
               )}
@@ -185,10 +187,10 @@ export const CalculusIntegralEstimator: React.FC<ActiveGameRenderProps> = ({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-400">
-                Subintervals (max n = {prob.maxPartitionsAllowed})
+                {"Subintervals (max n ="} {prob.maxPartitionsAllowed})
               </span>
               <span className="font-mono font-bold text-amber-400 tabular-nums">
-                n = {partitions}
+                {"n ="} {partitions}
               </span>
             </div>
             <div className="flex gap-2">
@@ -256,9 +258,9 @@ export const CalculusIntegralEstimator: React.FC<ActiveGameRenderProps> = ({
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>
-              {idx + 1 === problems.length
+              <UiText value={idx + 1 === problems.length
                 ? 'Verify & Finish Lab'
-                : 'Verify Integral Estimate'}
+                : 'Verify Integral Estimate'}/>
             </span>
           </button>
         </div>

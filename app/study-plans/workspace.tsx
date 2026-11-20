@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import Link from "next/link";
 import { studyPlanHandoffKey, type QuizPlanHandoff, type StudyPlanHandoff } from "@/lib/study-plan-handoff";
@@ -32,12 +34,12 @@ function minutesAt(time: string) {
 function PlanDetails({ plan }: { plan: Pick<Draft, "course" | "examDate" | "target" | "minutes" | "start" | "end" | "studyDays" | "topics"> }) {
   return (
     <div className="space-y-2">
-      <p><strong>{plan.course}</strong> · Exam {plan.examDate}</p>
+      <p><strong>{plan.course}</strong> {"· Exam"} {plan.examDate}</p>
       <p className="break-words"><strong>Goal:</strong> {plan.target}</p>
-      <p>{plan.minutes} min per session · {plan.start.slice(0, 5)}–{plan.end.slice(0, 5)} Yerevan time</p>
+      <p>{plan.minutes} {"min per session ·"} {plan.start.slice(0, 5)}–{plan.end.slice(0, 5)} {"Yerevan time"}</p>
       <p><strong>Study days:</strong> {plan.studyDays.map((day) => days[day - 1]).join(", ")}</p>
       <ol className="list-decimal space-y-1 pl-5">{plan.topics.map((topic, index) => (
-        <li key={index} className="break-words">{topic.name} · Confidence {topic.confidence}/5</li>
+        <li key={index} className="break-words">{topic.name} {"· Confidence"} {topic.confidence}/5</li>
       ))}</ol>
     </div>
   );
@@ -200,7 +202,7 @@ export function StudyPlanWorkspace() {
     }
   }
 
-  if (needsSignIn) return <p>Sign in with an active student account. <Link className="underline" href="/account">Sign in</Link></p>;
+  if (needsSignIn) return <p><UiText value="Sign in with an active student account."/> <Link className="underline" href="/account"><UiText value="Sign in"/></Link></p>;
   if (!courses) return error ? (
     <div className="space-y-2">
       <p role="alert">{error}</p>
@@ -209,25 +211,25 @@ export function StudyPlanWorkspace() {
         setLoadAttempt((value) => value + 1);
       }}>Retry loading study plans</button>
     </div>
-  ) : <p role="status">Loading your study plans…</p>;
+  ) : <p role="status"><UiText value={"Loading your study plans…"}/></p>;
 
   return (
     <div className="space-y-4">
       {!courses.length && <p className={card}>You need an enrolled course before creating a plan.</p>}
       {courses.length > 0 && (
         <form key={revision} hidden={!showForm} className={card} onSubmit={preview}>
-          <h2 id="study-plan-form-heading" tabIndex={-1} className="text-xl font-semibold">{revisionSource ? "Revised study plan draft" : "New study plan"}</h2>
+          <h2 id="study-plan-form-heading" tabIndex={-1} className="text-xl font-semibold"><UiText value={revisionSource ? "Revised study plan draft" : "New study plan"}/></h2>
           {quizFeedback && <p className="text-sm">Quiz feedback prefilled the topics that need practice. Review their confidence ratings before saving.</p>}
           {revisionSource && <p className="text-sm">This draft is a copy. Your existing sessions and progress stay with the original plan.</p>}
           {topics.length > 10 && <p role="status">Remove topics until ten or fewer remain.</p>}
-          <label className="block">Course
+          <label className="block"><UiText value="Course"/>
             <select name="course" defaultValue={quizFeedback?.offeringId ?? (prefill && courses.length === 1 ? courses[0].id : "")} required className={field}>
               <option value="" disabled>Choose an enrolled course</option>
               {courses.map((course) => <option key={course.id} value={course.id}>{course.name} · {course.semester}</option>)}
             </select>
           </label>
-          <label className="block">Exam date<input className={field} name="examDate" type="date" min={today} defaultValue={revisionSource?.exam_date ?? prefill?.examDate} required /></label>
-          <label className="block">Target outcome<input className={field} name="target" maxLength={240} defaultValue={revisionSource?.target_outcome} required /></label>
+          <label className="block"><UiText value="Exam date"/><input className={field} name="examDate" type="date" min={today} defaultValue={revisionSource?.exam_date ?? prefill?.examDate} required /></label>
+          <label className="block"><UiText value={"Target outcome"}/><input className={field} name="target" maxLength={240} defaultValue={revisionSource?.target_outcome} required /></label>
           <label className="block">Session duration in minutes<input className={field} name="minutes" type="number" min={15} max={180} defaultValue={revisionSource?.session_minutes ?? prefill?.minutes ?? 45} required /></label>
           <fieldset className="grid gap-2 sm:grid-cols-2">
             <legend className="font-semibold">Daily study window (Yerevan time)</legend>
@@ -244,7 +246,7 @@ export function StudyPlanWorkspace() {
             <legend className="font-semibold">Topics and current confidence</legend>
             {topics.map((topic, index) => (
               <div key={index} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem_auto]">
-                <label>Topic {index + 1}<input className={field} maxLength={120} required value={topic.name}
+                <label><UiText value="Topic"/> {index + 1}<input className={field} maxLength={120} required value={topic.name}
                   onChange={(event) => setTopics((items) => items.map((item, i) => i === index ? { ...item, name: event.target.value } : item))} /></label>
                 <label>Confidence
                   <select className={field} value={topic.confidence}
@@ -253,12 +255,12 @@ export function StudyPlanWorkspace() {
                     <option value={4}>4 · High</option><option value={5}>5 · Very high</option>
                   </select>
                 </label>
-                {topics.length > 1 && <button type="button" className="self-end underline" onClick={() => setTopics((items) => items.filter((_, i) => i !== index))}>Remove topic {index + 1}</button>}
+                {topics.length > 1 && <button type="button" className="self-end underline" onClick={() => setTopics((items) => items.filter((_, i) => i !== index))}>{"Remove topic"} {index + 1}</button>}
               </div>
             ))}
             <button type="button" className="underline" disabled={topics.length >= 10} onClick={() => setTopics((items) => [...items, { name: "", confidence: 3 }])}>Add another topic</button>
           </fieldset>
-          <button className={button}>Preview study plan</button>
+          <button className={button}><UiText value={"Preview study plan"}/></button>
         </form>
       )}
       {!showForm && draft && (
@@ -266,7 +268,7 @@ export function StudyPlanWorkspace() {
           <h2 id="study-plan-preview-heading" tabIndex={-1} className="text-xl font-semibold">Review your study plan</h2>
           <PlanDetails plan={draft} />
           <div className="flex flex-wrap gap-3">
-            <button type="button" className={button} disabled={busy} onClick={() => void save()}>{busy ? "Saving…" : "Save draft"}</button>
+            <button type="button" className={button} disabled={busy} onClick={() => void save()}><UiText value={busy ? "Saving…" : "Save draft"}/></button>
             <button type="button" className="underline" disabled={busy} onClick={() => { setShowForm(true); setError(""); requestAnimationFrame(() => document.getElementById("study-plan-form-heading")?.focus()); }}>Edit inputs</button>
           </div>
         </section>
@@ -274,7 +276,7 @@ export function StudyPlanWorkspace() {
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
       <section id="saved-plans" className={card}>
-        <h2 className="text-xl font-semibold">Saved study plans</h2>
+        <h2 className="text-xl font-semibold"><UiText value={"Saved study plans"}/></h2>
         {plans.length === 0 && <p>No study plans saved yet.</p>}
         {plans.map((plan) => (
           <details key={plan.id} className="rounded jarvis-muted-panel p-3">
@@ -286,7 +288,7 @@ export function StudyPlanWorkspace() {
             }} /></div>
             {plan.study_sessions.length > 0 && (
               <p className="mt-2 font-semibold">
-                {plan.study_sessions.filter((session) => session.completed_at).length} of {plan.study_sessions.length} sessions completed
+                {plan.study_sessions.filter((session) => session.completed_at).length} {"of"} {plan.study_sessions.length} {"sessions completed"}
               </p>
             )}
             {quizFeedback?.offeringId === plan.offering_id && plan.exam_date >= today && (

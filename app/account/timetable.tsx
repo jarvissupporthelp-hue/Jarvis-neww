@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { assignmentDeadlines, type AssignmentDeadline } from "@/lib/course-assignments";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -151,12 +153,12 @@ export function Timetable({ getToken, admin, personal }: {
           <button type="button" className="ui-week-arrow" aria-label="Next week" disabled={busy} onClick={() => changeWeek(shiftDate(week, 7))}>→</button>
         </div>
         <div className="ui-calendar-toolbar-actions">
-          <button type="button" className="ui-action-secondary" disabled={busy} onClick={() => changeWeek(yerevanWeek())}>Today</button>
+          <button type="button" className="ui-action-secondary" disabled={busy} onClick={() => changeWeek(yerevanWeek())}><UiText value={"Today"}/></button>
           <label className="ui-calendar-filter">Show <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as typeof typeFilter)}>
-            <option value="all">All events</option><option value="official">Classes</option>
-            {personal && <option value="assignment">Deadlines</option>}
-            {personal && <option value="study">Study sessions</option>}
-            {personal && <option value="personal">Personal events</option>}
+            <option value="all"><UiText value={"All events"}/></option><option value="official"><UiText value={"Classes"}/></option>
+            {personal && <option value="assignment"><UiText value="Deadlines"/></option>}
+            {personal && <option value="study"><UiText value="Study sessions"/></option>}
+            {personal && <option value="personal"><UiText value={"Personal events"}/></option>}
           </select></label>
         </div>
       </div>
@@ -194,7 +196,7 @@ export function Timetable({ getToken, admin, personal }: {
                 <li key={entry.source + entry.item.id} className="ui-agenda-entry" data-kind={entry.source}>
                   <div className="ui-agenda-time">
                     <strong>{entry.time.slice(0,5)}</strong>
-                    <span>{entry.source === "assignment" ? "Due" : "Start"}</span>
+                    <span><UiText value={entry.source === "assignment" ? "Due" : "Start"}/></span>
                   </div>
                   <div className="ui-agenda-entry-main">
                     <span className="ui-agenda-kind">{entry.source === "official" ? "University class" : entry.source === "assignment" ? "Deadline" : entry.source === "study" ? "Study session" : "Personal event"}</span>
@@ -207,7 +209,7 @@ export function Timetable({ getToken, admin, personal }: {
                         {entry.source === "official" && entry.item.room ? " · "+entry.item.room : ""}
                       </p>
                       {entry.source === "official" && <p>{entry.item.student_group} · {entry.item.lecturer}</p>}
-                      {entry.source === "study" && entry.item.completed_at && <span className="ui-agenda-completed">Completed</span>}
+                      {entry.source === "study" && entry.item.completed_at && <span className="ui-agenda-completed"><UiText value="Completed"/></span>}
                       {admin && entry.source === "official" && <button type="button" className="ui-text-action" disabled={busy}
                         onClick={() => {setSelected(entry.item.id);setOffering(entry.item.offering_id);setMessage("");}}>Edit lesson</button>}
                       {personal && entry.source === "personal" && <button type="button" className="ui-text-action"
@@ -222,7 +224,7 @@ export function Timetable({ getToken, admin, personal }: {
       </div>
 
       {personal && eventEditorOpen && <div className="ui-calendar-editor">
-        <div className="ui-calendar-editor-header"><h3>{eventId ? "Edit personal event" : "New personal event"}</h3>
+        <div className="ui-calendar-editor-header"><h3><UiText value={eventId ? "Edit personal event" : "New personal event"}/></h3>
           <button className="ui-icon-close" type="button" aria-label="Close event editor" onClick={() => {setEventId("");setEventEditorOpen(false);}}>×</button></div>
         <PersonalEventEditor key={week + eventId + revision} client={personal} from={week} to={shiftDate(week,6)}
           initialDate={activeDay==="all" ? week : activeDay}
@@ -233,7 +235,7 @@ export function Timetable({ getToken, admin, personal }: {
       {admin && (
         <form id="jarvis-lesson-editor" key={selected + week + revision} onSubmit={save} className="ui-calendar-editor jarvis-calendar-form space-y-3">
           <fieldset disabled={busy} className="space-y-3">
-            <h3 className="font-semibold">{lesson ? "Edit selected lesson" : "Add lesson"}</h3>
+            <h3 className="font-semibold"><UiText value={lesson ? "Edit selected lesson" : "Add lesson"}/></h3>
             <input type="hidden" name="id" value={selected} />
             <label className="block">Course offering
               <select className={field} name="offeringId" value={offering} required onChange={(event) => setOffering(event.target.value)}>
@@ -241,21 +243,21 @@ export function Timetable({ getToken, admin, personal }: {
                 {admin.offerings.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
               </select>
             </label>
-            <label className="block">Lecturer
+            <label className="block"><UiText value="Lecturer"/>
               <select key={offering} className={field} name="lecturerId" defaultValue={lesson?.offering_id === offering ? lesson.lecturer_id : ""} required>
                 <option value="" disabled>Choose an assigned lecturer</option>
                 {lecturers?.map((item) => <option key={item.id} value={item.id}>{item.display_name}</option>)}
               </select>
             </label>
             {offering && !lecturers?.length && <p>Assign an active lecturer to this offering first.</p>}
-            <label className="block">Date<input className={field} name="date" type="date" min={week} max={shiftDate(week, 6)} defaultValue={lesson?.lesson_date ?? week} required /></label>
-            <label className="block">Starts<input className={field} name="start" type="time" defaultValue={lesson?.starts_at.slice(0, 5)} required /></label>
-            <label className="block">Ends<input className={field} name="end" type="time" defaultValue={lesson?.ends_at.slice(0, 5)} required /></label>
-            <label className="block">Room<input className={field} name="room" maxLength={80} defaultValue={lesson?.room} required /></label>
+            <label className="block"><UiText value="Date"/><input className={field} name="date" type="date" min={week} max={shiftDate(week, 6)} defaultValue={lesson?.lesson_date ?? week} required /></label>
+            <label className="block"><UiText value="Starts"/><input className={field} name="start" type="time" defaultValue={lesson?.starts_at.slice(0, 5)} required /></label>
+            <label className="block"><UiText value="Ends"/><input className={field} name="end" type="time" defaultValue={lesson?.ends_at.slice(0, 5)} required /></label>
+            <label className="block"><UiText value="Room"/><input className={field} name="room" maxLength={80} defaultValue={lesson?.room} required /></label>
             <div className="flex flex-wrap gap-3">
               <button className={button} disabled={!lecturers?.length}>Save lesson</button>
               {lesson && <>
-                <button type="button" className="underline" onClick={() => { setSelected(""); setOffering(""); }}>Cancel edit</button>
+                <button type="button" className="underline" onClick={() => { setSelected(""); setOffering(""); }}><UiText value="Cancel edit"/></button>
                 <button type="button" className="underline" onClick={() => {
                   if (window.confirm("Remove this lesson from the timetable?")) void mutate("remove", { id: lesson.id });
                 }}>Remove lesson</button>

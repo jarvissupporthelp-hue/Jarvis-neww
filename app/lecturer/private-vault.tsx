@@ -1,4 +1,6 @@
 "use client";
+import {UiText} from "@/app/components/interface-language";
+
 
 import { ChatAnswer } from "../account/chat-answer";
 import { useEffect, useState, type FormEvent } from "react";
@@ -105,8 +107,8 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
     <p>Only you can open these notes and PDFs. They are never included in student chat or student course resources.</p>
     <form className="space-y-2" onSubmit={(event) => save(event, "note")}>
       <h3 className="font-semibold">Private exam note</h3>
-      <label className="block">Title<input className="block w-full rounded border p-2" name="title" maxLength={120} required /></label>
-      <label className="block">Notes<textarea className="block w-full rounded border p-2" name="content" rows={5} maxLength={12000} required placeholder="Draft exam guidance, marking considerations, or teaching preparation. This stays private to your account." /></label>
+      <label className="block"><UiText value="Title"/><input className="block w-full rounded border p-2" name="title" maxLength={120} required /></label>
+      <label className="block"><UiText value="Notes"/><textarea className="block w-full rounded border p-2" name="content" rows={5} maxLength={12000} required placeholder="Draft exam guidance, marking considerations, or teaching preparation. This stays private to your account." /></label>
       <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={busy}>Save private note</button>
     </form>
     <ul className="space-y-2">{notes.map((item) => <li className="rounded bg-[#eef3ee] p-3" key={item.id}>
@@ -115,14 +117,14 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
     </li>)}</ul>
     <form className="space-y-2" onSubmit={(event) => save(event, "file")}>
       <h3 className="font-semibold">Private PDF</h3>
-      <label className="block">Title<input className="block w-full rounded border p-2" name="title" maxLength={120} required /></label>
+      <label className="block"><UiText value="Title"/><input className="block w-full rounded border p-2" name="title" maxLength={120} required /></label>
       <label className="block">PDF<input className="block w-full rounded border p-2" name="pdf" type="file" accept="application/pdf,.pdf" required /></label>
       <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={busy}>Upload private PDF</button>
     </form>
     <ul className="space-y-2">{files.map((item) => <li key={item.id} className="rounded bg-[#eef3ee] p-3">
       <strong>{item.title}</strong> ({item.filename}){" "}
-      <button className="underline" onClick={() => void download(item.id)}>Download</button>{" · "}
-      <button className="underline" onClick={() => void remove(item.id, "file")}>Delete</button>
+      <button className="underline" onClick={() => void download(item.id)}><UiText value="Download"/></button>{" · "}
+      <button className="underline" onClick={() => void remove(item.id, "file")}><UiText value="Delete"/></button>
     </li>)}</ul>
     <form className="space-y-2 border-t pt-4" onSubmit={ask}>
       <h3 className="font-semibold">Ask lecturer JARVIS</h3>
@@ -135,7 +137,7 @@ export function LecturerPrivateVault({ offeringId }: { offeringId: string }) {
       </label>
       <label className="block">Question<textarea className="block w-full rounded border p-2" rows={3} maxLength={2000} required value={question} onChange={(event) => setQuestion(event.target.value)} /></label>
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={aiConsent} onChange={(event) => setAiConsent(event.target.checked)} />I agree to send my question and selected private excerpts to the external AI provider. The free preview provider may retain or use them for model improvement.</label>
-      <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={busy || !aiConsent || !question.trim()}>{busy ? "Thinking…" : "Ask JARVIS"}</button>
+      <button className="rounded bg-[#1e3328] px-4 py-2 text-white disabled:opacity-50" disabled={busy || !aiConsent || !question.trim()}><UiText value={busy ? "Thinking…" : "Ask JARVIS"}/></button>
       {answer && <div className="whitespace-pre-wrap rounded bg-[#eef3ee] p-3" role="status"><ChatAnswer text={answer} /></div>}
     </form>
     {message && <p role="status">{message}</p>}
