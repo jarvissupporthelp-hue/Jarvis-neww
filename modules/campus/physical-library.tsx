@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useContext, useEffect, useState } from "react";
+import { Heart } from "lucide-react";
+import { useLibrary } from "./library-personal";
 import Link from "next/link";
 import { InterfaceLanguage, useInterfaceCopy } from "@/app/components/interface-language";
 import { getClient } from "@/lib/browser-supabase";
@@ -40,13 +42,17 @@ export function PhysicalLibrary({ initialBooks }: { initialBooks: PhysicalBook[]
     dateStyle: "medium", timeZone: "UTC",
   });
   const today = new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeZone: "Asia/Yerevan" }).format(new Date());
+  const shelf = useLibrary(locale === "hy" || locale === "ru" || locale === "fr" ? locale : "en");
+  const liked = new Set(shelf.entries.filter(entry => entry.liked).map(entry => entry.book_id));
+  const waiting = new Set(waitlist.filter(entry => !entry.notified_at).map(entry => entry.book_id));
+  const [view, setView] = useState("All books");
   const categories = [...new Set(books?.map(book => book.category))].sort();
   const search = normalize(query.trim());
-  const matches = books?.filter(book => normalize(`${book.title} ${book.author} ${book.shelf}`).includes(search)
+  const matches = books?.filter(book => (view !== "My waitlist" || waiting.has(book.id))
+    && (view !== "Liked books" || liked.has(book.id)) && normalize(`${book.title} ${book.author} ${book.shelf}`).includes(search)
     && (!language || book.language === language) && (!category || book.category === category)
     && (!faculty || book.faculties.some(value => value === faculty))
     && (!availability || (availability === "loaned") === Boolean(book.expected_return))) ?? [];
-  const waiting = new Set(waitlist.filter(entry => !entry.notified_at).map(entry => entry.book_id));
   const alerts = waitlist.filter(entry => entry.notified_at)
     .sort((first, second) => Number(Boolean(first.read_at)) - Number(Boolean(second.read_at)));
   const bookById = new Map(books?.map(book => [book.id, book]));
@@ -110,36 +116,43 @@ export function PhysicalLibrary({ initialBooks }: { initialBooks: PhysicalBook[]
   return <section className="space-y-5" aria-labelledby="physical-library-heading">
     <header className="jarvis-panel space-y-2">
       <h2 id="physical-library-heading" className="text-2xl font-semibold">{t("Physical Library")}</h2>
-      <p className="text-sm text-[var(--muted)]">{t("Sample inventory. Join the waitlist to get an in-app alert when a book is returned.")}</p>
-      <div className="grid gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-5">
+      <p className="text-sm text-[var(--muted)]">{t("Add a book to your waitlist to get an alert when it is returned.")}</p>
+      <nav aria-label={t("Physical Library")} className="jarvis-section-nav flex-wrap">
+        {["All books", "My waitlist", "Liked books"].map(label => <button key={label} type="button" aria-pressed={view === label}
+          onClick={() => { setView(label); setQuery(""); setLanguage(""); setCategory(""); setFaculty(""); setAvailability(""); setLimit(12); }}>
+          {t(label)}{role && label !== "All books" ? ` (${label === "My waitlist" ? waiting.size : books?.filter(book => liked.has(book.id)).length ?? 0})` : ""}
+        </button>)}
+      </nav>
+      <div className="grid grid-cols-1 gap-3 pt-2 sm:grid-cols-2 lg:grid-cols-5">
         <label className="grid min-w-0 gap-1 text-sm">{t("Search")}
-          <input type="search" value={query} placeholder={t("Title, author, or shelf")} onChange={event => { setQuery(event.target.value); setLimit(12); }}/>
+          <input className="w-full min-w-0 max-w-full" type="search" value={query} placeholder={t("Title, author, or shelf")} onChange={event => { setQuery(event.target.value); setLimit(12); }}/>
         </label>
         <label className="grid min-w-0 gap-1 text-sm">{t("Availability")}
-          <select value={availability} onChange={event => { setAvailability(event.target.value); setLimit(12); }}>
+          <select className="w-full min-w-0 max-w-full truncate" value={availability} onChange={event => { setAvailability(event.target.value); setLimit(12); }}>
             {availabilityOptions.map(([value, label]) => <option key={value} value={value}>{t(label)}</option>)}
           </select>
         </label>
         <label className="grid min-w-0 gap-1 text-sm">{t("Category")}
-          <select value={category} onChange={event => { setCategory(event.target.value); setLimit(12); }}>
+          <select className="w-full min-w-0 max-w-full truncate" value={category} onChange={event => { setCategory(event.target.value); setLimit(12); }}>
             <option value="">{t("All categories")}</option>
             {categories.map(value => <option key={value} value={value}>{t(digitalLibrary.en.categories[value])}</option>)}
           </select>
         </label>
         <label className="grid min-w-0 gap-1 text-sm">{t("Language")}
-          <select value={language} onChange={event => { setLanguage(event.target.value); setLimit(12); }}>
+          <select className="w-full min-w-0 max-w-full truncate" value={language} onChange={event => { setLanguage(event.target.value); setLimit(12); }}>
             <option value="">{t("All languages")}</option>
             {bookLanguages.map(value => <option key={value} value={value}>{t(digitalLibrary.en.languages[value])}</option>)}
           </select>
         </label>
         <label className="grid min-w-0 gap-1 text-sm">{t("Faculty")}
-          <select value={faculty} onChange={event => { setFaculty(event.target.value); setLimit(12); }}>
+          <select className="w-full min-w-0 max-w-full truncate" value={faculty} onChange={event => { setFaculty(event.target.value); setLimit(12); }}>
             <option value="">{t("All faculties")}</option>
-            {libraryFaculties.map(value => <option key={value} value={value}>{t(digitalLibrary.en.faculties[value])}</option>)}
+            {libraryFaculties.map(value => <option key={value} value={value}>{value === "informatics" ? "IMA" : t(digitalLibrary.en.faculties[value])}</option>)}
           </select>
         </label>
       </div>
     </header>
+    {shelf.notice && <p role="status">{t(shelf.notice)}</p>}
     {message && <p role="status" className="jarvis-panel text-sm">{t(message)}</p>}
     {role && alerts.length > 0 && <section id="availability-alerts" className="jarvis-panel scroll-mt-20 space-y-3">
       <h3 className="font-semibold">{t("Library alerts")}</h3>
@@ -155,7 +168,7 @@ export function PhysicalLibrary({ initialBooks }: { initialBooks: PhysicalBook[]
     </section>}
     {books ? <p role="status" className="text-sm text-[var(--muted)]">{matches.length} / {books.length} {t("books")}</p>
       : <p role="status">{t("Loading the catalog…")}</p>}
-    {books && !matches.length && <p className="jarvis-panel">{t("No books match these filters.")}</p>}
+    {books && !matches.length && <p className="jarvis-panel">{view !== "All books" && !role ? <Link href="/account" className="underline">{t("Sign in")}</Link> : view === "My waitlist" && !waiting.size ? t("Your waitlist is empty.") : view === "Liked books" && !books.some(book => liked.has(book.id)) ? t("Like a book to save it here.") : t("No books match these filters.")}</p>}
     <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {matches.slice(0, limit).map(book => {
         const due = book.expected_return;
@@ -171,14 +184,18 @@ export function PhysicalLibrary({ initialBooks }: { initialBooks: PhysicalBook[]
           <div className="text-sm">{due
             ? <>{t(due < today ? "Return overdue" : "Expected return")} · <time dateTime={due}>{date.format(new Date(due + "T00:00:00Z"))}</time></>
             : <>{t("Shelf")} · {book.shelf}</>}</div>
+          {shelf.user && <button type="button" className="ui-action-secondary inline-flex items-center gap-2 self-start" aria-pressed={liked.has(book.id)}
+            disabled={shelf.busy} onClick={() => void shelf.saveBook(book.id, { liked: !liked.has(book.id) })}>
+            <Heart size={16} fill={liked.has(book.id) ? "currentColor" : "none"}/>{t(liked.has(book.id) ? "Liked" : "Like")}
+          </button>}
           {due && (role
             ? <button type="button" className="ui-action-secondary mt-auto self-start" disabled={pending}
               aria-pressed={waiting.has(book.id)} onClick={() => void act(() => getClient().rpc("change_physical_library_waitlist", {
                 p_book: book.id, p_join: !waiting.has(book.id),
-              }), waiting.has(book.id) ? "You left the waitlist." : "You joined the waitlist.")}>
-              {t(waiting.has(book.id) ? "Leave waitlist" : "Join waitlist")}
+              }), waiting.has(book.id) ? "Removed from your waitlist." : "Added to your waitlist.")}>
+              {t(waiting.has(book.id) ? "Remove from waitlist" : "Add to waitlist")}
             </button>
-            : <Link className="ui-action-secondary mt-auto self-start" href="/account">{t("Sign in to join the waitlist")}</Link>)}
+            : <Link className="ui-action-secondary mt-auto self-start" href="/account">{t("Sign in to add to waitlist")}</Link>)}
           {role === "admin" && <details className="border-t border-[var(--stroke)] pt-2 text-sm">
             <summary className="cursor-pointer font-medium">{t("Manage availability")}</summary>
             <form className="mt-2 grid gap-2" onSubmit={event => {

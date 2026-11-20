@@ -8,7 +8,7 @@ import { labels, useLibrary } from "./library-personal";
 import { digitalLibrary, type Locale } from "@/lib/locales";
 import { bookCategories, bookLanguages, filterBooks, libraryFaculties } from "./books";
 
-const input = "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2";
+const input = "block min-w-0 max-w-full w-full truncate rounded-lg border border-slate-300 bg-white px-3 py-2";
 const panel = "rounded-2xl border border-slate-200 bg-white p-5";
 const subjects = ["Computer Networks", "Applied Mathematics", "Algorithms", "French", "Computer Architecture", "English"];
 const times = [540, 630, 720, 840, 930, 1020];
@@ -91,7 +91,7 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
         <label className="min-w-0"><UiText value={copy.faculty}/>
           <select className={input} value={faculty} onChange={(event) => setFaculty(event.target.value)}>
             <option value=""><UiText value={copy.allFaculties}/></option>
-            {libraryFaculties.map((value) => <option key={value} value={value}>{copy.faculties[value]}</option>)}
+            {libraryFaculties.map((value) => <option key={value} value={value}>{value === "informatics" ? "IMA" : copy.faculties[value]}</option>)}
           </select>
         </label>
         <label className="min-w-0"><UiText value={copy.language}/>
@@ -136,7 +136,7 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
           <select aria-label={t[13]+" — "+title} disabled={profile.busy} value={saved.get(id)?.status??""} onChange={e=>void profile.saveBook(id,{status:e.target.value})}>
             {["","later","reading","read"].map((v,i)=><option key={v} value={v}>{i?t[i]:t[13]}</option>)}
           </select>
-          <button disabled={profile.busy} aria-label={(saved.get(id)?.liked?t[15]:t[14])+" — "+title} aria-pressed={!!saved.get(id)?.liked} onClick={()=>void profile.saveBook(id,{liked:!saved.get(id)?.liked})} className="rounded-full border px-3 py-1 aria-pressed:text-rose-700"><UiText value={saved.get(id)?.liked?"♥":"♡"}/> {t[14]}</button>
+          <button disabled={profile.busy} aria-label={(saved.get(id)?.liked?t[15]:t[14])+" — "+title} aria-pressed={!!saved.get(id)?.liked} onClick={()=>void profile.saveBook(id,{liked:!saved.get(id)?.liked})} className="rounded-full border px-3 py-1 aria-pressed:text-rose-700"><UiText value={saved.get(id)?.liked?"♥":"♡"}/> {saved.get(id)?.liked?t[4]:t[14]}</button>
         </div>}
       </li>)}
     </ul>
