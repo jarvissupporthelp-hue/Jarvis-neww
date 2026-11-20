@@ -46,6 +46,7 @@ const prefetchedRoutes = new Set(["/account", "/account/calendar", "/chat", "/le
 const libraryNav: NavItem[] = [
   { href: "/library", label: "Library", icon: "courses" },
   { href: "/library/digital", label: "Digital Library", icon: "courses", nested: true },
+  { href: "/library/loans", label: "My loans", icon: "courses", nested: true },
   { href: "/library/physical", label: "Physical Library", icon: "courses", nested: true },
 ];
 

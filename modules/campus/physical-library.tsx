@@ -200,14 +200,20 @@ export function PhysicalLibrary({ initialBooks }: { initialBooks: PhysicalBook[]
             <summary className="cursor-pointer font-medium">{t("Manage availability")}</summary>
             <form className="mt-2 grid gap-2" onSubmit={event => {
               event.preventDefault();
-              const value = new FormData(event.currentTarget).get("returnDate");
+              const form = new FormData(event.currentTarget);
+              const value = form.get("returnDate");
+              if (!due) {
+                void act(() => getClient().rpc("checkout_library_book", {book: book.id, reader: form.get("reader"), due_date: value}), "Book status updated.");
+                return;
+              }
               if (typeof value === "string" && value) void setReturnDate(book.id, value);
             }}>
+              {!due && <label className="grid gap-1">{t("Borrower account ID")}<input name="reader" required /></label>}
               <label className="grid gap-1">{t("Expected return")}
                 <input type="date" name="returnDate" min={today} defaultValue={due && due >= today ? due : ""} required/>
               </label>
               <div className="flex flex-wrap gap-2">
-                <button className="ui-action-secondary" disabled={pending}>{t("Save loan date")}</button>
+                <button className="ui-action-secondary" disabled={pending}>{t(due ? "Save loan date" : "Record checkout")}</button>
                 {due && <button type="button" className="ui-action-secondary" disabled={pending} onClick={() => void setReturnDate(book.id, null)}>{t("Mark returned")}</button>}
               </div>
             </form>
