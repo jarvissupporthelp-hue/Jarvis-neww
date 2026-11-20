@@ -16,3 +16,10 @@ export function formatCoursePdfSearch(results: CoursePdfSearchResult) {
   }
   return sections.join("\n\n");
 }
+
+const searchNoise = new Set("please explain from my lecture pdf course notes using the a an and of in me show about what is how give example explique mon mes cours dans le la les des du de из мой мне про это конспект իմ մասին դասախոսությունից".split(" "));
+
+export function courseSearchTerms(prompt: string) {
+  const words = prompt.normalize("NFKC").toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+  return [...new Set(words.filter(word => word.length > 1 && !searchNoise.has(word)))].slice(0, 32);
+}

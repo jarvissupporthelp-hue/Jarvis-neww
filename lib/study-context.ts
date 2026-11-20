@@ -51,6 +51,13 @@ export function examDateClarification(prompt: string, context: StudyContext) {
   if (context.officialExamDatesAvailable) return null;
 
   const dateQuestion = /^(?:when (?:is|are)|what (?:date|day) (?:is|are)|what is the date of)\s+(?:(?:my|our|the|next|final)\s+)*(?:[\p{L}\d-]+\s+){0,4}exams?(?:\s+scheduled)?\s*[?.!]?$/iu;
+  const question = prompt.trim().replace(/[՞։?!.,]/gu, "").trim();
+  if (/^quand (?:est|a lieu|aura lieu) (?:mon|notre|le|l’)\s*examen(?: de [\p{L} -]+)?$/iu.test(question))
+    return "Je n’ai pas de date confirmée pour cet examen. Consulte l’annonce officielle du cours.";
+  if (/^когда (?:будет )?(?:(?:мой|наш) )?экзамен(?: по [\p{L} -]+)?$/iu.test(question))
+    return "У меня нет подтверждённой даты этого экзамена. Проверь объявление по курсу.";
+  if (/^երբ է (?:իմ |մեր )?(?:[\p{L}-]+ ){0,3}քննություն[ըսն]?$/iu.test(question))
+    return "Այս քննության հաստատված ամսաթիվը չունեմ։ Ստուգիր դասընթացի պաշտոնական հայտարարությունը։";
   if (dateQuestion.test(prompt.trim())) {
     return "I don’t have a verified exam date for you. Check your official course announcement or ask your lecturer. If you share the date, I can help you plan your revision.";
   }

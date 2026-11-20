@@ -4,7 +4,7 @@ import { studentIdentity, colorMemory, profileUpdate } from "@/lib/student-profi
 import { authorize } from "@/lib/authorization";
 import { askStudyAI, providerFailureMessage, resolveProviderAccess } from "@/lib/study-ai";
 import { createStudyClient, examDateClarification, loadStudyContext } from "@/lib/study-context";
-import { formatCoursePdfSearch, type CoursePdfSearchResult } from "@/lib/course-pdf-search";
+import { courseSearchTerms, formatCoursePdfSearch, type CoursePdfSearchResult } from "@/lib/course-pdf-search";
 import { getCourseProfessorGuides } from "@/lib/professor-guides";
 import { searchChroma } from "@/lib/chroma-retrieval";
 import { assignmentDeadlines, type AssignmentDeadline } from "@/lib/course-assignments";
@@ -18,8 +18,8 @@ function reply(body: object, status = 200) {
 async function findPassages(client: NonNullable<ReturnType<typeof createStudyClient>>, prompt: string, offeringId?: string): Promise<CoursePdfSearchResult | null> {
   const semantic = await searchChroma(client, prompt, offeringId).catch(() => null);
   if (semantic?.length) return { matches: semantic, unavailable: 0 };
-  const words = [...new Set(prompt.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])];
-  const terms = words.filter((word) => word.length > 1);
+  const terms = courseSearchTerms(prompt);
+  if (!terms.length) return { matches: [], unavailable: 0 };
   const { data, error } = await client.rpc("search_course_pdf_pages", offeringId ? { p_terms: terms, p_offering: offeringId } : { p_terms: terms });
   return error || !data ? null : data as CoursePdfSearchResult;
 }
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
   const [profileResult, memoryResult, deadlineResult] = await Promise.all([
     offeringId ? profilesQuery.eq("offering_id", offeringId) : profilesQuery,
     supabase.from("student_ai_preferences")
-      .select("learning_preferences,current_goal,topics_to_practice").eq("student_id", caller.userId).maybeSingle(),
+      .select("learning_preferences,current_goal,topics_to_practice,preferred_color,interest").eq("student_id", caller.userId).maybeSingle(),
     (offeringId ? deadlines.eq("offering_id", offeringId) : deadlines).limit(12).returns<AssignmentDeadline[]>(),
   ]);
   if (deadlineResult.data && !deadlineResult.error) {
@@ -125,10 +125,11 @@ export async function POST(request: Request) {
     }
   }
 
-  const facts = await supabase.from("study_profile_facts").select("profile_field,profile_value")
-    .eq("student_id", caller.userId);
-  if (facts.error) return reply({ error: "Could not load your profile. Your draft is still here." }, 503);
-  const preferences: Record<string, string> = Object.fromEntries(facts.data.map(row => [row.profile_field, row.profile_value]));
+  const savedMemory = memoryResult.data;
+  const preferences: Record<string, string> = savedMemory ? {
+    preferredColor: savedMemory.preferred_color, interest: savedMemory.interest,
+    learningPreference: savedMemory.learning_preferences, currentGoal: savedMemory.current_goal,
+  } : {};
   const update = profileUpdate(prompt);
   if (update) preferences[update.profile_field] = update.profile_value;
   const memory = colorMemory(prompt, preferences.preferredColor);
@@ -168,5 +169,7 @@ export async function POST(request: Request) {
     .insert({ conversation_id: conversationId, prompt, answer, ...update })
     .select("id,prompt,answer").single();
   if (saved.error) return reply({ error: "Could not save the reply. Your draft is still here." }, 503);
-  return reply({ turn: saved.data });
+  const fields: Record<string, string> = { preferredColor: "preferred_color", interest: "interest", currentGoal: "current_goal", learningPreference: "learning_preferences" };
+  const memoryPatch = update ? { [fields[update.profile_field]]: update.profile_value } : undefined;
+  return reply({ turn: saved.data, memoryPatch });
 }

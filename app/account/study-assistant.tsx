@@ -13,7 +13,7 @@ import { MAX_STUDY_PROMPT } from "@/lib/study-chat-limits";
 type Thread = { id: string; title: string };
 type Turn = { id: string; prompt: string; answer: string };
 type Usage = { limit: number; used: number; remaining: number; inputTokens: number; outputTokens: number; tokenReportedAttempts: number; resetsAt: string };
-type Memory = { learning_preferences: string; current_goal: string; topics_to_practice: string };
+type Memory = { preferred_color: string; interest: string; learning_preferences: string; current_goal: string; topics_to_practice: string };
 
 const button = "min-h-11 rounded-xl bg-[#214b36] px-4 py-2 font-semibold text-white shadow-sm transition hover:bg-[#163c2b] disabled:cursor-not-allowed disabled:opacity-50";
 const field = "w-full rounded-xl border border-[#bbccbc] bg-white p-3 text-[#1e3328] placeholder:text-[#73877a]";
@@ -214,6 +214,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
       }
       setTurns((items) => [...(items ?? []), result.turn].slice(-100));
       setNewTurnId(result.turn.id);
+      if (result.memoryPatch) setMemory(current => current && { ...current, ...result.memoryPatch });
       setSendStatus("Reply ready.");
     } catch {
       setSendStatus("");
@@ -280,6 +281,8 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
         <label className="block text-xs font-medium">How I learn best<textarea className={field} rows={2} maxLength={1000} value={memory.learning_preferences} onChange={(event) => setMemory({ ...memory, learning_preferences: event.target.value })} /></label>
         <label className="block text-xs font-medium">Current goal<textarea className={field} rows={2} maxLength={1000} value={memory.current_goal} onChange={(event) => setMemory({ ...memory, current_goal: event.target.value })} /></label>
         <label className="block text-xs font-medium">Topics to practice<textarea className={field} rows={2} maxLength={1000} value={memory.topics_to_practice} onChange={(event) => setMemory({ ...memory, topics_to_practice: event.target.value })} /></label>
+        <label className="block text-xs font-medium">Favorite color<input className={field} maxLength={1000} value={memory.preferred_color} onChange={event => setMemory({ ...memory, preferred_color: event.target.value })} /></label>
+        <label className="block text-xs font-medium">Interest<input className={field} maxLength={1000} value={memory.interest} onChange={event => setMemory({ ...memory, interest: event.target.value })} /></label>
         <div className="flex flex-wrap items-center gap-3">
           <button className={button}>Save memory</button>
           <button type="button" className="text-sm underline" onClick={async () => {

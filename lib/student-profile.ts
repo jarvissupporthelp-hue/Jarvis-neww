@@ -30,6 +30,7 @@ export function profileUpdate(prompt: string) {
   const fields = [
     ["currentGoal", /^my (?:current )?goal is (.+)$/i],
     ["learningPreference", /^i learn best (.+)$/i],
+    ["learningPreference", /^(?:actually,? )?(?:i prefer|je préfère|я предпочитаю|ես նախընտրում եմ) (.+)$/iu],
     ["interest", /^i (?:like|love|enjoy) (.+)$/i],
   ] as const;
   for (const [field, pattern] of fields) {

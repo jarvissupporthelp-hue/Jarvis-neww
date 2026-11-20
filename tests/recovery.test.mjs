@@ -93,7 +93,7 @@ test("an AI outage saves no partial turn and a retry saves one complete turn", a
     insert: (turn) => { turns.push(turn); return query; },
     single: () => ({ data: turns.at(-1) }),
   };
-  doubles.chat = { from: (table) => table === "study_profile_facts" ? { select: () => ({ eq: () => ({ data: turns.filter(row => row.profile_field) }) }) } : query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
+  doubles.chat = { from: (table) => table === "student_ai_preferences" ? { select: () => ({ eq: () => ({ maybeSingle: () => ({ data: { preferred_color: turns.findLast(row => row.profile_field === "preferredColor")?.profile_value } }) }) }) } : query, rpc: (name) => { rpcCalls.push(name); return { data: true }; } };
   doubles.ai = () => null;
   const body = { prompt: "Explain routing", conversationId: id, consent: true };
   const failure = await chat(post(body));
@@ -161,7 +161,7 @@ test("course PDF mode checks enrollment scope before searching and filters the f
   assigned = true;
   assert.equal((await chat(post(request))).status, 200);
   assert.ok(checks.some(([table, field, value]) => table === "course_offerings" && field === "id" && value === scope));
-  assert.deepEqual(calls, [["search_course_pdf_pages", { p_terms: ["explain", "routing"], p_offering: scope }]]);
+  assert.deepEqual(calls, [["search_course_pdf_pages", { p_terms: ["routing"], p_offering: scope }]]);
 });
 
 test("a PDF processing failure can be recorded on retry against the same resource", async () => {
