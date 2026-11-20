@@ -4,15 +4,14 @@ import {UiText} from "@/app/components/interface-language";
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent } from "react";
-import type { Locale } from "@/lib/locales";
 import { getAccessToken } from "@/lib/browser-supabase";
-import { RoomSimulation, DigitalLibrary } from "./discovery";
+import { RoomSimulation } from "./discovery";
 import { MeetingPanel } from "./meeting-panel";
 
 const input = "block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
 const button = "rounded-lg bg-[#1e3328] px-4 py-2 text-sm font-semibold text-white";
 const panel = "rounded-2xl border border-slate-200 bg-white p-5";
-const tabs = ["Rooms & map", "Library", "Team booking"] as const;
+const tabs = ["Rooms & map", "Equipment & loans", "Team booking"] as const;
 type Tab = typeof tabs[number] | "Staff";
 type Resource = { id: string; title: string; kind: string; capacity: number; building: string; floor: number; position: number; accessible: boolean; features: string[]; opens: number; closes: number };
 type Booking = { id: string; resourceId: string; startAt: string; endAt: string; status: string; purpose?: string; lateCancelAt?: string };
@@ -32,8 +31,8 @@ async function request(params: URLSearchParams, payload?: Record<string, unknown
   return result;
 }
 
-export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: boolean; locale: Locale }) {
-  const [tab, setTab] = useState<Tab>(initialLibrary ? "Library" : "Rooms & map");
+export function CampusWorkspace() {
+  const [tab, setTab] = useState<Tab>("Rooms & map");
   const [data, setData] = useState<Data | null>(null);
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState(false);
@@ -85,15 +84,14 @@ export function CampusWorkspace({ initialLibrary, locale }: { initialLibrary: bo
     <nav aria-label="Campus tools" className="jarvis-section-nav">
       {[...tabs, ...(data?.staff ? ["Staff" as const] : [])].map((item) => <button type="button" key={item}
         aria-pressed={tab === item} onClick={() => { setTab(item); setSelected(""); setQuery(""); setMessage(""); }}>
-        {item}
+        <UiText value={item}/>
       </button>)}
     </nav>
     {tab === "Rooms & map" && <RoomSimulation />}
-    {tab === "Library" && <DigitalLibrary locale={locale} />}
     {tab === "Team booking" && <MeetingPanel />}
-    {(tab === "Library" || tab === "Staff") && data && message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
-    {tab === "Library" && !data && <p className="text-sm text-slate-600"><Link href="/account" className="underline"><UiText value="Sign in"/></Link> to access campus loans and equipment when available.</p>}
-    {data && tab === "Library" && <>
+    {(tab === "Equipment & loans" || tab === "Staff") && data && message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message}</p>}
+    {tab === "Equipment & loans" && !data && <p className="text-sm text-slate-600"><Link href="/account" className="underline"><UiText value="Sign in"/></Link> to access campus loans and equipment when available.</p>}
+    {data && tab === "Equipment & loans" && <>
       <div className={`${panel} space-y-3`}><h2 className="font-semibold">{"Campus loans & equipment"}</h2><label>Search by title <input className={input} type="search" value={query} onChange={(e) => setQuery(e.target.value)} /></label>
         <p className="text-sm text-slate-600">Select dates to reserve equipment. Times are Asia/Yerevan.</p>{dateInputs}{reserveForm}
         <ul className="grid gap-3 sm:grid-cols-2">{resources.filter((item) => item.kind !== "room" && item.title.toLowerCase().includes(query.trim().toLowerCase())).map((item) => <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3" key={item.id}>

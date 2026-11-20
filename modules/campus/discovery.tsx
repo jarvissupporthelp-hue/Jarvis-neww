@@ -4,7 +4,6 @@ import {UiText} from "@/app/components/interface-language";
 
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
 import { labels, useLibrary } from "./library-personal";
 import { digitalLibrary, type Locale } from "@/lib/locales";
 import { bookCategories, bookLanguages, filterBooks, libraryFaculties } from "./books";
@@ -84,7 +83,6 @@ export function DigitalLibrary({ locale }: { locale: Locale }) {
           <h2 id="digital-library-heading" className="flex items-center gap-3 text-3xl font-semibold tracking-tight"><BookOpen className="size-7 text-emerald-700" aria-hidden="true"/><UiText value={copy.title}/></h2>
           <p className="mt-1 text-sm text-slate-600"><UiText value={copy.description}/></p>
         </div>
-        {!profile.user && <Link className="underline" href={`/campus?tab=library&lang=${locale === "hy" ? "en" : "hy"}`}><UiText value={locale === "hy" ? "English" : "Հայերեն"}/></Link>}
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <label className="min-w-0"><UiText value={copy.search}/>

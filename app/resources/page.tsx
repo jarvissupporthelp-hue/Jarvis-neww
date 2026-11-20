@@ -9,7 +9,7 @@ export default async function ResourcesPage({ searchParams }: PageProps<"/resour
   const { lang } = await searchParams;
   const locale = lang === "hy" ? "hy" : "en";
   const library = digitalLibrary[locale];
-  const address = `/campus?tab=library&lang=${locale}`;
+  const address = `/library/digital?lang=${locale}`;
   return (
     <main className="mx-auto max-w-3xl space-y-4 px-4 py-8 sm:px-6">
       <Link href="/account" className="font-semibold underline"><UiText value="Back to account"/></Link>

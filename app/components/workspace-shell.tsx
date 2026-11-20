@@ -43,6 +43,12 @@ type NavItem = { href: string; label: string; icon: IconName; nested?: boolean }
 
 const prefetchedRoutes = new Set(["/account", "/account/calendar", "/chat", "/lecturer"]);
 
+const libraryNav: NavItem[] = [
+  { href: "/library", label: "Library", icon: "courses" },
+  { href: "/library/digital", label: "Digital Library", icon: "courses", nested: true },
+  { href: "/library/physical", label: "Physical Library", icon: "courses", nested: true },
+];
+
 const studentNav: NavItem[] = [
   { href: "/account", label: "My day", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
@@ -50,10 +56,10 @@ const studentNav: NavItem[] = [
   { href: "/learning", label: "Learning tools", icon: "plans" },
   { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
+  ...libraryNav,
   { href: "/career", label: "Career", icon: "users" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
-  { href: "/resources", label: "Course library", icon: "courses" },
   { href: "/study-plans", label: "Study plans", icon: "plans" },
   { href: "/chat", label: "AI Agent", icon: "chat" },
   { href: "/chat/math-visualization", label: "Math visualizations", icon: "math", nested: true },
@@ -65,6 +71,7 @@ const lecturerNav: NavItem[] = [
   { href: "/academics", label: "Academics", icon: "layers" },
   { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
+  ...libraryNav,
   { href: "/career", label: "Career", icon: "users" },
   { href: "/lecturer", label: "My courses", icon: "courses" },
   { href: "/account/calendar", label: "Timetable", icon: "calendar" },
@@ -77,6 +84,7 @@ const adminNav: NavItem[] = [
   { href: "/academics", label: "Academic tools", icon: "courses" },
   { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
+  ...libraryNav,
   { href: "/career", label: "Career", icon: "users" },
   { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
   { href: "/account/admin/users", label: "Users & access", icon: "users" },

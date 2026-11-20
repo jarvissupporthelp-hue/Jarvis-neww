@@ -37,6 +37,35 @@ class SlotBoundary extends Component<{ fallback: string; children: ReactNode }, 
   }
 }
 
+function LibraryAlertLink() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function refresh() {
+      if (document.visibilityState === "hidden") return;
+      try {
+        const { count, error } = await getClient().from("physical_library_waitlist")
+          .select("id", { count: "exact", head: true }).not("notified_at", "is", null)
+          .is("read_at", null).abortSignal(controller.signal);
+        if (!error && !controller.signal.aborted) setCount(count ?? 0);
+      } catch {
+        // The university notification list remains usable if the library is unavailable.
+      }
+    }
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 30_000);
+    return () => {
+      controller.abort();
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  return count > 0 && <Link className="ui-action-secondary mb-3" href="/library/physical#availability-alerts">
+    <UiText value="Library alerts"/> {`(${count})`}
+  </Link>;
+}
+
 function Notifications({ copy }: { copy: Copy }) {
   const [items, setItems] = useState<Notice[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -149,7 +178,7 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
   const matches = permitted.filter((entry) => title(entry).toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
 
   function widget(slot: DashboardSlot) {
-    if (slot === "notifications") return <Notifications copy={copy} />;
+    if (slot === "notifications") return <><LibraryAlertLink /><Notifications copy={copy} /></>;
     if (slot === "search") return (
       <div className="space-y-2">
         <label className="block"><UiText value={copy.searchLabel}/><input type="search" className="mt-1 w-full rounded border p-2" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
