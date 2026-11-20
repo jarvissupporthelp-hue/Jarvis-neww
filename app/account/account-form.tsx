@@ -143,9 +143,13 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
     try {
       const supabase = getClient();
       if (flow === "forgot") {
-        await supabase.auth.resetPasswordForEmail(email, {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: new URL("/account?flow=recovery", window.location.origin).toString(),
         });
+        if (error) {
+          setError(error.status === 429 ? copy.limited : copy.error);
+          return;
+        }
         setMessage(copy.resetSent);
         return;
       }
