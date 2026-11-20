@@ -41,6 +41,8 @@ function Icon({ name, size = 19 }: { name: IconName; size?: number }) {
 
 type NavItem = { href: string; label: string; icon: IconName; nested?: boolean };
 
+const prefetchedRoutes = new Set(["/account", "/account/calendar", "/chat", "/lecturer"]);
+
 const studentNav: NavItem[] = [
   { href: "/account", label: "My day", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
@@ -174,7 +176,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
     }
     try {
       const client = getClient();
-      void client.auth.getSession().then(({ data }) => inspect(data.session?.access_token,data.session?.user.id)).catch(() => inspect(undefined));
+      // INITIAL_SESSION supplies the starting session through the same subscription.
       const { data } = client.auth.onAuthStateChange((_event, session) => { void inspect(session?.access_token, session?.user.id); });
       const refresh = () => { void client.auth.getSession().then(({data})=>inspect(data.session?.access_token,data.session?.user.id)); };
       window.addEventListener("jarvis-profile-saved",refresh);
@@ -237,7 +239,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
               <nav aria-label="Main navigation" className="jarvis-side-links">
                 {items.map((item) => {
                   const current = currentLink?.href === item.href;
-                  return <Link key={item.href} href={item.href} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onNavigate={() => setDrawerPath(null)}>
+                  return <Link key={item.href} href={item.href} prefetch={current ? false : prefetchedRoutes.has(item.href) ? true : undefined} aria-current={pathname === item.href ? "page" : undefined} className={"jarvis-side-link" + (current ? " is-active" : "") + (item.nested ? " is-nested" : "")} onNavigate={() => setDrawerPath(null)}>
                     <Icon name={item.icon}/><span>{tr(item.label)}</span>
                   </Link>;
                 })}
