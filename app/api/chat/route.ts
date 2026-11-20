@@ -1,3 +1,4 @@
+import { directoryAnswer } from "@/lib/directory-answer";
 import { studySearchQuery } from "@/lib/study-follow-up";
 import { studentIdentity, colorMemory, profileUpdate } from "@/lib/student-profile";
 import { authorize } from "@/lib/authorization";
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
   if (update) preferences[update.profile_field] = update.profile_value;
   const memory = colorMemory(prompt, preferences.preferredColor);
   context.studentProfile = { identity: studentIdentity(caller.email), preferences };
-  let answer = memory.answer ?? examDateClarification(prompt, context);
+  let answer = memory.answer ?? examDateClarification(prompt, context) ?? directoryAnswer(prompt);
   if (!answer) {
     const provider = resolveProviderAccess(request);
     if ("error" in provider) return reply({ error: `${provider.error} Your draft is still here.` }, 503);
