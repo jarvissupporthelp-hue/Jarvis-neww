@@ -727,7 +727,7 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
     linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, var(--blue) 4%), var(--panel)) !important;
 }
 .jarvis-chat-composer { box-shadow: 0 -12px 32px -30px var(--shadow); }
-.jarvis-chat-input { border-radius: 16px !important; min-height: 86px !important; line-height: 1.55; transition: border-color .16s ease, box-shadow .16s ease; }
+.jarvis-chat-input { border-radius: 16px !important; min-height: 56px !important; field-sizing: content; line-height: 1.55; transition: border-color .16s ease, box-shadow .16s ease; }
 .jarvis-chat-input:focus { border-color: var(--violet) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--violet) 18%, transparent); outline: 0 !important; }
 .jarvis-pdf-mode {
   display: inline-flex; align-items: center; gap: 10px; min-width: 218px; padding: 7px 9px;
@@ -754,7 +754,7 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
 .jarvis-chat-send:hover span { transform: translate(2px,-2px); }
 @media (max-width: 560px) {
   .jarvis-pdf-mode { width: 100%; }
-  .jarvis-chat-composer .jarvis-chat-send { width: 100%; }
+  .jarvis-chat-composer .jarvis-chat-send { width: auto; min-height: 44px; margin-inline-start: auto; }
 }
 
 .math-lab-gate { margin: 1rem 0; padding: 2rem 1.5rem; border: 1px solid var(--stroke); border-radius: 1rem; background: var(--panel); text-align: center; }

@@ -187,6 +187,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
     event.preventDefault();
     if (busy || !selectedId || !turns || !draft.trim()) return;
     const question = draft.trim();
+    setDrafts((items) => ({ ...items, [selectedId]: "" }));
     setSendStatus(coursePdfSearch ? "Searching course PDFs…" : "Waiting for JARVIS…");
     setPendingPrompt(question);
     setFailedPrompt("");
@@ -205,6 +206,7 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
         setSendStatus("");
         setError(result.error || "Could not get a reply. Your draft is still here.");
         setFailedPrompt(question);
+      setDrafts((items) => ({ ...items, [selectedId]: items[selectedId] || draft }));
         return;
       }
       if (typeof result?.turn?.id !== "string" || typeof result.turn.prompt !== "string" || typeof result.turn.answer !== "string") {
@@ -213,11 +215,11 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
       setTurns((items) => [...(items ?? []), result.turn].slice(-100));
       setNewTurnId(result.turn.id);
       setSendStatus("Reply ready.");
-      setDrafts((items) => ({ ...items, [selectedId]: "" }));
     } catch {
       setSendStatus("");
       setError("Could not get a reply. Your draft is still here.");
       setFailedPrompt(question);
+      setDrafts((items) => ({ ...items, [selectedId]: items[selectedId] || draft }));
     } finally {
       setPendingPrompt("");
       setBusy(false);
@@ -385,10 +387,13 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
             <span className="text-xs text-[#708473]">{coursePdfSearch ? "Cited pages · no AI message used" : usage ? usage.remaining + " AI messages left today" : "AI study mode"}</span>
           </div>
           <label className="sr-only" htmlFor="study-question">Study question</label>
-          <textarea id="study-question" className={field + " jarvis-chat-input block max-h-40 min-h-20 resize-y"} rows={3} maxLength={MAX_STUDY_PROMPT} required readOnly={busy}
+          <textarea id="study-question" className={field + " jarvis-chat-input block max-h-40 min-h-20 resize-y"} rows={2} maxLength={MAX_STUDY_PROMPT} required
             placeholder={coursePdfSearch ? "Search your course material…" : "Ask JARVIS anything about your studies…"}
             value={draft}
-            onChange={(event) => setDrafts((items) => ({ ...items, [selected.id]: event.target.value }))}
+            onChange={(event) => {
+              const value = event.currentTarget.value;
+              setDrafts((items) => ({ ...items, [selected.id]: value }));
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault();
