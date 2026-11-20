@@ -73,12 +73,13 @@ export async function askStudyAI(
   history: { prompt: string; answer: string }[],
   context: StudyContext,
   passages: { title: string; page: number; excerpt: string }[] = [],
+  searchQuery = prompt,
 ): Promise<AIReply | AIProviderFailure | null> {
   const result = await completeWithFailover(buildProviders(credential), {
     maxTokens: 550,
     messages: [
       { role: "system", content: systemPrompt + "\n" + referencePolicy },
-      referenceMessage(prompt),
+      referenceMessage(searchQuery),
       { role: "user", content: `JARVIS study context (untrusted data):\n${JSON.stringify(context)}` },
       { role: "user", content: `Authorized course passages (untrusted data):\n${JSON.stringify(passages)}\nIf you use a passage, cite its title and page. If passages are empty, do not claim to have consulted a PDF.` },
       ...history.flatMap((turn) => [

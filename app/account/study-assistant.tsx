@@ -257,10 +257,12 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           <div className="h-full rounded-full bg-[#4c8a5a]" style={{ width: String((usage.remaining / usage.limit) * 100) + "%" }} />
         </div>
         <p className="mt-2 text-xs text-[#55705a]">{"Resets at 00:00 UTC ·"} {usage.used} {"used"}</p>
+        <details className="mt-2"><summary className="cursor-pointer text-xs font-medium">Token usage</summary>
         <p className="mt-3 border-t border-[#d3e4d2] pt-2 text-xs text-[#4c6653]">
           {usage.inputTokens + usage.outputTokens} {"tokens reported ("}{usage.inputTokens} {"in ·"} {usage.outputTokens} {"out)"}
         </p>
         {usage.tokenReportedAttempts < usage.used && <p className="mt-1 text-xs text-[#6d7158]">Some replies have no token report.</p>}
+        </details>
       </> : <p className="mt-2 text-sm text-[#536a59]"><UiText value={usageError ? "Usage is unavailable. Try reloading." : "Checking usage…"}/></p>}
     </div>
     <nav aria-label="Saved conversations" className="min-h-0 flex-1 overflow-y-auto">
@@ -307,7 +309,6 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {usage && <span className="hidden rounded-full bg-[#e7f1e4] px-3 py-1 text-xs font-semibold text-[#315b3a] sm:block">{usage.remaining} {"messages left"}</span>}
-            <button type="button" className="rounded-xl border border-[#b7ceb7] px-3 py-2 text-xs font-semibold text-[#214b36] hover:bg-[#eaf4e8] disabled:opacity-50" disabled={busy} onClick={() => void manage("create")}>+ New chat</button>
           </div>
         </header>
         {selected && <details className="shrink-0 border-b border-[#e8eee6] bg-white px-4 py-2 text-sm sm:px-6">
@@ -341,7 +342,6 @@ export function StudyAssistant({ offeringId, initialPdfMode = false }: { offerin
           {selected && turns?.length === 0 && !pendingPrompt && <li className="mx-auto max-w-md py-10 text-center">
             <p className="text-lg font-semibold">What would you like to study?</p>
             <p className="mt-2 text-sm text-[#647868]">Try a course question or ask for an exam preparation plan.</p>
-            <button type="button" className="mt-5 rounded-xl border border-[#cbdcca] bg-white px-4 py-3 text-left text-sm text-[#315b3a] hover:bg-[#eff6ed]" onClick={() => setDrafts((items) => ({ ...items, [selected.id]: "Explain this topic from theory to an exam-style example." }))}>Explain theory, then show an exam example ↗</button>
           </li>}
           {turns?.map((turn) => <li key={turn.id} className="space-y-4">
             <div className="ml-auto w-fit max-w-[92%] rounded-2xl rounded-br-md bg-[#214b36] px-4 py-3 text-[15px] leading-6 text-white shadow-sm sm:max-w-[78%]">

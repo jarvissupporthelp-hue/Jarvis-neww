@@ -1,3 +1,4 @@
+import { studySearchQuery } from "@/lib/study-follow-up";
 import { studentIdentity, colorMemory, profileUpdate } from "@/lib/student-profile";
 import { authorize } from "@/lib/authorization";
 import { askStudyAI, providerFailureMessage, resolveProviderAccess } from "@/lib/study-ai";
@@ -141,8 +142,9 @@ export async function POST(request: Request) {
       .order("id", { ascending: false }).limit(8);
     if (history.error) return reply({ error: "Could not load chat history. Your draft is still here." }, 503);
 
-    const passages = await findPassages(supabase, prompt, offeringId).catch(() => null);
-    const generated = await askStudyAI(prompt, provider.credential, history.data.reverse(), context, passages?.matches ?? []);
+    const searchQuery = studySearchQuery(prompt, history.data);
+    const passages = await findPassages(supabase, searchQuery, offeringId).catch(() => null);
+    const generated = await askStudyAI(prompt, provider.credential, history.data.reverse(), context, passages?.matches ?? [], searchQuery);
     if (generated && "errorStatus" in generated) return reply({ error: `${providerFailureMessage(generated.errorStatus)} Your draft is still here.` }, 502);
     if (!generated) return reply({ error: "The AI provider did not respond. Your draft is still here. Try again shortly." }, 502);
 
