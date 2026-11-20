@@ -32,14 +32,12 @@
   color: #e2dff6;
 }
 
-.language,
 .filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.language a,
 .filters a {
   display: inline-flex;
   align-items: center;
@@ -50,18 +48,6 @@
   text-decoration: none;
   font-size: .875rem;
   font-weight: 650;
-}
-
-.language a {
-  color: #fff;
-  border-color: #ffffff4a;
-  background: #100e20b3;
-}
-
-.language a:hover,
-.language a[aria-current] {
-  background: #3c2b68;
-  border-color: #ba9bfc;
 }
 
 .hub h2 {

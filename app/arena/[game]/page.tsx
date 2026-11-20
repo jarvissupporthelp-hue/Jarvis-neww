@@ -13,7 +13,7 @@ async function resolveGame({ params, searchParams }: PageProps<"/arena/[game]">)
   const game = arenaGames.find(({ id }) => id === slug);
   if (!game) notFound();
 
-  const locale = query.lang === "en" ? "en" : "hy";
+  const locale = query.lang === "hy" ? "hy" : "en";
   const copy = arena[locale];
   const [title, description] = copy.games[game.id];
   return { game, locale, copy, title, description, subject: arenaSubject(query.subject) } as const;
@@ -31,10 +31,6 @@ export default async function ArenaGamePage(props: PageProps<"/arena/[game]">) {
     <main className={styles.hub} lang={locale}>
       <div className={styles.gameNav}>
         <Link href={arenaHref(locale, subject)}>← <UiText value={copy.back}/></Link>
-        <nav className={styles.filters} aria-label={copy.language}>
-          <Link href={arenaHref("hy", subject, game.id)} hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
-          <Link href={arenaHref("en", subject, game.id)} hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</Link>
-        </nav>
       </div>
       <header className={styles.gameHeading}>
         <p>{copy.disciplines[game.discipline]}</p>

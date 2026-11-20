@@ -8,13 +8,13 @@ import styles from "./arena.module.css";
 
 export async function generateMetadata({ searchParams }: PageProps<"/arena">): Promise<Metadata> {
   const { lang } = await searchParams;
-  const copy = arena[lang === "en" ? "en" : "hy"];
+  const copy = arena[lang === "hy" ? "hy" : "en"];
   return { title: copy.title, description: copy.description };
 }
 
 export default async function ArenaPage({ searchParams }: PageProps<"/arena">) {
   const query = await searchParams;
-  const locale = query.lang === "en" ? "en" : "hy";
+  const locale = query.lang === "hy" ? "hy" : "en";
   const copy = arena[locale];
   const subject = arenaSubject(query.subject);
   const games = subject ? arenaGames.filter((game) => game.discipline === subject) : arenaGames;
@@ -22,10 +22,6 @@ export default async function ArenaPage({ searchParams }: PageProps<"/arena">) {
   return (
     <main className={styles.hub} lang={locale}>
       <header className={styles.hero}>
-        <nav className={styles.language} aria-label={copy.language}>
-          <Link href={arenaHref("hy", subject)} hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
-          <Link href={arenaHref("en", subject)} hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</Link>
-        </nav>
         <h1><UiText value={copy.title}/></h1>
         <p><UiText value={copy.description}/></p>
         <Link className={styles.heroAction} href={`/arena/leaderboard?lang=${locale}`}>{arenaRanked[locale].leaderboard} →</Link>
