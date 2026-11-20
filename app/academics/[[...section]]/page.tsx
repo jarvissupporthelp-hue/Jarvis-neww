@@ -5,7 +5,7 @@ import { AcademicPortal } from "@/modules/academics/portal";
 
 export default async function AcademicsPage({ params, searchParams }: PageProps<"/academics/[[...section]]">) {
   const [{ section = [] }, query] = await Promise.all([params, searchParams]);
-  const locale = query.lang === "en" ? "en" : "hy";
+  const locale = query.lang === "hy" ? "hy" : "en";
   const [page = "overview", offering] = section;
   if (!pages.some(({ key }) => key === page) || section.length > 2 || (offering && page !== "courses")) notFound();
 

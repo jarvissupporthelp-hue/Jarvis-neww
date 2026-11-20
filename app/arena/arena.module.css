@@ -194,24 +194,6 @@
   font-weight: 700;
 }
 
-.heroAction {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  margin-top: 14px;
-  padding: 8px 13px;
-  color: #fff;
-  background: #3c2b68;
-  border: 1px solid #ba9bfc;
-  border-radius: 10px;
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.heroAction:hover {
-  background: #4e3981;
-}
-
 .rankings {
   width: 100%;
   margin-top: 18px;

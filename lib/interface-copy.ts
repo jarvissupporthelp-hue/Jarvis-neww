@@ -28,7 +28,7 @@ export const interfaceCopy: Record<string, readonly [string,string,string]> = {
 "Study from your timetable":["Պարապիր ըստ դասացուցակի", "Révise à partir de ton emploi du temps", "Занимайся по расписанию"],
 "Class date":["Դասի ամսաթիվ", "Date du cours", "Дата занятия"],
 "Topic quizzes":["Թեմատիկ թեստեր", "Quiz par sujet", "Тесты по темам"],
-"No subjects with practice decks on this date. Choose a course below to practice anytime.":["Այս օրվա դասերի համար վարժություններ չկան։ Պարապելու համար ընտրիր դասընթաց։", "Aucun exercice disponible pour les cours de cette date. Choisis un cours pour t’entraîner.", "Для занятий на эту дату упражнений нет. Выбери курс для практики."],
+"No subjects with practice decks on this date. Choose a date or open Quizzes to practice.":["Այս օրվա դասերի համար վարժություններ չկան։ Ընտրիր այլ օր կամ բացիր Թեստեր բաժինը։","Aucun exercice pour les cours de cette date. Choisis une autre date ou ouvre les quiz.","На эту дату нет упражнений. Выбери другую дату или открой «Тесты»."],
 "Study resources and your saved materials.":["Ուսումնական ռեսուրսներ և քո պահպանած նյութերը։", "Ressources et supports que tu as enregistrés.", "Учебные ресурсы и сохранённые материалы."],
 "Tags (comma-separated)":["Պիտակներ (ստորակետով բաժանված)", "Étiquettes (séparées par des virgules)", "Метки (через запятую)"],
 "All":["Բոլորը", "Tous", "Все"],

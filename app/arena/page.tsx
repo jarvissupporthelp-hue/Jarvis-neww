@@ -2,8 +2,9 @@
 import {UiText} from "@/app/components/interface-language";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { arena, arenaRanked } from "@/lib/locales";
+import { arena } from "@/lib/locales";
 import { arenaDisciplines, arenaGames, arenaHref, arenaSubject } from "@/modules/arena/catalog";
+import { ArenaSectionNav } from "./section-nav";
 import styles from "./arena.module.css";
 
 export async function generateMetadata({ searchParams }: PageProps<"/arena">): Promise<Metadata> {
@@ -24,8 +25,8 @@ export default async function ArenaPage({ searchParams }: PageProps<"/arena">) {
       <header className={styles.hero}>
         <h1><UiText value={copy.title}/></h1>
         <p><UiText value={copy.description}/></p>
-        <Link className={styles.heroAction} href={`/arena/leaderboard?lang=${locale}`}>{arenaRanked[locale].leaderboard} →</Link>
       </header>
+      <ArenaSectionNav locale={locale} page="catalogue"/>
 
       <section aria-labelledby="arena-catalogue">
         <h2 id="arena-catalogue"><UiText value={copy.catalogue}/></h2>

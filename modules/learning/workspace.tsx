@@ -259,7 +259,7 @@ function DailyStudy({ lessons, date }: { lessons: TimetableLesson[]; date: strin
         <Link className="underline" href={`/learning/flashcards?course=${code}`}><UiText value={"Flashcards"}/></Link>
         <Link className="underline" href={`/learning/pomodoro?course=${code}`}><UiText value="Focus session"/></Link>
       </li>
-    ))}</ul> : <p><UiText value="No subjects with practice decks on this date. Choose a course below to practice anytime."/></p>}
+    ))}</ul> : <p><UiText value="No subjects with practice decks on this date. Choose a date or open Quizzes to practice."/></p>}
   </section>;
 }
 
@@ -285,6 +285,7 @@ export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
       <h1 id="learning-title" className="mt-2 text-4xl font-semibold"><UiText value="Learning tools"/></h1>
     </header>
     <nav aria-labelledby="learning-title" className="jarvis-section-nav">
+      <Link href="/learning" aria-current={page === "overview" ? "page" : undefined}><UiText value="Overview"/></Link>
       {pages.map(([key, label]) => <Link key={key} href={`/learning/${key}`} aria-current={page === key ? "page" : undefined}><UiText value={label}/></Link>)}
     </nav>
     {title ? <section className="space-y-4 rounded-xl border border-[#c5d0c6] bg-white p-5">
@@ -292,10 +293,6 @@ export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
         {page !== "exam-plan" && page !== "code-trace" && <CoursePicker course={course.code} onChange={setCode} />}
       </div>
       <div key={`${page}:${course.code}`}>{content}</div>
-    </section> : <><DailyStudy lessons={lessons} date={date} /><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{pages.map(([key, label]) => (
-      <Link key={key} href={`/learning/${key}`} className="flex items-center justify-between gap-2 rounded-xl border border-[#c5d0c6] bg-white p-5 font-semibold">
-        <UiText value={label}/>
-      </Link>
-    ))}</div></>}
+    </section> : <DailyStudy lessons={lessons} date={date} />}
   </main>;
 }

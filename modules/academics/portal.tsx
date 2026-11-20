@@ -16,7 +16,6 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
   const [response, setResponse] = useState<{ data?: PortalSnapshot; status: number }>();
   const [attempt, setAttempt] = useState(0);
   const lang = `lang=${locale}`;
-  const path = offeringId ? `/academics/courses/${offeringId}` : page === "overview" ? "/academics" : `/academics/${page}`;
   const title = page === "overview" ? copy.title : page === "courses" ? copy.courses : copy.assignments;
   const data = response?.data;
   const offering = offeringId ? data?.courses[0] : undefined;
@@ -47,13 +46,7 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
 
   return <main className="space-y-6" lang={locale}>
     <header className={tile}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href={offeringId ? `/academics/courses?${lang}` : "/"} className={link}>{offeringId ? copy.allCourses : copy.home}</Link>
-        <nav aria-label={copy.language} className="flex gap-4">
-          <Link href={`${path}?lang=hy`} lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</Link>
-          <Link href={`${path}?lang=en`} lang="en" aria-current={locale === "en" ? "page" : undefined}>English</Link>
-        </nav>
-      </div>
+      <Link href="/" className={link}><UiText value={copy.home}/></Link>
       <h1 className="mt-4 break-words text-3xl font-semibold sm:text-5xl">{offering?.course.name ?? title}</h1>
       {(offering || page === "overview") && <p className="mt-2 text-[var(--muted)]">{offering
         ? [offering.course.code, offering.group?.name, offering.semester.name].filter(Boolean).join(" · ") : copy.description}</p>}
@@ -65,21 +58,14 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
     {response && response.status >= 500 && <div role="status">
       <p><UiText value={copy.failed}/></p><button type="button" className={link} onClick={() => { setResponse(undefined); setAttempt((n) => n + 1); }}><UiText value={copy.retry}/></button>
     </div>}
-    {data && !offering && <>
+    {data && (
       <nav className="jarvis-section-nav" aria-label={copy.title}>
         <Link href={`/academics?${lang}`} aria-current={page === "overview" ? "page" : undefined}><UiText value={copy.overview}/></Link>
         <Link href={`/academics/courses?${lang}`} aria-current={page === "courses" ? "page" : undefined}><UiText value={copy.courses}/></Link>
         {data.role !== "admin" && <Link href={`/academics/assignments?${lang}`} aria-current={page === "assignments" ? "page" : undefined}><UiText value={copy.assignments}/></Link>}
-        <Link href={`/account/calendar?${lang}`}><UiText value={copy.calendar}/></Link>
-        {data.role === "student" && <>
-          <Link href={`/account?${lang}`}><UiText value={copy.dashboard}/></Link>
-          <Link href={`/chat?${lang}`}><UiText value={copy.chat}/></Link>
-          <Link href="/study-plans"><UiText value={copy.plans}/></Link>
-        </>}
-        {data.role === "lecturer" && <Link href="/lecturer"><UiText value={copy.lecturer}/></Link>}
-        {data.role === "admin" && <Link href={`/account/admin/group?${lang}`}><UiText value={copy.admin}/></Link>}
       </nav>
-      {page !== "assignments" && <section aria-labelledby="portal-courses">
+    )}
+    {data && !offering && page !== "assignments" && <section aria-labelledby="portal-courses">
         <h2 id="portal-courses" className="mb-3 text-xl font-semibold"><UiText value={copy.courses}/></h2>
         {!data.courses.length ? <p><UiText value={copy.empty}/></p> : <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[...data.courses].sort((a, b) => a.course.name.localeCompare(b.course.name, locale)).map((item) => (
@@ -90,8 +76,7 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
             </li>
           ))}
         </ul>}
-      </section>}
-    </>}
+    </section>}
     {data && (page === "assignments" || (offering && data.role !== "admin")) && <section className={tile} aria-labelledby="portal-assignments">
         <h2 id="portal-assignments" className="mb-2 text-xl font-semibold"><UiText value={copy.assignments}/></h2>
         {data.assignments === null ? <p><UiText value={copy.failed}/></p> : !data.assignments.length ? <p><UiText value={copy.noAssignments}/></p> :
