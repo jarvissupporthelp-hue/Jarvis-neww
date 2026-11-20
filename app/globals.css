@@ -47,6 +47,7 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 .jarvis-app button { cursor: pointer; }
 .jarvis-app button:disabled { cursor: not-allowed; }
 .jarvis-app :is(.bg-white, .rounded-xl.bg-white) { background-color: var(--panel) !important; }
+html:not([data-theme="light"]) .jarvis-app .bg-slate-100 { background-color: var(--panel-raised); }
 .jarvis-app :is(.border, .border-t, .border-b) { border-color: var(--stroke) !important; }
 .jarvis-app :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {
   background-color: var(--input) !important;
@@ -145,7 +146,7 @@ a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 .jarvis-main-area > main > h1 { font-size: clamp(1.7rem, 3vw, 2.45rem); font-weight: 760; letter-spacing: -.06em; margin-bottom: 16px; }
 .jarvis-main-area > main > p { color: var(--muted); }
 .jarvis-app section.rounded-xl, .jarvis-app section.rounded-lg { border-radius: 16px; }
-.jarvis-mobile-menu,.jarvis-drawer-overlay { display: none; }
+.jarvis-drawer-overlay { display: none; }
 .jarvis-account-flow > form { background: var(--panel); border: 1px solid var(--stroke); border-radius: 18px; padding: clamp(20px,3vw,30px); box-shadow: 0 20px 65px -47px var(--shadow); }
 .jarvis-account-flow:not(:has(.authenticated-workspace)) { max-width: 540px; }
 .jarvis-account-flow form label { display: block; font-size: 13px; margin-bottom: 9px; }
@@ -223,11 +224,10 @@ html[data-theme="light"] .jarvis-app [role="alert"] { color: #9a1c35; background
   .jarvis-brand-text small { font-size: 7px; }
   .jarvis-shell-body { min-height: calc(100dvh - 64px); }
   .jarvis-main-area, .jarvis-main-area.has-sidebar { width: 100%; padding: 23px 16px 55px; }
-  .jarvis-mobile-menu { display: grid; place-items: center; border: 1px solid var(--stroke); width: 37px; height: 37px; border-radius: 9px; background: var(--panel); color: var(--text); }
   .jarvis-topbar-start { gap: 10px; }
   .jarvis-sidebar { position: fixed; left: 0; top: 64px; bottom: 0; z-index: 45; height: calc(100dvh - 64px); width: min(275px,85vw); visibility: hidden; pointer-events: none; overscroll-behavior: contain; box-shadow: 20px 0 70px #00000033; }
   .jarvis-sidebar.is-open { visibility: visible; pointer-events: auto; }
-  .jarvis-drawer-overlay { display: block; position: fixed; inset: 64px 0 0 0; z-index: 40; background: #080a13a8; border: 0; width: 100%; }
+  .jarvis-drawer-overlay { display: block; position: fixed; inset: 64px 0 0 0; z-index: 40; background: #080a13a8; opacity:0; visibility:hidden; pointer-events:none; transition:opacity .22s ease, visibility 0s .22s; }
   .jarvis-admin-hero { padding: 21px 18px; }
   .jarvis-admin-hero-badge { display: none; }
   .jarvis-landing-hero { grid-template-columns: 1fr; }
@@ -790,9 +790,9 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
   background: #1e4033;
 }
 
-.jarvis-nav-control { display:grid; place-items:center; flex:none; width:40px; height:40px; color:var(--muted); border:1px solid var(--stroke); border-radius:10px; background:var(--panel); }
+.jarvis-nav-control { display:grid; place-items:center; flex:none; width:40px; height:40px; color:var(--muted); border:0; border-radius:8px; background:transparent; }
 .jarvis-nav-control:hover { color:var(--text); background:var(--panel-raised); }
-.nav-sidebar-heading { display:flex; align-items:center; justify-content:space-between; gap:6px; margin:0 2px 16px 10px; }
+.nav-sidebar-heading { margin:0 10px 16px; font-size:14px; font-weight:700; }
 .nav-group { width:100%; text-align:start; }
 .nav-group.active-group { color:var(--text); font-weight:650; }
 .nav-chevron { margin-inline-start:auto; flex:none; transition:transform .2s ease; }
@@ -809,9 +809,8 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
 @media(max-width:740px) {
   .jarvis-sidebar { transform:translateX(-101%); transition:transform .22s ease,visibility 0s .22s; }
   .jarvis-sidebar.is-open { transform:translateX(0); transition-delay:0s; }
-  .jarvis-drawer-overlay { animation:jarvis-overlay-in .18s ease; }
+  .jarvis-drawer-overlay[data-open=true] { opacity:1; visibility:visible; pointer-events:auto; transition-delay:0s; }
 }
-@keyframes jarvis-overlay-in { from { opacity:0; } to { opacity:1; } }
 @media(prefers-reduced-motion:reduce) {
   .jarvis-sidebar,.nav-chevron,.nav-disclosure,.jarvis-drawer-overlay { transition:none; animation:none; }
 }

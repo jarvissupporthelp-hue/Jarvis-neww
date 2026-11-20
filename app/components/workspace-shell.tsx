@@ -3,7 +3,7 @@ import {UiText} from "@/app/components/interface-language";
 
 
 import { InterfaceLanguage } from "./interface-language";
-import { ChevronDown, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
@@ -212,7 +212,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
   const [fallbackHidden,setFallbackHidden] = useState(false);
   const hidden = savedHidden || fallbackHidden;
   const sidebarOpen = mobile ? drawerOpen : !hidden;
-  const closeButton = useRef<HTMLButtonElement>(null);
+  const sidebar = useRef<HTMLElement>(null);
   function toggleSidebar() {
     if (mobile) setDrawerPath(drawerOpen ? null : pathname);
     else {
@@ -224,7 +224,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
     if (sidebarOpen) menuButton.current?.focus();
   }
   useEffect(() => {
-    if (mobile && drawerOpen) closeButton.current?.focus();
+    if (mobile && drawerOpen) sidebar.current?.querySelector<HTMLElement>("nav .jarvis-side-link")?.focus();
   }, [mobile, drawerOpen]);
   const theme = useSyncExternalStore<Theme>(subscribeTheme, readTheme, () => "dark");
 
@@ -311,8 +311,8 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
       <header className="jarvis-topbar">
         <div className="jarvis-topbar-start">
           {workspace && <button ref={menuButton} className="jarvis-nav-control" aria-label={tr(sidebarOpen ? "Close navigation" : "Open navigation")}
-            aria-controls="jarvis-workspace-navigation" aria-expanded={sidebarOpen} type="button"
-            onClick={toggleSidebar}>{sidebarOpen ? <PanelLeftClose size={19}/> : <PanelLeftOpen size={19}/>}</button>}
+            title={tr(sidebarOpen ? "Close navigation" : "Open navigation")} aria-controls="jarvis-workspace-navigation" aria-expanded={sidebarOpen} type="button"
+            onClick={toggleSidebar}><Menu size={20} aria-hidden="true"/></button>}
           <Link href="/" className="jarvis-brand" aria-label="JARVIS home">
             <span className="jarvis-brand-symbol"><span>J</span></span>
             <span className="jarvis-brand-text">JARVIS<small>ACADEMIC WORKSPACE</small></span>
@@ -329,12 +329,10 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
       </header>
       <div className="jarvis-shell-body" data-collapsed={hidden}>
         {workspace && <>
-          {drawerOpen && <button className="jarvis-drawer-overlay" type="button" aria-label={tr("Close navigation")} onClick={toggleSidebar}/>}
-          <aside inert={!sidebarOpen} id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
+          <div className="jarvis-drawer-overlay" data-open={drawerOpen} aria-hidden="true" onPointerDown={toggleSidebar}/>
+          <aside ref={sidebar} inert={!sidebarOpen} id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
             <div className="jarvis-sidebar-content">
-              <div className="nav-sidebar-heading"><strong>{tr(roleName)}</strong>
-                <button type="button" ref={closeButton} className="jarvis-nav-control" onClick={toggleSidebar} aria-label={tr("Close navigation")} title={tr("Close navigation")}><PanelLeftClose size={18}/></button>
-              </div>
+              <div className="nav-sidebar-heading">{tr(roleName)}</div>
               <WorkspaceNavigation key={role + pathname} items={items} pathname={pathname} language={preferences.language} onNavigate={() => setDrawerPath(null)}/>
             </div>
           </aside>
