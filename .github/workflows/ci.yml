@@ -17,8 +17,12 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            math-lab/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm ci --prefix math-lab --include=dev
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
