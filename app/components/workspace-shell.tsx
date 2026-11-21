@@ -4,6 +4,7 @@ import {UiText} from "@/app/components/interface-language";
 
 import { InterfaceLanguage } from "./interface-language";
 import { ChevronDown, Menu } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, useRef, type ReactNode } from "react";
@@ -291,7 +292,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
             title={tr(sidebarOpen ? "Close navigation" : "Open navigation")} aria-controls="jarvis-workspace-navigation" aria-expanded={sidebarOpen} type="button"
             onClick={toggleSidebar}><Menu size={20} aria-hidden="true"/></button>}
           <Link href="/" className="jarvis-brand" aria-label="JARVIS home">
-            <span className="jarvis-brand-symbol"><span>J</span></span>
+            <Image className="jarvis-brand-symbol" src="/jarvis-mark.png" width={38} height={38} alt="" unoptimized />
             <span className="jarvis-brand-text">JARVIS<small>ACADEMIC WORKSPACE</small></span>
           </Link>
           <span className="jarvis-topbar-divider"/>

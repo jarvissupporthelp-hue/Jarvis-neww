@@ -93,7 +93,7 @@ html:not([data-theme="light"]) .jarvis-app .bg-slate-100 { background-color: var
 .jarvis-topbar-start, .jarvis-topbar-actions, .jarvis-brand { display: flex; align-items: center; gap: 16px; }
 .jarvis-topbar-actions { gap: 13px; }
 .jarvis-brand { color: var(--text); text-decoration: none; flex: 0 0 auto; gap: 10px; }
-.jarvis-brand-symbol { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 12px; background: linear-gradient(145deg,#a14bff,#446df5 72%,#21bbef); color: white; font-weight: 850; font-size: 22px; box-shadow: 0 6px 17px #6543ec40; }
+.jarvis-brand-symbol { width: 38px; height: 38px; flex-shrink: 0; }
 .jarvis-brand-text { font-weight: 800; font-size: 17px; letter-spacing: .06em; line-height: 1.08; }
 .jarvis-brand-text small { display: block; color: var(--subtle); font-size: 8px; font-weight: 700; letter-spacing: .14em; margin-top: 4px; }
 .jarvis-topbar-divider { height: 27px; width: 1px; background: var(--stroke); }
