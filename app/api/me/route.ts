@@ -14,6 +14,7 @@ export async function GET(request: Request) {
     return Response.json({ userId: result.userId, role: result.role, displayName: profile.data.display_name }, { headers });
   }
 
+  if (result.mfaRequired) return Response.json({ code: "MFA_REQUIRED" }, { status: 403, headers });
   const message = {
     401: "Sign in required",
     403: "Active membership required",

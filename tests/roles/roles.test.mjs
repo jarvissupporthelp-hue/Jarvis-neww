@@ -3,7 +3,7 @@ import test from "node:test";
 
 const origin = process.env.JARVIS_TEST_ORIGIN;
 const id = "20000000-0000-4000-8000-000000000001";
-const tokens = { student: "student-token", lecturer: "lecturer-token", admin: "admin-token" };
+const tokens = { student: "student-token", lecturer: "lecturer-token", admin: "mock.eyJhYWwiOiJhYWwyIn0.test" };
 const all = ["student", "lecturer", "admin"];
 
 // [method, path, roles allowed past the gate]. Mirrors the authorize() calls in app/api.

@@ -9,6 +9,7 @@ import { getClient, getAccessToken, passwordCallback, clearPasswordCallback } fr
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
+import { AdminMfa } from "./admin-mfa";
 import { AdminWorkspace, type AdminSection } from "./admin-workspace";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
@@ -18,8 +19,11 @@ type Group = { id: string; name: string };
 type PendingInvitation = { email: string; role: "student" | "lecturer"; student_group_id: string | null; group_name: string | null };
 export type AccountView = "dashboard" | "calendar" | "tasks";
 
-async function currentIdentity(token: string): Promise<{role: Role; displayName: string} | null> {
+async function currentIdentity(token: string): Promise<{role: Role; displayName: string; mfaRequired?: true} | null> {
   const response = await fetch("/api/me", { headers: { Authorization: `Bearer ${token}` } });
+  if (response.status === 403 && (await response.json()).code === "MFA_REQUIRED") {
+    return { role: "admin", displayName: "", mfaRequired: true };
+  }
   if (response.status === 401 || response.status === 403) return null;
   if (!response.ok) throw new Error("Membership check unavailable");
   const identity = await response.json();
@@ -40,6 +44,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
   const lang = `?lang=${locale}`;
   const [flow, setFlow] = useState<Flow>("signin");
   const [role, setRole] = useState<Role | null>(null);
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [groups, setGroups] = useState<Group[]>([]);
   const [inviteRole, setInviteRole] = useState<PendingInvitation["role"]>("student");
@@ -89,7 +94,8 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         } else if (data.session) {
           const identity = await currentIdentity(data.session.access_token);
           if (!mounted) return;
-          setRole(identity?.role ?? null);
+          setMfaRequired(Boolean(identity?.mfaRequired));
+          setRole(identity?.mfaRequired ? null : identity?.role ?? null);
           setDisplayName(identity?.displayName ?? "");
         }
       } catch {
@@ -187,6 +193,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
         setError(copy.inactive);
         return;
       }
+      if (verified.mfaRequired) { setMfaRequired(true); return; }
       setRole(verified.role);
       setDisplayName(verified.displayName);
     } catch {
@@ -229,6 +236,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
     <span><UiText value={copy.checking}/></span>
   </div>;
 
+  if (mfaRequired) return <AdminMfa locale={locale}/>;
   const callback = flow === "invite" || flow === "recovery";
   return (
     <div className="jarvis-account-flow space-y-4">

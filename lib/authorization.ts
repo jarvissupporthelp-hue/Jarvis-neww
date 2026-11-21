@@ -2,7 +2,7 @@ type Role = "student" | "lecturer" | "admin";
 
 type Authorization =
   | { ok: true; userId: string; email?: string; role: Role }
-  | { ok: false; status: 401 | 403 | 503 };
+  | { ok: false; status: 401 | 403 | 503; mfaRequired?: true };
 
 export async function authorize(
   request: Request,
@@ -42,6 +42,13 @@ export async function authorize(
 
     const membership = await fetch(membershipUrl, options);
     if (membership.status === 401) return { ok: false, status: 401 };
+    if (membership.status === 403) {
+      const denial = await membership.json();
+      if (denial.code === "PT403" && denial.message === "JARVIS_ADMIN_MFA_REQUIRED") {
+        return { ok: false, status: 403, mfaRequired: true };
+      }
+      return { ok: false, status: 403 };
+    }
     if (!membership.ok) return { ok: false, status: 503 };
 
     const rows = await membership.json();
@@ -49,6 +56,13 @@ export async function authorize(
     const role = allowedRoles.find((candidate) => candidate === rows[0]?.role);
     if (!role) return { ok: false, status: 403 };
 
+    if (role === "admin") {
+      // Supabase Auth already validated this exact bearer token above.
+      let assurance: unknown;
+      try { assurance = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString()).aal; }
+      catch { /* Missing or malformed assurance fails closed. */ }
+      if (assurance !== "aal2") return { ok: false, status: 403, mfaRequired: true };
+    }
     return { ok: true, userId: user.id, ...(typeof user.email === "string" && user.email_confirmed_at ? { email: user.email } : {}), role };
   } catch {
     return { ok: false, status: 503 };

@@ -6,7 +6,7 @@ export const identities = {
   "student-token": { id: "10000000-0000-4000-8000-000000000001", role: "student", active: true },
   "other-student-token": { id: "10000000-0000-4000-8000-000000000006", role: "student", active: true },
   "lecturer-token": { id: "10000000-0000-4000-8000-000000000002", role: "lecturer", active: true },
-  "admin-token": { id: "10000000-0000-4000-8000-000000000003", role: "admin", active: true },
+  "mock.eyJhYWwiOiJhYWwyIn0.test": { id: "10000000-0000-4000-8000-000000000003", role: "admin", active: true },
   "pending-token": { id: "10000000-0000-4000-8000-000000000005", role: "student", active: false },
   "disabled-token": { id: "10000000-0000-4000-8000-000000000004", role: "student", active: false },
 };
@@ -28,7 +28,7 @@ export function startMockSupabase(port, { demoPassword } = {}) {
       const fixtures = {
         "jarvis-student@example.com": "student-token",
         "jarvis-staff@example.com": "lecturer-token",
-        "jarvis-admin@example.com": "admin-token",
+        "jarvis-admin@example.com": "mock.eyJhYWwiOiJhYWwyIn0.test",
       };
       const accessToken = Object.hasOwn(fixtures, input?.email) ? fixtures[input.email] : undefined;
       if (!accessToken || input.password !== demoPassword) return send(400, { message: "invalid fixture credentials" });

@@ -8,3 +8,7 @@ enable_signup = false
 
 [db.seed]
 enabled = false
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

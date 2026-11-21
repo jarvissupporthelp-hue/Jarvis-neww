@@ -49,3 +49,17 @@ test("inactive membership and missing token are denied", async () => {
   });
   assert.deepEqual(await authorize(new Request("https://example.test/api/chat"), ["student"]), { ok: false, status: 401 });
 });
+
+test("an active administrator needs a Supabase-validated AAL2 session", async () => {
+  await withIdentity("admin", "active", async () => {
+    for (const aal of ["aal1", "aal2"]) {
+      const payload = Buffer.from(JSON.stringify({ aal })).toString("base64url");
+      const candidate = new Request("https://example.test/api/admin", {
+        headers: { authorization: "Bearer mock." + payload + ".test" },
+      });
+      const result = await authorize(candidate, ["admin"]);
+      assert.equal(result.ok, aal === "aal2");
+      if (!result.ok) assert.equal(result.mfaRequired, true);
+    }
+  });
+});
