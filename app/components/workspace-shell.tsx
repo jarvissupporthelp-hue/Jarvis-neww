@@ -62,7 +62,10 @@ const studentNav: NavItem[] = [
     { href: "/study-plans", label: "Study plans", icon: "plans" },
     { href: "/focus", label: "Focus timer", icon: "focus" },
   ] },
-  { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
+  { href: "/chat", label: "AI Agent", icon: "chat", children: [
+    { href: "/chat", label: "AI chat", icon: "chat" },
+    { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
+  ] },
   { href: "/arena", label: "Arena", icon: "arena", children: [
     { href: "/arena", label: "Games", icon: "arena" },
     { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
@@ -72,10 +75,7 @@ const studentNav: NavItem[] = [
   { href: "/career", label: "Career", icon: "users" },
   { href: "/account/calendar", label: "Calendar", icon: "calendar" },
   { href: "/account/tasks", label: "My tasks", icon: "tasks" },
-  { href: "/chat", label: "AI Agent", icon: "chat", children: [
-    { href: "/chat", label: "AI chat", icon: "chat" },
-    { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
-  ] },
+  { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
 ];
 
 const lecturerNav: NavItem[] = [
