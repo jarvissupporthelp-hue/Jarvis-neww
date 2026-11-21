@@ -3,12 +3,13 @@ import {UiText} from "@/app/components/interface-language";
 
 
 import { useEffect, useState, type FormEvent } from "react";
+import { lessonPeriods } from "./lesson-periods";
 import Link from "next/link";
 import { computerScienceTimetable } from "@/modules/academics/demo";
 import { getAccessToken } from "@/lib/browser-supabase";
 
 type Person = { id: string; name: string; role: string };
-type Meeting = { id: string; studentId: string; lecturerId: string; topic: string; agenda: string; startAt: string; status: string; response: string };
+type Meeting = { id: string; studentId: string; lecturerId: string; topic: string; agenda: string; startAt: string; durationMinutes: number; status: string; response: string };
 type Data = { people: Person[]; meetings: Meeting[]; viewer: string; role: "student" | "lecturer" };
 const field = "block w-full rounded-lg border border-slate-300 p-2";
 const button = "rounded-lg bg-[#1e3328] px-4 py-2 font-medium text-white disabled:opacity-50";
@@ -62,7 +63,7 @@ export function MeetingPanel() {
     event.preventDefault();
     const form = event.currentTarget;
     const values = new FormData(form);
-    const startAt = new Date(`${values.get("start")}:00+04:00`).toISOString();
+    const startAt = new Date(`${values.get("date")}T${values.get("period")}:00+04:00`).toISOString();
     const question = String(values.get("agenda") ?? "").trim();
     const context = String(values.get("context") ?? "").trim();
     const agenda = context ? question + "\n\nAdditional context: " + context : question;
@@ -77,7 +78,7 @@ export function MeetingPanel() {
   const students = data?.people.filter(({ role, id }) => role === "student" && id !== data.viewer) ?? [];
   const name = (id: string, fallback: string) => data?.people.find((person) => person.id === id)?.name ?? fallback;
   return <section className="space-y-5">
-    <div><h2 className="text-xl font-semibold">Academic meetings</h2><p className="text-slate-600">Request 30 minutes with a lecturer to ask a question, discuss coursework, or get project feedback.</p></div>
+    <div><h2 className="text-xl font-semibold">Academic meetings</h2><p className="text-slate-600"><UiText value="Book one 80-minute lesson period with a lecturer."/></p></div>
     {message && <p role="status" className="rounded-lg bg-slate-100 p-3">{message} {message.startsWith("Sign in") && <Link href="/account" className="underline"><UiText value="Open account"/></Link>}</p>}
     {!data && !message && <p>Loading meeting requests…</p>}
     {data?.role !== "lecturer" && <form className="grid gap-4 rounded-xl border bg-white p-5 sm:grid-cols-2" onSubmit={submit}>
@@ -96,7 +97,11 @@ export function MeetingPanel() {
           {otherLecturers.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
         </optgroup>}
       </select></label>
-      <label>Preferred time (Yerevan) <input required name="start" type="datetime-local" className={field} /></label>
+      <label><UiText value="Meeting date (Yerevan)"/> <input required name="date" type="date" className={field} /></label>
+      <label><UiText value="Class period"/> <select required name="period" className={field} defaultValue="">
+        <option value="" disabled>—</option>
+        {lessonPeriods.map(period => <option key={period.start} value={period.start}>{period.label}</option>)}
+      </select></label>
       <label className="sm:col-span-2"><UiText value="Topic"/> <input required maxLength={100} name="topic" className={field} placeholder="e.g. Questions about the Networks assignment" /></label>
       <label className="sm:col-span-2">Question or agenda <textarea required maxLength={700} name="agenda" className={field} rows={3} placeholder="What would you like to discuss?" /></label>
       <label className="sm:col-span-2">Additional context (optional) <textarea maxLength={275} name="context" className={field} rows={2} placeholder="Course, assignment, deadline, or what you have already tried" /></label>
@@ -110,7 +115,7 @@ export function MeetingPanel() {
       {!data.meetings.length && <p>No meetings yet.</p>}
       {data.meetings.map((meeting) => <article key={meeting.id} className="space-y-2 rounded-xl border bg-white p-4">
         <h4 className="font-semibold">{meeting.topic} <span className="rounded bg-slate-100 px-2 py-1 text-sm capitalize">{meeting.status}</span></h4>
-        <p className="text-sm">{displayTime.format(new Date(meeting.startAt))} · {data.role === "lecturer" ? name(meeting.studentId, "Student") : name(meeting.lecturerId, "Lecturer")}</p>
+        <p className="text-sm">{displayTime.formatRange(new Date(meeting.startAt), new Date(Date.parse(meeting.startAt) + meeting.durationMinutes * 60_000))} · {data.role === "lecturer" ? name(meeting.studentId, "Student") : name(meeting.lecturerId, "Lecturer")}</p>
         <p className="whitespace-pre-wrap break-words">{meeting.agenda}</p>
         {meeting.response && <p className="whitespace-pre-wrap break-words text-sm">{"Lecturer reply:"} {meeting.response}</p>}
         {data.role === "lecturer" && meeting.status === "pending" && <form className="space-y-2" onSubmit={(event) => {

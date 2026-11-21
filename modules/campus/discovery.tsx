@@ -2,6 +2,7 @@
 import {UiText, useInterfaceCopy} from "@/app/components/interface-language";
 
 
+import { lessonPeriods } from "./lesson-periods";
 import { BookOpen } from "lucide-react";
 import { useState } from "react";
 import { labels, useLibrary } from "./library-personal";
@@ -11,9 +12,6 @@ import { bookCategories, bookLanguages, filterBooks, libraryFaculties } from "./
 const input = "block min-w-0 max-w-full w-full truncate rounded-lg border border-slate-300 bg-white px-3 py-2";
 const panel = "rounded-2xl border border-slate-200 bg-white p-5";
 const subjects = ["Computer Networks", "Applied Mathematics", "Algorithms", "French", "Computer Architecture", "English"];
-const times = [540, 630, 720, 840, 930, 1020];
-const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-
 const floorLabels = ["First floor", "Second floor", "Third floor", "Fourth floor", "Fifth floor", "Sixth floor"];
 const imaRoomCounts = [4, 5, 4];
 
@@ -69,7 +67,7 @@ export function RoomSimulation() {
         </label>
         <label className="min-w-0">{t("Class period")}
           <select className={input} value={slot} onChange={e => setSlot(Number(e.target.value))}>
-            {times.map((start, index) => <option key={start} value={index}>{time(start)}–{time(start + 80)}</option>)}
+            {lessonPeriods.map((period, index) => <option key={period.start} value={index}>{period.label}</option>)}
           </select>
         </label>
       </div>

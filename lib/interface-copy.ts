@@ -231,6 +231,8 @@ export const interfaceCopy: Record<string, readonly [string,string,string]> = {
 "No class scheduled":["Դաս նախատեսված չէ", "Aucun cours prévu", "Занятий нет"],
 "First floor":["Առաջին հարկ", "Premier étage", "Первый этаж"],
 "Second floor":["Երկրորդ հարկ", "Deuxième étage", "Второй этаж"],
+"Meeting date (Yerevan)":["Հանդիպման ամսաթիվ (Երևան)", "Date de la réunion (Erevan)", "Дата встречи (Ереван)"],
+"Book one 80-minute lesson period with a lecturer.":["Ամրագրեք մեկ 80 րոպեանոց դասաժամ դասախոսի հետ։", "Réservez un créneau de 80 minutes avec un enseignant.", "Забронируйте одно 80-минутное занятие с преподавателем."],
 "Class period":["Դասաժամ", "Créneau de cours", "Учебный час"],
 "Busy":["Զբաղված", "Occupée", "Занята"],
 "Free":["Ազատ", "Libre", "Свободна"],

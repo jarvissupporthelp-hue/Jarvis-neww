@@ -205,6 +205,7 @@ model CampusMeeting {
   topic        String
   agenda       String
   startAt      DateTime @db.Timestamptz(3)
+  durationMinutes Int @default(30)
   status       String @default("pending")
   response     String @default("")
   participants String[] @db.Uuid

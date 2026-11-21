@@ -1,3 +1,4 @@
+import { isLessonStart, lessonMinutes } from "@/modules/campus/lesson-periods";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { foundationDb } from "@/lib/foundation/db";
 import { authorize } from "@/lib/authorization";
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
         || !Number.isFinite(+startAt) || +startAt <= Date.now() || +startAt > Date.now() + 90 * 86400000) {
         return fail("Choose a lecturer and future time, and enter a topic and agenda.", 400);
       }
+      if (!isLessonStart(startAt)) return fail("Choose a class period from Rooms & map.", 400);
       const [allowed] = await db.$queryRaw<{ lecturer: boolean; participants: number }[]>`
         SELECT EXISTS (SELECT 1 FROM public.memberships WHERE user_id = ${lecturerId}::uuid
           AND role = 'lecturer' AND status = 'active') AS lecturer,
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
           AND role = 'student' AND status = 'active' AND student_group_id =
           (SELECT student_group_id FROM public.memberships WHERE user_id = ${identity.userId}::uuid)) AS participants`;
       if (!allowed.lecturer || (participants.length && allowed.participants !== participants.length)) return fail("Choose active participants from the directory.", 400);
-      await db.campusMeeting.create({ data: { studentId: identity.userId, lecturerId, topic, agenda, startAt, participants } });
+      await db.campusMeeting.create({ data: { studentId: identity.userId, lecturerId, topic, agenda, startAt, durationMinutes: lessonMinutes, participants } });
     } else if (["accept", "decline", "cancel"].includes(body.action)) {
       const response = typeof body.response === "string" ? body.response.trim() : "";
       if (!uuid.test(String(body.id)) || response.length > 1000) return fail("Check the meeting response.", 400);
