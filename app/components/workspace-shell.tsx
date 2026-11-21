@@ -60,9 +60,9 @@ const studentNav: NavItem[] = [
   { href: "/learning", label: "Learning tools", icon: "plans", children: [
     { href: "/learning", label: "Overview", icon: "plans" },
     { href: "/study-plans", label: "Study plans", icon: "plans" },
-    { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
     { href: "/focus", label: "Focus timer", icon: "focus" },
   ] },
+  { href: "/quizzes", label: "Practice quizzes", icon: "tasks" },
   { href: "/arena", label: "Arena", icon: "arena", children: [
     { href: "/arena", label: "Games", icon: "arena" },
     { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },

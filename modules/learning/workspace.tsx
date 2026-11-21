@@ -13,7 +13,7 @@ import { button, field, useLearningData } from "./storage";
 import { CoursePicker, Pomodoro } from "./study-tools";
 
 const pages = [
-  ["materials", "Materials"], ["quizzes", "Quizzes"], ["flashcards", "Flashcards"],
+  ["materials", "Materials"], ["quizzes", "Topic quizzes"], ["flashcards", "Flashcards"],
   ["pomodoro", "Pomodoro"], ["code-trace", "Code Trace"], ["exam-plan", "Exam Plan"],
 ];
 type Course = (typeof learningCourses)[number];
@@ -282,7 +282,10 @@ export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
   }[page];
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-8">
     <header><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link>
-      <h1 id="learning-title" className="mt-2 text-4xl font-semibold"><UiText value="Learning tools"/></h1>
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <h1 id="learning-title" className="text-4xl font-semibold"><UiText value="Learning tools"/></h1>
+        <Link href="/quizzes" className="ui-action-secondary"><UiText value="Practice quizzes"/></Link>
+      </div>
     </header>
     <nav aria-labelledby="learning-title" className="jarvis-section-nav">
       <Link href="/learning" aria-current={page === "overview" ? "page" : undefined}><UiText value="Overview"/></Link>

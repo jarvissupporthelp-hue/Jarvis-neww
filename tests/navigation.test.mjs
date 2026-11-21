@@ -27,6 +27,11 @@ test("students also get the learning tools and the AI agent", () => {
   }
 });
 
+test("the practice catalog is visible without expanding Learning tools", () => {
+  const studentMenu = shell.split("const studentNav:")[1].split("const lecturerNav:")[0];
+  assert.match(studentMenu, /^  \{ href: "\/quizzes", label: "Practice quizzes"/m);
+});
+
 // Resolves a URL against the App Router folders, allowing dynamic ([x]) and catch-all ([[...x]]) segments.
 function hasPage(directory, segments) {
   if (!existsSync(directory)) return false;
