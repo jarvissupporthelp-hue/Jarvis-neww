@@ -128,10 +128,19 @@ const adminNav: NavItem[] = [
 function WorkspaceNavigation({ items, pathname, language, onNavigate }: {
   items: NavItem[]; pathname: string; language: WorkspaceLanguage; onNavigate: () => void;
 }) {
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const links = items.flatMap(item => item.children ?? [item]);
   const current = links.filter(link => pathname === link.href || pathname.startsWith(link.href + "/"))
     .sort((a,b) => b.href.length - a.href.length)[0];
+  const activeGroup = items.find(item => current && item.children?.includes(current))?.href;
+  const [previousGroup, setPreviousGroup] = useState(activeGroup);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(
+    () => activeGroup ? { [activeGroup]: true } : {},
+  );
+  // Open newly selected groups without collapsing the ones already open.
+  if (previousGroup !== activeGroup) {
+    setPreviousGroup(activeGroup);
+    if (activeGroup) setExpanded(groups => ({ ...groups, [activeGroup]: true }));
+  }
   const renderLink = (item: NavItem, nested = false) => <Link key={item.href} href={item.href}
     prefetch={current === item ? false : prefetchedRoutes.has(item.href) || undefined}
     aria-current={current === item ? "page" : undefined}
@@ -139,12 +148,12 @@ function WorkspaceNavigation({ items, pathname, language, onNavigate }: {
     onClick={onNavigate}><Icon name={item.icon}/><span>{workspaceText(language,item.label)}</span></Link>;
   return <nav aria-label={workspaceText(language,"Workspace")} className="jarvis-side-links">{items.map(item => {
     if (!item.children) return renderLink(item);
-    const active = item.children.some(child => child === current);
-    const open = expanded[item.href] ?? active;
+    const active = item.href === activeGroup;
+    const open = expanded[item.href] ?? false;
     const id = "subnav-" + item.href.slice(1);
     return <div key={item.href}>
       <button type="button" className={"jarvis-side-link nav-group" + (active ? " active-group" : "")}
-        aria-expanded={open} aria-controls={id} onClick={() => setExpanded({...expanded,[item.href]:!open})}>
+        aria-expanded={open} aria-controls={id} onClick={() => setExpanded(groups => ({ ...groups, [item.href]: !open }))}>
         <Icon name={item.icon}/><span>{workspaceText(language,item.label)}</span><ChevronDown size={15} className="nav-chevron"/>
       </button>
       <div className="nav-disclosure" data-open={open} inert={!open} id={id}><div>
@@ -333,7 +342,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
           <aside ref={sidebar} inert={!sidebarOpen} id="jarvis-workspace-navigation" className={"jarvis-sidebar" + (drawerOpen ? " is-open" : "")} aria-label={roleName + " navigation"}>
             <div className="jarvis-sidebar-content">
               <div className="nav-sidebar-heading">{tr(roleName)}</div>
-              <WorkspaceNavigation key={role + pathname} items={items} pathname={pathname} language={preferences.language} onNavigate={() => setDrawerPath(null)}/>
+              <WorkspaceNavigation key={role} items={items} pathname={pathname} language={preferences.language} onNavigate={() => setDrawerPath(null)}/>
             </div>
           </aside>
         </>}
