@@ -88,6 +88,17 @@ test("responses carry baseline security headers", async () => {
   assert.ok(response.headers.get("referrer-policy"));
 });
 
+test("workspace and embedded math lab enforce the intended browser restrictions", async () => {
+  for (const [path, ancestors] of [["/", "'none'"], ["/account", "'none'"], ["/math-lab/index.html", "'self'"]]) {
+    const response = await fetch(origin + path);
+    assert.equal(response.status, 200, path);
+    const directives = response.headers.get("content-security-policy")?.split(";").map(value => value.trim());
+    for (const rule of ["base-uri 'none'", "object-src 'none'", "form-action 'self'", "frame-ancestors " + ancestors]) {
+      assert.ok(directives?.includes(rule), path + " missing " + rule);
+    }
+  }
+});
+
 test("account subpages honour the selected language", async () => {
   for (const path of ["/account/calendar", "/account/tasks", "/account/admin/users"]) {
     const html = await (await fetch(origin + path + "?lang=hy")).text();
