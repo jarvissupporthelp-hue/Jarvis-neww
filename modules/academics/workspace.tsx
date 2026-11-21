@@ -1,9 +1,10 @@
 "use client";
-import {UiText} from "@/app/components/interface-language";
+import { UiText, useInterfaceCopy } from "@/app/components/interface-language";
 
 
 import Link from "next/link";
-import { useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
 import { annualGrade, decimal, displayCourseGrade, formatGrade, requiredScore, selectedScore, semesterGrade, type GradeModule, type MissingMode, type RetakePolicy } from "./grading";
 import { computerScienceDays, computerScienceWeekLabel, courseCatalog, courses, currentModules, demoSchedule, exampleModules, lecturers, prerequisites, semesters, type Event } from "./demo";
 import { pages } from "./routes";
@@ -14,7 +15,7 @@ type Edit = { value: string; reason: string };
 type Published = Record<string, string>;
 const button = "rounded-md bg-[#234c3c] px-4 py-2 font-semibold text-white disabled:opacity-50";
 const field = "rounded-md border border-[#a6b8aa] bg-white px-3 py-2";
-const roles: Role[] = ["student", "lecturer", "staff", "admin"];
+const roleLabels: Record<Role, string> = { student: "Student", lecturer: "Lecturer", staff: "Staff", admin: "Administrator" };
 const changeEvent = "jarvis-academics-demo";
 
 function subscribe(callback: () => void) {
@@ -330,27 +331,16 @@ function SubjectsForDay({ timetable, today, date, onDateChange }: { timetable: E
 }
 
 export function AcademicsWorkspace({ page, code, initialDate }: { page: string; code?: string; initialDate?: string }) {
-  const [role, setRole] = useDemoValue<Role | null>("jarvis-academics-role", null);
+  const router = useRouter();
+  const t = useInterfaceCopy();
+  const [savedRole, setRole] = useDemoValue<Role | null>("jarvis-academics-role", null);
+  let role = savedRole && Object.hasOwn(roleLabels, savedRole) ? savedRole : "student";
+  if (["grades", "degree", "calculator", "timetable", "exams"].includes(page)) role = "student";
+  if (page === "gradebook") role = "lecturer";
+  if (page === "manage" && role !== "staff") role = "admin";
   const [published, publish] = useDemoValue<Published>("jarvis-academics-published", {});
-  const [loginError, setLoginError] = useState(false);
   const schedule = demoSchedule();
   const [selectedDate, setSelectedDate] = useState(initialDate ?? schedule.day);
-  if (!role) return <main className="mx-auto max-w-lg space-y-5 px-5 py-12">
-    <Link href="/" className="underline"><UiText value="JARVIS home"/></Link><h1 className="text-4xl font-semibold"><UiText value="Academics"/></h1>
-    <Card title="Sign in to the demo">
-      <p>Use <strong>student@example.com</strong>, <strong>lecturer@example.com</strong>, <strong>staff@example.com</strong>, or <strong>admin@example.com</strong>. The demo password is <strong>JarvisDemo2026</strong>.</p>
-      <form className="grid gap-3" onSubmit={(event: FormEvent<HTMLFormElement>) => {
-        event.preventDefault(); const fields = new FormData(event.currentTarget);
-        const selected = roles.find((candidate) => fields.get("email") === `${candidate}@example.com`);
-        if (!selected || fields.get("password") !== "JarvisDemo2026") { setLoginError(true); return; }
-        setLoginError(false); setRole(selected);
-      }}>
-        <label><UiText value="Email"/> <input name="email" type="email" autoComplete="username" required className={`block w-full ${field}`} /></label>
-        <label><UiText value={"Password"}/> <input name="password" type="password" autoComplete="current-password" required className={`block w-full ${field}`} /></label>
-        <button className={button}><UiText value="Sign in"/></button>{loginError && <p role="alert">The demo email or password is incorrect.</p>}
-      </form>
-    </Card>
-  </main>;
 
   const allowed = role === "student" ? pages.filter((entry) => !["gradebook", "manage"].includes(entry.key))
     : role === "lecturer" ? pages.filter((entry) => ["overview", "courses", "assignments", "gradebook"].includes(entry.key))
@@ -408,8 +398,17 @@ export function AcademicsWorkspace({ page, code, initialDate }: { page: string; 
   };
   return <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-8">
     <header className="flex flex-wrap items-start justify-between gap-4">
-      <div><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link><h1 className="mt-2 text-4xl font-semibold"><UiText value="Academics"/></h1><p className="mt-1">{"Demo"} {role} {"· Asia/Yerevan"}</p></div>
-      <button className="underline" onClick={() => setRole(null)}><UiText value="Sign out"/></button>
+      <div><Link href="/" className="text-sm font-semibold underline"><UiText value="JARVIS home"/></Link><h1 className="mt-2 text-4xl font-semibold"><UiText value="Academics"/></h1><p className="mt-1">{t("Demo data")} · Asia/Yerevan</p></div>
+      <label className="grid gap-1 text-sm">{t("Demo role")}
+        <select className={field} value={role} onChange={(event) => {
+          const next = event.target.value as Role;
+          setRole(next);
+          if (page !== "overview") router.push("/academics/demo" + window.location.search);
+        }}>
+          {(Object.entries(roleLabels) as [Role, string][]).map(([value, label]) =>
+            <option key={value} value={value}>{t(label)}</option>)}
+        </select>
+      </label>
     </header>
     <nav aria-label="Academics" className="jarvis-section-nav">
       {allowed.map((entry) => <Link key={entry.key} aria-current={page === entry.key ? "page" : undefined}

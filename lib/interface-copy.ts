@@ -1,4 +1,7 @@
 export const interfaceCopy: Record<string, readonly [string,string,string]> = {
+  "Demo role": ["Փորձնական դեր", "Rôle de démonstration", "Роль в демо"],
+  "Demo data": ["Փորձնական տվյալներ", "Données de démonstration", "Демонстрационные данные"],
+  "Administrator": ["Ադմինիստրատոր", "Administrateur", "Администратор"],
 "Your waitlist is empty.":["Քո սպասման ցուցակը դատարկ է։","Ta liste d’attente est vide.","Ваш список ожидания пуст."],
 "Like a book to save it here.":["Հավանիր գիրքը՝ այն այստեղ պահելու համար։","Ajoute un livre aux favoris pour le retrouver ici.","Отметьте книгу, чтобы сохранить её здесь."],
 "My waitlist":["Իմ սպասման ցուցակը", "Ma liste d’attente", "Мой список ожидания"],

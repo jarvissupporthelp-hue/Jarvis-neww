@@ -98,6 +98,6 @@ export function AcademicPortal({ locale, page, offeringId }: { locale: Locale; p
         <div lang="en"><CourseResources offeringId={offering.id} /></div>
       </section>
     </>}
-    <Link href="/academics/demo" className={link}><UiText value={copy.demo}/></Link>
+    <Link href={`/academics/demo/grades?${lang}`} className={link}><UiText value={copy.demo}/></Link>
   </main>;
 }
