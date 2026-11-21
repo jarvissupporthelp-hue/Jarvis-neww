@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { createContext, useCallback, useContext, useSyncExternalStore } from "react";
 
 const changed = "jarvis-learning-change";
 function subscribe(callback: () => void) {
@@ -12,14 +12,28 @@ function subscribe(callback: () => void) {
   };
 }
 
+// An unresolved session has no storage access.
+export const LearningOwner = createContext<string | null>(null);
+
+export function clearLearningCache(owner: string) {
+  const prefix = "jarvis-learning-v2:" + owner + ":";
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith(prefix)) localStorage.removeItem(key);
+  }
+  window.dispatchEvent(new Event(changed));
+}
+
 export function useLearningData<T>(key: string, initial: T) {
   const fallback = JSON.stringify(initial);
-  const name = `jarvis-learning:${key}`;
-  const value = useSyncExternalStore(subscribe, () => localStorage.getItem(name) ?? fallback, () => fallback);
+  const owner = useContext(LearningOwner);
+  const name = `jarvis-learning-v2:${owner}:${key}`;
+  const storage = () => owner === "guest" ? sessionStorage : localStorage;
+  const value = useSyncExternalStore(subscribe, () => owner ? storage().getItem(name) ?? fallback : fallback, () => fallback);
   const save = useCallback((next: T) => {
-    localStorage.setItem(name, JSON.stringify(next));
+    if (!owner) return;
+    (owner === "guest" ? sessionStorage : localStorage).setItem(name, JSON.stringify(next));
     window.dispatchEvent(new Event(changed));
-  }, [name]);
+  }, [name, owner]);
   return [JSON.parse(value) as T, save] as const;
 }
 

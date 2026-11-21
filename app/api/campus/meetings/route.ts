@@ -55,7 +55,20 @@ export async function POST(request: Request) {
           AND role = 'student' AND status = 'active' AND student_group_id =
           (SELECT student_group_id FROM public.memberships WHERE user_id = ${identity.userId}::uuid)) AS participants`;
       if (!allowed.lecturer || (participants.length && allowed.participants !== participants.length)) return fail("Choose active participants from the directory.", 400);
-      await db.campusMeeting.create({ data: { studentId: identity.userId, lecturerId, topic, agenda, startAt, durationMinutes: lessonMinutes, participants } });
+      const rejection = await db.$transaction(async tx => {
+        // Serialize requests from the same student, including across app instances.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${identity.userId}::text, 8041))`;
+        const studentId = identity.userId;
+        const duplicate = await tx.campusMeeting.findFirst({
+          where: { studentId, lecturerId, startAt, status: { in: ["pending", "accepted"] } }, select: { id: true },
+        });
+        if (duplicate) return "You already have a request for this lecturer and period.";
+        const pending = await tx.campusMeeting.count({ where: { studentId, status: "pending", startAt: { gt: new Date() } } });
+        if (pending >= 5) return "You have five pending meeting requests. Cancel one before requesting another.";
+        await tx.campusMeeting.create({ data: { studentId, lecturerId, topic, agenda, startAt, durationMinutes: lessonMinutes, participants } });
+        return null;
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+      if (rejection) return fail(rejection, 409);
     } else if (["accept", "decline", "cancel"].includes(body.action)) {
       const response = typeof body.response === "string" ? body.response.trim() : "";
       if (!uuid.test(String(body.id)) || response.length > 1000) return fail("Check the meeting response.", 400);

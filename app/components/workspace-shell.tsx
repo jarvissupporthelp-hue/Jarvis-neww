@@ -2,6 +2,7 @@
 import {UiText} from "@/app/components/interface-language";
 
 
+import { LearningOwner, clearLearningCache } from "@/modules/learning/storage";
 import { InterfaceLanguage } from "./interface-language";
 import { ChevronDown, Globe2, Menu } from "lucide-react";
 import Image from "next/image";
@@ -181,6 +182,8 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
   const router = useRouter();
   const [preferences, setPreferences] = useState<{ language: WorkspaceLanguage; avatar: string }>({language:"en",avatar:""});
   const tr = (label: string) => workspaceText(preferences.language,label);
+  const [learningOwner, setLearningOwner] = useState<string | null>(null);
+  const lastUser = useRef<string | undefined>(undefined);
   const [isGuest, setIsGuest] = useState(false);
   const [guestChoice, setGuestChoice] = useState<string>();
   const [role, setRole] = useState<Role | null>(null);
@@ -225,7 +228,11 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
     let revision = 0;
     async function inspect(token: string | undefined, id?: string) {
       const current = ++revision;
-      if (active) setIsGuest(!token);
+      if (!active) return;
+      if (lastUser.current && lastUser.current !== id) clearLearningCache(lastUser.current);
+      lastUser.current = id;
+      setLearningOwner(id ?? "guest");
+      setIsGuest(!token);
       if (!token) {
         if (active) { document.cookie="jarvis-language=; Path=/; Max-Age=0; SameSite=Lax"; setRole(null); setPreferences({language:"en",avatar:""}); }
         return;
@@ -261,7 +268,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
       const refresh = () => { void client.auth.getSession().then(({data})=>inspect(data.session?.access_token,data.session?.user.id)); };
       window.addEventListener("jarvis-profile-saved",refresh);
       return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener("jarvis-profile-saved",refresh); };
-    } catch { queueMicrotask(() => { if (active) setIsGuest(true); }); return () => { active = false; }; }
+    } catch { queueMicrotask(() => { if (active) { setIsGuest(true); setLearningOwner("guest"); } }); return () => { active = false; }; }
   }, [router]);
 
   useEffect(() => {
@@ -329,7 +336,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
               </select>
             </label>
           </div>}
-          {children}</div>
+          <LearningOwner.Provider value={learningOwner}>{children}</LearningOwner.Provider></div>
       </div>
     </div>
     </InterfaceLanguage.Provider>
