@@ -1,10 +1,16 @@
 
+import { Globe2 } from "lucide-react";
 import {UiText} from "@/app/components/interface-language";
 import Link from "next/link";
 
 export default function Home() {
   return (
     <main className="jarvis-landing">
+      <div className="jarvis-landing-language">
+        {/* Reload the document so its lang attribute updates with the page. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+        <a href="/hy" hrefLang="hy" lang="hy"><Globe2 size={16} aria-hidden="true"/>Հայերեն</a>
+      </div>
       <div className="jarvis-landing-hero">
         <div>
           <p className="jarvis-landing-eyebrow">THE NEW WAY TO STUDY SMARTER</p>
@@ -35,14 +41,13 @@ export default function Home() {
         </div>
       </div>
       <nav className="jarvis-integrated-tools" aria-label="Explore JARVIS modules">
-        <Link href="/academics"><UiText value={"Academic records"}/> <span aria-hidden="true">↗</span></Link>
+        <Link href="/academics"><UiText value={"Academic records"}/> <span aria-hidden="true">→</span></Link>
         <Link href="/arena?lang=en"><UiText value={"Arena"}/> <span aria-hidden="true">→</span></Link>
-        <Link href="/learning"><UiText value={"Learning tools"}/> <span aria-hidden="true">↗</span></Link>
+        <Link href="/learning"><UiText value={"Learning tools"}/> <span aria-hidden="true">→</span></Link>
         <Link href="/campus"><UiText value={"Campus resources"}/> <span aria-hidden="true">→</span></Link>
         <Link href="/career"><UiText value={"Career"}/> <span aria-hidden="true">→</span></Link>
-        <Link href="/chat"><UiText value={"AI Agent"}/> <span aria-hidden="true">↗</span></Link>
-        <Link href="/dashboard"><UiText value={"University hub"}/> <span aria-hidden="true">↗</span></Link>
-        <Link href="/hy" lang="hy">Հայերեն</Link>
+        <Link href="/chat"><UiText value={"AI Agent"}/> <span aria-hidden="true">→</span></Link>
+        <Link href="/dashboard"><UiText value={"University hub"}/> <span aria-hidden="true">→</span></Link>
       </nav>
       <div className="jarvis-landing-features">
         <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong><UiText value={"Academic calendar"}/></strong><p>See classes, assignments, study sessions, and your personal time in one place.</p></article>
