@@ -23,14 +23,14 @@ const exercises: Record<PracticeSubject, readonly ExerciseBuilder[]> = {
     (n, a, b) => ({ prompt: `A current of ${a + b} A passes through a ${n} Ω resistor. What voltage is across it?`, value: n * (a + b), reasoning: "Ohm’s law gives voltage = current × resistance.", unit: "V" }),
   ],
   Chemistry: [
-    (n, a, b) => ({ prompt: `Use C = 12 and H = 1 g/mol. What is the molar mass of the alkane C${n + a}H${2 * (n + a) + 2}?`, value: 14 * (n + a) + 2, reasoning: `Add ${n + a} carbon contributions and ${2 * (n + a) + 2} hydrogen contributions.`, unit: "g/mol" }),
+    (n, a) => ({ prompt: `Use C = 12 and H = 1 g/mol. What is the molar mass of the alkane C${n + a}H${2 * (n + a) + 2}?`, value: 14 * (n + a) + 2, reasoning: `Add ${n + a} carbon contributions and ${2 * (n + a) + 2} hydrogen contributions.`, unit: "g/mol" }),
     (n, a, b) => ({ prompt: `A solution contains ${n * (a + b)} mmol of solute in ${a + b} L of solution. Calculate its concentration.`, value: n, reasoning: "Divide the solute amount in mmol by the final volume in litres.", unit: "mmol/L" }),
     (n) => ({ prompt: `For 2H₂ + O₂ → 2H₂O, how many moles of water form when ${n} mol of oxygen reacts completely with excess hydrogen?`, value: 2 * n, reasoning: "Each mole of oxygen produces two moles of water.", unit: "mol" }),
     (n, a, b) => ({ prompt: `A ${n * (a + b)} mmol/L solution is diluted to ${a + b} times its initial volume. What is the final concentration?`, value: n, reasoning: "The amount of solute stays fixed, so divide the initial concentration by the dilution factor.", unit: "mmol/L" }),
   ],
   Computing: [
-    (n, a, b) => ({ prompt: `Convert the unsigned binary integer ${(n * 2 + 1).toString(2)} to decimal.`, value: n * 2 + 1, reasoning: "Sum the powers of two at positions with a 1 bit, starting at 2⁰ on the right." }),
-    (n, a, b) => ({ prompt: `Convert 0x${(n * 16 + a).toString(16).toUpperCase()} from hexadecimal to decimal.`, value: n * 16 + a, reasoning: "Each hexadecimal position is a power of 16. The rightmost digit is the units position." }),
+    (n) => ({ prompt: `Convert the unsigned binary integer ${(n * 2 + 1).toString(2)} to decimal.`, value: n * 2 + 1, reasoning: "Sum the powers of two at positions with a 1 bit, starting at 2⁰ on the right." }),
+    (n, a) => ({ prompt: `Convert 0x${(n * 16 + a).toString(16).toUpperCase()} from hexadecimal to decimal.`, value: n * 16 + a, reasoning: "Each hexadecimal position is a power of 16. The rightmost digit is the units position." }),
     (n, a, b) => ({ prompt: `An uncompressed array stores ${n * a} values, each occupying exactly ${b} bytes. How many bytes are used by the values alone?`, value: n * a * b, reasoning: "Multiply the number of values by the number of bytes per value.", unit: "bytes" }),
     (n) => ({ prompt: `A zero-based array contains ${3 * n + 1} elements. What is the index of the last element?`, value: 3 * n, reasoning: "The first element has index 0, so the final index is the length minus 1." }),
   ],
@@ -38,7 +38,7 @@ const exercises: Record<PracticeSubject, readonly ExerciseBuilder[]> = {
     (n, a, b) => ({ prompt: `Find the arithmetic mean of ${n - b}, ${n - a}, ${n + a} and ${n + b}.`, value: n, reasoning: `The two pairs each sum to ${2 * n}. Divide the total by four.` }),
     (n, a, b) => ({ prompt: `Find the range of this data set: ${2 * n + b}, ${n}, ${n + a}, ${2 * n + a + b}.`, value: n + a + b, reasoning: `Subtract the minimum, ${n}, from the maximum, ${2 * n + a + b}.` }),
     (n) => ({ prompt: `A bag contains ${n} blue and ${200 - n} red counters. What is the probability of drawing a blue counter, expressed as a percentage?`, value: n / 2, reasoning: "Divide the number of blue counters by the total of 200 and multiply by 100.", unit: "%" }),
-    (n, a, b) => ({ prompt: `A grade is weighted 25% for a score of ${n + 3 * a} and 75% for a score of ${n - a}. What is the weighted mean?`, value: n, reasoning: "Multiply the scores by 0.25 and 0.75 respectively, then add the products." }),
+    (n, a) => ({ prompt: `A grade is weighted 25% for a score of ${n + 3 * a} and 75% for a score of ${n - a}. What is the weighted mean?`, value: n, reasoning: "Multiply the scores by 0.25 and 0.75 respectively, then add the products." }),
   ],
 };
 
