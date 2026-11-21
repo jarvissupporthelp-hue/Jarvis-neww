@@ -10,11 +10,11 @@ import { reviewFlashcard } from "./practice";
 import { courseResources } from "./resources";
 import { learningCourses } from "./seed";
 import { button, field, useLearningData } from "./storage";
-import { CoursePicker, Pomodoro } from "./study-tools";
+import { CoursePicker } from "./study-tools";
 
 const pages = [
-  ["materials", "Materials"], ["quizzes", "Topic quizzes"], ["flashcards", "Flashcards"],
-  ["pomodoro", "Pomodoro"], ["code-trace", "Code Trace"], ["exam-plan", "Exam Plan"],
+  ["materials", "Materials"], ["flashcards", "Flashcards"],
+  ["code-trace", "Code Trace"], ["exam-plan", "Exam Plan"],
 ];
 type Course = (typeof learningCourses)[number];
 type Exam = { id: string; title: string; course: string; start: number };
@@ -113,58 +113,6 @@ function Materials({ course }: { course: Course }) {
   </div>;
 }
 
-function Quiz({ course }: { course: Course }) {
-  const [misses, setMisses] = useLearningData<Record<string, number>>(`weak:${course.code}`, {});
-  const [topic, setTopic] = useState("");
-  const [mistakes, setMistakes] = useLearningData<string[]>(`mistakes:${course.code}`, []);
-  const [order, setOrder] = useState<number[] | null>(null);
-  const [answers, setAnswers] = useState<number[]>([]);
-  const [choice, setChoice] = useState<number | null>(null);
-  const current = order?.[answers.length];
-  const question = current === undefined ? undefined : course.questions[current];
-
-  function start(mistakesOnly = false) {
-    const picked = course.questions.map((question, index) => ({ question, index }))
-      .filter(({ question }) => mistakesOnly ? mistakes.includes(question.id) : !topic || question.topic === topic)
-      .sort((a, b) => (misses[b.question.topic] ?? 0) - (misses[a.question.topic] ?? 0) || a.index - b.index);
-    setOrder(picked.map(({ index }) => index));
-    setAnswers([]);
-    setChoice(null);
-  }
-  if (!order) return <div className="flex flex-wrap items-center gap-3">
-    <label><UiText value="Quiz topic"/> <select className={field} value={topic} onChange={(event) => setTopic(event.target.value)}>
-      <option value=""><UiText value="All topics · weak topics first"/></option>
-      {[...new Set(course.questions.map(({ topic }) => topic))].map((name) => <option key={name}>{name}</option>)}
-    </select></label>
-    <button className={button} onClick={() => start()}><UiText value="Start quiz"/></button>
-    <button className={field} disabled={!mistakes.length} onClick={() => start(true)}><UiText value="Retry mistakes"/> ({mistakes.length})</button>
-  </div>;
-  if (question && current !== undefined) return <div className="space-y-3">
-    <p>{"Question"} {answers.length + 1} {"of"} {order.length} · {question.topic}</p>
-    <fieldset className="space-y-2"><legend className="font-semibold">{question.text}</legend>{question.choices.map((option, index) => (
-      <label className="block" key={option}><input type="radio" name="answer" checked={choice === index} onChange={() => setChoice(index)} /> {option}</label>
-    ))}</fieldset>
-    <button className={button} disabled={choice === null} onClick={() => {
-      if (choice === null) return;
-      if (choice !== question.answer) {
-        setMisses({ ...misses, [question.topic]: (misses[question.topic] ?? 0) + 1 });
-        if (!mistakes.includes(question.id)) setMistakes([...mistakes, question.id]);
-      } else if (mistakes.includes(question.id)) setMistakes(mistakes.filter((id) => id !== question.id));
-      setAnswers([...answers, choice]); setChoice(null);
-    }}><UiText value={answers.length + 1 === order.length ? "See results" : "Next question"}/></button>
-  </div>;
-  const score = order.filter((index, position) => course.questions[index].answer === answers[position]).length;
-  return <div className="space-y-4"><p className="text-lg font-semibold">{"Result ·"} {score}/{order.length}</p>
-    {order.map((index, position) => {
-      const entry = course.questions[index];
-      return <article className="rounded border p-3" key={index}><h3 className="font-semibold">{entry.text}</h3>
-        <p>{"Your answer:"} {entry.choices[answers[position]]} · <UiText value={answers[position] === entry.answer ? "Correct" : "Incorrect"}/></p>
-        <p>{"Correct answer:"} {entry.choices[entry.answer]}</p><p className="text-sm">{"Source:"} {entry.source}</p>
-      </article>;
-    })}<button className={button} onClick={() => start()}><UiText value="Try again"/></button> <button className={field} onClick={() => setOrder(null)}><UiText value="Choose another topic"/></button>
-  </div>;
-}
-
 function Flashcards({ course }: { course: Course }) {
   const [reviews, setReviews] = useLearningData<Record<string, { box: number; due: number }>>(`deck-v2:${course.code}`, {});
   const [topic, setTopic] = useState("");
@@ -255,9 +203,9 @@ function DailyStudy({ lessons, date }: { lessons: TimetableLesson[]; date: strin
     {available.length ? <ul className="space-y-2">{available.map(({ code, title }) => (
       <li key={code} className="flex flex-wrap items-center gap-3">
         <strong>{title}</strong>
-        <Link className="underline" href={`/learning/quizzes?course=${code}`}><UiText value="Topic quizzes"/></Link>
+        <Link className="underline" href={`/quizzes?course=${encodeURIComponent(code)}#topic-review`}><UiText value="Topic quizzes"/></Link>
         <Link className="underline" href={`/learning/flashcards?course=${code}`}><UiText value={"Flashcards"}/></Link>
-        <Link className="underline" href={`/learning/pomodoro?course=${code}`}><UiText value="Focus session"/></Link>
+        <Link className="underline" href={`/focus?course=${encodeURIComponent(code)}`}><UiText value="Focus session"/></Link>
       </li>
     ))}</ul> : <p><UiText value="No subjects with practice decks on this date. Choose a date or open Quizzes to practice."/></p>}
   </section>;
@@ -274,9 +222,7 @@ export function Learning({ page, exams, slots, lessons, date, initialCourse }: {
   const title = pages.find(([key]) => key === page)?.[1];
   const content = {
     materials: <Materials course={course} />,
-    quizzes: <Quiz course={course} />,
     flashcards: <Flashcards course={course} />,
-    pomodoro: <Pomodoro course={course.code} />,
     "code-trace": <CodeTrace />,
     "exam-plan": <ExamPlan exams={exams} slots={slots} />,
   }[page];

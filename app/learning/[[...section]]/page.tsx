@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Learning } from "@/modules/learning/workspace";
 import { learningPages } from "@/modules/learning/routes";
 import { demoStudentId, getExamSchedule, getFreeTimeSlots, getTimetable } from "@/modules/academics/services";
@@ -6,8 +6,17 @@ import { demoStudentId, getExamSchedule, getFreeTimeSlots, getTimetable } from "
 export default async function LearningPage({ params, searchParams }: PageProps<"/learning/[[...section]]">) {
   const { section = [] } = await params;
   const [page = "overview"] = section;
-  if (section.length > 1 || !["overview", ...learningPages].includes(page)) notFound();
-  const { course, date: requestedDate } = await searchParams;
+  if (section.length > 1) notFound();
+  const { course, date: requestedDate, lang } = await searchParams;
+  if (page === "pomodoro" || page === "quizzes") {
+    const query = new URLSearchParams();
+    if (typeof course === "string") query.set("course", course);
+    if (typeof lang === "string") query.set("lang", lang);
+    if (page === "quizzes") query.set("view", "topics");
+    const suffix = query.size ? `?${query}` : "";
+    redirect(page === "pomodoro" ? `/focus${suffix}` : `/quizzes${suffix}#topic-review`);
+  }
+  if (!["overview", ...learningPages].includes(page)) notFound();
   const initialCourse = typeof course === "string" ? course : undefined;
   const now = new Date();
   const end = new Date(now.getTime() + 30 * 86_400_000);

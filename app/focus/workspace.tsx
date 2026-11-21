@@ -24,7 +24,7 @@ const historyDate = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Yerevan",
 });
 
-export function FocusWorkspace() {
+export function FocusWorkspace({ courseLabel }: { courseLabel?: string }) {
   const t=useInterfaceCopy();
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [mode, setMode] = useState<FocusMode>("focus");
@@ -129,7 +129,7 @@ export function FocusWorkspace() {
                 onChange={(event) => setMinutes({ ...minutes, [mode]: Number(event.target.value) })} />
             </label>
             {mode === "focus" && <label><UiText value="Task or study topic (optional)"/>
-              <input className={field} name="label" maxLength={120} disabled={busy} />
+              <input className={field} name="label" defaultValue={courseLabel} maxLength={120} disabled={busy} />
             </label>}
             <button className={button} disabled={busy}>{mode === "focus" ? t("Start focus session") : t("Start break")}</button>
           </form>
