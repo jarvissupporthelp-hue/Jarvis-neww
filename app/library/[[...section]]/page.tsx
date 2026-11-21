@@ -31,7 +31,7 @@ export default async function LibraryPage({ params, searchParams }: PageProps<"/
   const books = physical ? await physicalCatalog() : null;
   return <main className="mx-auto max-w-6xl space-y-6 px-4 py-7 sm:px-6">
     <h1 className="text-3xl font-semibold sm:text-4xl"><UiText value="Library"/></h1>
-    <nav className="jarvis-section-nav" aria-label="Library">
+    <nav className="jarvis-section-nav library-section-nav" aria-label="Library">
       <Link href={`/library/digital?lang=${linkLanguage}`} aria-current={section[0] === "digital" ? "page" : undefined}><UiText value="Digital Library"/></Link>
       <Link href={`/library/physical?lang=${linkLanguage}`} aria-current={physical ? "page" : undefined}><UiText value="Physical Library"/></Link>
       <Link href={`/library/loans?lang=${linkLanguage}`} aria-current={section[0] === "loans" ? "page" : undefined}><UiText value="My loans"/></Link>

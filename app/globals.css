@@ -757,6 +757,10 @@ html[data-theme="light"] .ui-task-tag.is-overdue { color:#a64037; }
   gap: 8px;
 }
 
+.jarvis-main-area.has-sidebar .library-section-nav {
+  display: none;
+}
+
 .jarvis-section-nav > :is(a, button) {
   display: inline-flex;
   align-items: center;

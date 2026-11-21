@@ -52,24 +52,15 @@ const libraryNav: NavItem = { href: "/library", label: "Library", icon: "courses
 const studentNav: NavItem[] = [
   { href: "/account", label: "My day", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
-  { href: "/academics", label: "Academics", icon: "courses", children: [
-    { href: "/academics", label: "Overview", icon: "courses" },
-    { href: "/academics/courses", label: "Courses", icon: "courses" },
-    { href: "/academics/assignments", label: "Assignments", icon: "tasks" },
-  ] },
-  { href: "/learning", label: "Learning tools", icon: "plans", children: [
-    { href: "/learning", label: "Overview", icon: "plans" },
-    { href: "/study-plans", label: "Study plans", icon: "plans" },
-    { href: "/focus", label: "Focus timer", icon: "focus" },
-  ] },
+  { href: "/academics", label: "Academics", icon: "courses" },
+  { href: "/learning", label: "Learning tools", icon: "plans" },
+  { href: "/study-plans", label: "Study plans", icon: "plans" },
+  { href: "/focus", label: "Focus timer", icon: "focus" },
   { href: "/chat", label: "AI Agent", icon: "chat", children: [
     { href: "/chat", label: "AI chat", icon: "chat" },
     { href: "/chat/math-visualization", label: "Math visualizations", icon: "math" },
   ] },
-  { href: "/arena", label: "Arena", icon: "arena", children: [
-    { href: "/arena", label: "Games", icon: "arena" },
-    { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
-  ] },
+  { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
   libraryNav,
   { href: "/career", label: "Career", icon: "users" },
@@ -80,17 +71,10 @@ const studentNav: NavItem[] = [
 
 const lecturerNav: NavItem[] = [
   { href: "/dashboard", label: "University hub", icon: "dashboard" },
-  { href: "/academics", label: "Academics", icon: "layers", children: [
-    { href: "/academics", label: "Overview", icon: "layers" },
-    { href: "/academics/courses", label: "Courses", icon: "courses" },
-    { href: "/academics/assignments", label: "Assignments", icon: "tasks" },
-    { href: "/lecturer", label: "My courses", icon: "courses" },
-    { href: "/resources", label: "Course resources", icon: "layers" },
-  ] },
-  { href: "/arena", label: "Arena", icon: "arena", children: [
-    { href: "/arena", label: "Games", icon: "arena" },
-    { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
-  ] },
+  { href: "/academics", label: "Academics", icon: "layers" },
+  { href: "/lecturer", label: "My courses", icon: "courses" },
+  { href: "/resources", label: "Course resources", icon: "layers" },
+  { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
   libraryNav,
   { href: "/career", label: "Career", icon: "users" },
@@ -99,26 +83,10 @@ const lecturerNav: NavItem[] = [
 ];
 
 const adminNav: NavItem[] = [
-  { href: "/account", label: "Administration", icon: "dashboard", children: [
-    { href: "/account", label: "Overview", icon: "dashboard" },
-    { href: "/account/admin/users", label: "Users & access", icon: "users" },
-    { href: "/account/admin/group", label: "Student groups", icon: "layers" },
-    { href: "/account/admin/semester", label: "Semesters", icon: "calendar" },
-    { href: "/account/admin/course", label: "Courses", icon: "courses" },
-    { href: "/account/admin/offering", label: "Course offerings", icon: "plans" },
-    { href: "/account/admin/timetable", label: "Timetable", icon: "calendar" },
-    { href: "/account/admin/audit", label: "Audit history", icon: "shield" },
-  ] },
+  { href: "/account", label: "Administration", icon: "dashboard" },
   { href: "/dashboard", label: "University hub", icon: "layers" },
-  { href: "/academics", label: "Academic tools", icon: "courses", children: [
-    { href: "/academics", label: "Overview", icon: "courses" },
-    { href: "/academics/courses", label: "Courses", icon: "courses" },
-    { href: "/academics/assignments", label: "Assignments", icon: "tasks" },
-  ] },
-  { href: "/arena", label: "Arena", icon: "arena", children: [
-    { href: "/arena", label: "Games", icon: "arena" },
-    { href: "/arena/leaderboard", label: "Leaderboard", icon: "layers" },
-  ] },
+  { href: "/academics", label: "Academic tools", icon: "courses" },
+  { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },
   libraryNav,
   { href: "/career", label: "Career", icon: "users" },
