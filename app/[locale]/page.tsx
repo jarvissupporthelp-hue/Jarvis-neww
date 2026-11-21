@@ -1,28 +1,8 @@
-
-import {UiText} from "@/app/components/interface-language";
-/* eslint-disable @next/next/no-html-link-for-pages -- Locale changes must reload the root document to update its lang attribute. */
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { arena, isLocale, landing } from "@/lib/locales";
+import { isLocale } from "@/lib/locales";
+import Home from "../page";
 
-export default async function Home({ params }: PageProps<"/[locale]">) {
-  const { locale } = await params;
-  if (!isLocale(locale)) notFound();
-  const copy = landing[locale];
-
-  return (
-    <main className="mx-auto grid min-h-dvh max-w-4xl content-center px-6 py-16 sm:px-12">
-      {/* Full navigation refreshes the root document language. */}
-      <nav aria-label={copy.language} className="mb-8 flex gap-4">
-        <a href="/hy" hrefLang="hy" lang="hy" aria-current={locale === "hy" ? "page" : undefined}>Հայերեն</a>
-        <a href="/en" hrefLang="en" lang="en" aria-current={locale === "en" ? "page" : undefined}>English</a>
-      </nav>
-      <p className="mb-5 text-sm font-semibold tracking-widest uppercase"><UiText value={copy.pilot}/></p>
-      <h1 className="text-5xl font-semibold tracking-tight sm:text-7xl"><UiText value={copy.brand}/></h1>
-      <p className="mt-5 max-w-xl text-xl sm:text-2xl"><UiText value={copy.description}/></p>
-      <p className="mt-8 max-w-xl border-l-2 border-[#53745f] pl-4"><UiText value={copy.invitation}/></p>
-      <a href={`/account?lang=${locale}`} className="mt-5 w-fit font-semibold underline"><UiText value={copy.signIn}/></a>
-      <Link href={locale === "hy" ? "/arena" : "/arena?lang=en"} className="mt-4 w-fit font-semibold underline">{arena[locale].title}</Link>
-    </main>
-  );
+export default async function LocalizedHome({ params }: PageProps<"/[locale]">) {
+  if (!isLocale((await params).locale)) notFound();
+  return <Home/>;
 }

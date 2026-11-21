@@ -176,9 +176,10 @@ html:not([data-theme="light"]) .jarvis-app .bg-slate-100 { background-color: var
 html[data-theme="light"] .jarvis-app [role="alert"] { color: #9a1c35; background: #fff1f4; }
 .jarvis-app [role="status"]:not(.jarvis-plain-status) { color: var(--muted); }
 .jarvis-landing { max-width: 1120px !important; margin-inline: auto; padding: clamp(25px,5vw,64px) 0 60px !important; }
-.jarvis-landing-language { display: flex; justify-content: flex-end; margin-bottom: 16px; }
-.jarvis-landing-language a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding-inline: 12px; border-radius: 10px; color: var(--text); font-size: 13px; font-weight: 700; }
-.jarvis-landing-language a:hover { background: var(--highlight); }
+.jarvis-landing-language { display:flex; justify-content:flex-end; max-width:1120px; margin:16px auto 0; }
+.jarvis-landing-language label { display:inline-flex; align-items:center; gap:8px; background:var(--panel-raised); color:var(--text); border:1px solid var(--stroke); border-radius:12px; padding-inline:12px; }
+.jarvis-landing-language select { min-height:44px; background:transparent; color:inherit; font-weight:600; cursor:pointer; }
+.jarvis-landing-language option { color:var(--text); background:var(--panel); }
 .jarvis-landing-hero { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr); gap: clamp(30px,6vw,85px); align-items: center; }
 .jarvis-landing-eyebrow { display: inline-flex; gap: 9px; align-items: center; width: fit-content; border: 1px solid #8e75ee5a; border-radius: 100px; padding: 9px 14px; color: var(--violet); background: #8e75ee0d; font-size: 11px; font-weight: 700; letter-spacing: .06em; }
 .jarvis-landing-eyebrow:before { content:""; width: 7px; height: 7px; background: #9d74ff; border-radius: 100%; box-shadow: 0 0 0 3px #9261ff25; }

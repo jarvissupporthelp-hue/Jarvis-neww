@@ -13,7 +13,7 @@ test("homepage opens Academics and both legacy locale pages reach sign-in", asyn
   const root = await fetch(origin);
   assert.equal(root.status, 200);
   assert.ok((await root.text()).includes('href="/academics"'));
-  for (const [locale, title] of [["hy", "Մուտք գործել JARVIS"], ["en", "Sign in to JARVIS"]]) {
+  for (const [locale, title] of [["hy", "Բացել իմ հարթակը"], ["en", "Open your workspace"]]) {
     const page = await fetch(`${origin}/${locale}`);
     assert.equal(page.status, 200);
     const html = await page.text();

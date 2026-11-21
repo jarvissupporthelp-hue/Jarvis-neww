@@ -3,7 +3,7 @@ import {UiText} from "@/app/components/interface-language";
 
 
 import { InterfaceLanguage } from "./interface-language";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Globe2, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -181,6 +181,8 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
   const router = useRouter();
   const [preferences, setPreferences] = useState<{ language: WorkspaceLanguage; avatar: string }>({language:"en",avatar:""});
   const tr = (label: string) => workspaceText(preferences.language,label);
+  const [isGuest, setIsGuest] = useState(false);
+  const [guestChoice, setGuestChoice] = useState<string>();
   const [role, setRole] = useState<Role | null>(null);
   const [drawerPath, setDrawerPath] = useState<string | null>(null);
   const drawerOpen = drawerPath === pathname;
@@ -223,6 +225,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
     let revision = 0;
     async function inspect(token: string | undefined, id?: string) {
       const current = ++revision;
+      if (active) setIsGuest(!token);
       if (!token) {
         if (active) { document.cookie="jarvis-language=; Path=/; Max-Age=0; SameSite=Lax"; setRole(null); setPreferences({language:"en",avatar:""}); }
         return;
@@ -258,7 +261,7 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
       const refresh = () => { void client.auth.getSession().then(({data})=>inspect(data.session?.access_token,data.session?.user.id)); };
       window.addEventListener("jarvis-profile-saved",refresh);
       return () => { active = false; data.subscription.unsubscribe(); window.removeEventListener("jarvis-profile-saved",refresh); };
-    } catch { return () => { active = false; }; }
+    } catch { queueMicrotask(() => { if (active) setIsGuest(true); }); return () => { active = false; }; }
   }, [router]);
 
   useEffect(() => {
@@ -278,12 +281,14 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
     window.dispatchEvent(new Event("jarvis-theme-changed"));
   }
 
-  const isLanding = pathname === "/";
+  const isLanding = ["/", "/hy", "/en"].includes(pathname);
+  const language = role ? preferences.language : (isGuest && guestChoice) || initialLanguage;
+  useEffect(() => { document.documentElement.lang = language; }, [language]);
   const items = role === "admin" ? adminNav : role === "lecturer" ? lecturerNav : studentNav;
   const workspace = !isLanding && role !== null;
   const roleName = role === "admin" ? "Administration" : role === "lecturer" ? "Lecturer workspace" : "Student workspace";
   return (
-    <InterfaceLanguage.Provider value={role ? preferences.language : initialLanguage}>
+    <InterfaceLanguage.Provider value={language}>
     <div className="jarvis-app">
       <a className="jarvis-skip-link" href="#jarvis-main-content"><UiText value={"Skip to main content"}/></a>
       <header className="jarvis-topbar">
@@ -293,10 +298,10 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
             onClick={toggleSidebar}><Menu size={20} aria-hidden="true"/></button>}
           <Link href="/" className="jarvis-brand" aria-label="JARVIS home">
             <Image className="jarvis-brand-symbol" src="/jarvis-mark.png" width={38} height={38} alt="" unoptimized />
-            <span className="jarvis-brand-text">JARVIS<small>ACADEMIC WORKSPACE</small></span>
+            <span className="jarvis-brand-text">JARVIS<small><UiText value="ACADEMIC WORKSPACE"/></small></span>
           </Link>
           <span className="jarvis-topbar-divider"/>
-          <span className="jarvis-topbar-context">{workspace ? tr(roleName) : "University platform"}</span>
+          <span className="jarvis-topbar-context">{workspace ? tr(roleName) : <UiText value="University platform"/>}</span>
         </div>
         <div className="jarvis-topbar-actions">
           <span className="jarvis-university-chip">UFAR · Pilot</span>
@@ -315,7 +320,16 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
             </div>
           </aside>
         </>}
-        <div id="jarvis-main-content" inert={workspace && mobile && drawerOpen} tabIndex={-1} className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>{children}</div>
+        <div id="jarvis-main-content" inert={workspace && mobile && drawerOpen} tabIndex={-1} className={"jarvis-main-area" + (workspace ? " has-sidebar" : "") + (isLanding ? " is-landing" : "")}>
+          {isLanding && isGuest && <div className="jarvis-landing-language">
+            <label><Globe2 size={17} aria-hidden="true"/>
+              <select aria-label={language === "hy" ? "Լեզու" : "Language"} value={language} onChange={event => setGuestChoice(event.target.value)}>
+                <option value="en">English</option><option value="hy">Հայերեն</option>
+                <option value="fr">Français</option><option value="ru">Русский</option>
+              </select>
+            </label>
+          </div>}
+          {children}</div>
       </div>
     </div>
     </InterfaceLanguage.Provider>
