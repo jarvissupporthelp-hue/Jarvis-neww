@@ -1,4 +1,9 @@
 export const interfaceCopy: Record<string, readonly [string,string,string]> = {
+  "Enter a profile URL or username.": ["Մուտքագրեք պրոֆիլի հղումը կամ օգտանունը։", "Saisissez une URL de profil ou un identifiant.", "Введите ссылку на профиль или имя пользователя."],
+  "Could not load links.": ["Չհաջողվեց բեռնել հղումները։", "Impossible de charger les liens.", "Не удалось загрузить ссылки."],
+  "Account settings": ["Հաշվի կարգավորումներ", "Paramètres du compte", "Настройки аккаунта"],
+  "View profile": ["Դիտել պրոֆիլը", "Voir le profil", "Открыть профиль"],
+  "Professional links": ["Մասնագիտական հղումներ", "Liens professionnels", "Профессиональные ссылки"],
   "ACADEMIC WORKSPACE": ["ՈՒՍՈՒՄՆԱԿԱՆ ՀԱՐԹԱԿ", "ESPACE UNIVERSITAIRE", "УЧЕБНАЯ ПЛАТФОРМА"],
   "University platform": ["Համալսարանական հարթակ", "Plateforme universitaire", "Университетская платформа"],
   "Tasks": ["Առաջադրանքներ", "Tâches", "Задания"],

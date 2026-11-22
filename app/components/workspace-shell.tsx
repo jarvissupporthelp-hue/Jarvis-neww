@@ -312,7 +312,15 @@ export function WorkspaceShell({ children, initialLanguage="en" }: { children: R
           <span className="jarvis-university-chip">UFAR · Pilot</span>
           <ThemeSelector theme={theme} onChange={changeTheme}/>
           {!role && <Link className="jarvis-header-signin" href="/account"><UiText value="Sign in"/> <Icon name="arrow" size={15}/></Link>}
-          {role && <Link href="/account/profile" className="inline-flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full" aria-label={tr("Profile")} title={tr("Profile")}><Avatar value={preferences.avatar || "👤"}/></Link>}
+          {role && <details key={pathname} className="relative" onKeyDown={event => {
+            if(event.key === "Escape"){event.currentTarget.open=false;event.currentTarget.querySelector("summary")?.focus();}
+          }} onBlur={event => {if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open=false;}}>
+            <summary className="grid size-10 cursor-pointer list-none place-items-center overflow-hidden rounded-full" aria-label={tr("Profile")}><Avatar value={preferences.avatar || "👤"}/></summary>
+            <nav className="absolute right-0 z-50 mt-2 grid w-52 gap-1 rounded-xl border border-[var(--stroke)] bg-[var(--panel)] p-2 shadow-xl" onClick={event => {event.currentTarget.closest("details")?.removeAttribute("open");}}>
+              <Link className="rounded-lg px-3 py-2 hover:bg-[var(--highlight)]" href="/account/profile"><UiText value="Profile"/></Link>
+              <Link className="rounded-lg px-3 py-2 hover:bg-[var(--highlight)]" href="/account/settings"><UiText value="Account settings"/></Link>
+            </nav>
+          </details>}
         </div>
       </header>
       <div className="jarvis-shell-body" data-collapsed={hidden}>
