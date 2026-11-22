@@ -45,7 +45,6 @@ export default function Home() {
         <Link href="/campus"><UiText value={"Campus resources"}/> <span aria-hidden="true">→</span></Link>
         <Link href="/career"><UiText value={"Career"}/> <span aria-hidden="true">→</span></Link>
         <Link href="/chat"><UiText value={"AI Agent"}/> <span aria-hidden="true">→</span></Link>
-        <Link href="/dashboard"><UiText value={"University hub"}/> <span aria-hidden="true">→</span></Link>
       </nav>
       <div className="jarvis-landing-features">
         <article className="jarvis-landing-feature"><i className="jarvis-feature-dot"/><strong><UiText value={"Academic calendar"}/></strong><p>{t("See classes, assignments, study sessions, and your personal time in one place.")}</p></article>

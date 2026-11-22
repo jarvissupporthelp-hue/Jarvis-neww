@@ -9,6 +9,7 @@ import { getClient, getAccessToken, passwordCallback, clearPasswordCallback } fr
 import { PersonalTasks } from "./personal-planner";
 import { StudentDashboard } from "./student-dashboard";
 import { Timetable } from "./timetable";
+import { AccountNotifications } from "./account-notifications";
 import { AdminMfa } from "./admin-mfa";
 import { AdminWorkspace, type AdminSection } from "./admin-workspace";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
@@ -246,6 +247,7 @@ export function AccountForm({ view = "dashboard", adminSection, locale = "en" }:
             <p ref={accountStatus} tabIndex={-1} className="text-sm">Signed in as <strong>{displayName || role}</strong> <span className="capitalize">({role})</span></p>
             <span className="jarvis-admin-status">Connected to JARVIS</span>
           </div>
+          {view === "dashboard" && !adminSection && <AccountNotifications locale={locale} />}
           {showInvitations && (
             <>
             <form onSubmit={invite} className="jarvis-invite-form space-y-3 rounded-xl border p-5" style={{borderColor:"var(--stroke)",background:"var(--panel)"}}>

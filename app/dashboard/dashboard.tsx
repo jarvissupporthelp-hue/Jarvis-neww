@@ -12,8 +12,6 @@ import type { DashboardSlot, ModuleRegistration } from "@/lib/foundation/registr
 import type { FoundationRole } from "@/lib/foundation/roles";
 import type { Locale } from "@/lib/locales";
 
-type Copy = (typeof dashboardCopy)[Locale];
-type Notice = { id: string; type: string; readAt: string | null };
 
 async function request(path: string, init?: RequestInit) {
   const token = await getAccessToken();
@@ -37,91 +35,7 @@ class SlotBoundary extends Component<{ fallback: string; children: ReactNode }, 
   }
 }
 
-function LibraryAlertLink() {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    async function refresh() {
-      if (document.visibilityState === "hidden") return;
-      try {
-        const { count, error } = await getClient().from("physical_library_waitlist")
-          .select("id", { count: "exact", head: true }).not("notified_at", "is", null)
-          .is("read_at", null).abortSignal(controller.signal);
-        if (!error && !controller.signal.aborted) setCount(count ?? 0);
-      } catch {
-        // The university notification list remains usable if the library is unavailable.
-      }
-    }
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), 30_000);
-    return () => {
-      controller.abort();
-      window.clearInterval(timer);
-    };
-  }, []);
-
-  return count > 0 && <Link className="ui-action-secondary mb-3" href="/library/physical#availability-alerts">
-    <UiText value="Library alerts"/> {`(${count})`}
-  </Link>;
-}
-
-function Notifications({ copy }: { copy: Copy }) {
-  const [items, setItems] = useState<Notice[] | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const [pending, setPending] = useState<string | null>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void request("/api/foundation/notifications", { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error();
-        const result: Notice[] = await response.json();
-        if (!controller.signal.aborted) setItems(result);
-      })
-      .catch(() => { if (!controller.signal.aborted) setFailed(true); });
-    return () => controller.abort();
-  }, [attempt]);
-
-  async function read(id: string) {
-    setPending(id);
-    try {
-      const response = await request("/api/foundation/notifications", {
-        method: "PATCH", body: JSON.stringify({ id }),
-      });
-      if (!response.ok) throw new Error();
-      setItems((current) => current?.map((item) => item.id === id ? { ...item, readAt: new Date().toISOString() } : item) ?? null);
-    } catch {
-      setFailed(true);
-    } finally {
-      setPending(null);
-    }
-  }
-
-  if (failed) return (
-    <div>
-      <p role="alert"><UiText value={copy.error}/></p>
-      <button className="underline" onClick={() => { setFailed(false); setAttempt((count) => count + 1); }}><UiText value={copy.retry}/></button>
-    </div>
-  );
-  if (!items) return <p role="status"><UiText value={copy.loading}/></p>;
-  if (!items.length) return <p><UiText value={copy.empty}/></p>;
-  return (
-    <ul className="space-y-2">
-      {items.map((item) => (
-        <li key={item.id} className="flex flex-wrap justify-between gap-2">
-          <span>{item.type === "welcome" ? copy.welcome : item.type === "reminder" ? copy.reminder : copy.notification}</span>
-          {item.readAt ? <span><UiText value={copy.read}/></span> : (
-            <button className="underline" disabled={pending !== null} onClick={() => void read(item.id)}><UiText value={copy.markRead}/></button>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-const slots: readonly DashboardSlot[] = ["myDay", "search", "notifications", "saved", "requests", "quick"];
+const slots: readonly DashboardSlot[] = ["myDay", "search", "saved", "requests", "quick"];
 const registrations: readonly ModuleRegistration[] = Object.values(registeredModules);
 
 function SlotContent({ render }: { render: () => ReactNode }) {
@@ -178,7 +92,6 @@ export function Dashboard({ moduleKey }: { moduleKey?: string }) {
   const matches = permitted.filter((entry) => title(entry).toLocaleLowerCase(language).includes(query.trim().toLocaleLowerCase(language)));
 
   function widget(slot: DashboardSlot) {
-    if (slot === "notifications") return <><LibraryAlertLink /><Notifications copy={copy} /></>;
     if (slot === "search") return (
       <div className="space-y-2">
         <label className="block"><UiText value={copy.searchLabel}/><input type="search" className="mt-1 w-full rounded border p-2" value={query} onChange={(event) => setQuery(event.target.value)} /></label>

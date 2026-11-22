@@ -23,7 +23,7 @@ test("UI and functionality routes respond successfully", async (t) => {
 
 test("merged landing offers both new academic modules and account login", async () => {
   const html = await (await fetch(origin)).text();
-  for (const href of ['/account', '/academics', '/learning', '/dashboard', '/chat']) {
+  for (const href of ['/account', '/academics', '/learning', '/chat']) {
     assert.ok(html.includes('href="' + href + '"'), "missing landing link " + href);
   }
 });

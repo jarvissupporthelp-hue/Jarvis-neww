@@ -53,7 +53,6 @@ const libraryNav: NavItem = { href: "/library", label: "Library", icon: "courses
 
 const studentNav: NavItem[] = [
   { href: "/account", label: "My day", icon: "dashboard" },
-  { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academics", icon: "courses" },
   { href: "/learning", label: "Learning tools", icon: "plans" },
   { href: "/study-plans", label: "Study plans", icon: "plans" },
@@ -72,7 +71,7 @@ const studentNav: NavItem[] = [
 ];
 
 const lecturerNav: NavItem[] = [
-  { href: "/dashboard", label: "University hub", icon: "dashboard" },
+  { href: "/account", label: "My day", icon: "dashboard" },
   { href: "/academics", label: "Academics", icon: "layers" },
   { href: "/lecturer", label: "My courses", icon: "courses" },
   { href: "/resources", label: "Course resources", icon: "layers" },
@@ -86,7 +85,6 @@ const lecturerNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { href: "/account", label: "Administration", icon: "dashboard" },
-  { href: "/dashboard", label: "University hub", icon: "layers" },
   { href: "/academics", label: "Academic tools", icon: "courses" },
   { href: "/arena", label: "Arena", icon: "arena" },
   { href: "/campus", label: "Campus resources", icon: "layers" },

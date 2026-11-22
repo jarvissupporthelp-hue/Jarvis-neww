@@ -14,7 +14,8 @@ function links(name) {
 test("every signed-in role can reach the integrated modules from the menu", () => {
   for (const name of ["studentNav", "lecturerNav", "adminNav"]) {
     const hrefs = links(name);
-    for (const required of ["/dashboard", "/academics", "/campus", "/arena", "/career", "/chat/math-visualization"]) {
+    assert.ok(!hrefs.includes("/dashboard"), `${name} still exposes the University Hub`);
+    for (const required of ["/account", "/academics", "/campus", "/arena", "/career", "/chat/math-visualization"]) {
       assert.ok(hrefs.includes(required), `${name} is missing ${required}`);
     }
   }
